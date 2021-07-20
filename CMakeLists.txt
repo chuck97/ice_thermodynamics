@@ -8,6 +8,7 @@ set(CMAKE_CXX_COMPILER g++)
 set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory("ThermoView")
+add_subdirectory("Solvers")
 add_subdirectory("Headers")
 
 include_directories("Headers")
