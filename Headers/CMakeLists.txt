@@ -4,5 +4,6 @@ set(
         ${CMAKE_CURRENT_SOURCE_DIR}/thermo_view.h
         ${CMAKE_CURRENT_SOURCE_DIR}/thomas_solver.h
         ${CMAKE_CURRENT_SOURCE_DIR}/output_operators.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/ice_thermo.h
         PARENT_SCOPE
 )
