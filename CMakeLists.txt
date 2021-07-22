@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17.0)
+cmake_minimum_required(VERSION 3.16.3)
 
 project(ice_thermodynamics)
 
@@ -13,8 +13,8 @@ add_subdirectory("Headers")
 
 include_directories("Headers")
 
-set(INMOST_SRC "...")
-set(INMOST_BUILD "...")
+set(INMOST_SRC "/home/vloden/Documents/All_work/Ice/INMOST/INMOST")
+set(INMOST_BUILD "/home/vloden/Documents/All_work/Ice/INMOST/INMOST_BUILD")
 
 
 include_directories(${INMOST_SRC}/Source/Headers)
