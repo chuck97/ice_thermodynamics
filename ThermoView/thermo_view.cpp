@@ -71,7 +71,7 @@ void ThermoMesh::AssignData(Mesh* m, bool is_sigma)
         counter = 0;
 
         // plot cell data for nodes
-
+        /*
         Tag node_var_tag = m->CreateTag(var.first,
                                         DATA_REAL,
                                         NODE,
@@ -108,6 +108,7 @@ void ThermoMesh::AssignData(Mesh* m, bool is_sigma)
             }
         }
         counter = 0;
+        */
 
     }
 

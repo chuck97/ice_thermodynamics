@@ -9,12 +9,13 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory("ThermoView")
 add_subdirectory("Solvers")
+add_subdirectory("IceThermo")
 add_subdirectory("Headers")
 
 include_directories("Headers")
 
-set(INMOST_SRC "/home/vloden/Documents/All_work/Ice/INMOST/INMOST")
-set(INMOST_BUILD "/home/vloden/Documents/All_work/Ice/INMOST/INMOST_BUILD")
+set(INMOST_SRC "/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST")
+set(INMOST_BUILD "/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST-build")
 
 
 include_directories(${INMOST_SRC}/Source/Headers)

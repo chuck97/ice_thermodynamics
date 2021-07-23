@@ -1,11 +1,25 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
+#include <sstream>
 #include "thomas_solver.h"
 #include "thermo_view.h"
 
 #define IS_COEFFS_SIGMA true
 #define ERR(message) {std::cerr << "Error: " << message  << std::endl; exit(1);}
+
+struct Consts
+{
+    const double rho_ice = 917.0;
+    const double c0_ice = 2108.0;
+    const double cw_water = 4184.0;
+    const double L0_ice = 333500.0;
+    const double mu_ice = 0.054;
+    const double k0_ice = 2.03;
+    const double k1_ice = 0.117;
+    const double sal_ice = 0.005;
+};
 
 class IceThermo
 {
@@ -22,12 +36,13 @@ public:
     void SetTimeStep(double time_step);
     void UpdateFluxes(double flux_boundary, double flux_surface);
     void Evaluate();
-    void WriteVTU();
+    void WriteVTU(const std::string& path,
+                  unsigned int step_num) const;
 
 private:
-    double dt_;
-    double F_b;
-    double F_su;
+    double dt_ = 0.0;
+    double F_b_ = 0.0;
+    double F_su_ = 0.0;
     const unsigned int n_cells_;
     const unsigned int n_nodes_;
     std::vector<double> T_cells_old_;
@@ -48,20 +63,15 @@ private:
     std::vector<double> a_nodes_;
     std::vector<double> b_nodes_;
     std::vector<double> S_nodes_;
+    std::vector<double> S_cells_;
+
+    Consts consts;
 
     void UpdateDeltaZ();
-    void UpdateCoefs();
+    void UpdateCoeffs();
     void UpdateT();
-    void UpdateW()
-};
+    void UpdateW();
 
-struct Consts
-{
-    const double rho_ice = 1.0;
-    const double c0_ice;
-    const double cw_water;
-    const double L0_ice;
-    const double mu_ice;
-    const double k0_ice;
-    const double k1_ice;
+    double CalculateE(double T, double S);
+    double CalculateK(double T, double S);
 };
