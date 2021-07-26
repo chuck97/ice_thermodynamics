@@ -1,0 +1,6 @@
+set(
+	SOURCE
+	${SOURCE}
+	${CMAKE_CURRENT_SOURCE_DIR}/vec_norms.cpp
+	PARENT_SCOPE
+)

@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory("ThermoView")
 add_subdirectory("Solvers")
+add_subdirectory("Support")
 add_subdirectory("IceThermo")
 add_subdirectory("Headers")
 

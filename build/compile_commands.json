@@ -1,0 +1,27 @@
+[
+{
+  "directory": "/home/chuck/Desktop/ice_thermodynamics/build",
+  "command": "g++ -I../Headers -I/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST/Source/Headers -I/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST-build -g -std=gnu++1z -o CMakeFiles/ice_thermodynamics.dir/ThermoView/thermo_view.cpp.o -c /home/chuck/Desktop/ice_thermodynamics/ThermoView/thermo_view.cpp",
+  "file": "/home/chuck/Desktop/ice_thermodynamics/ThermoView/thermo_view.cpp"
+},
+{
+  "directory": "/home/chuck/Desktop/ice_thermodynamics/build",
+  "command": "g++ -I../Headers -I/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST/Source/Headers -I/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST-build -g -std=gnu++1z -o CMakeFiles/ice_thermodynamics.dir/Solvers/thomas_solver.cpp.o -c /home/chuck/Desktop/ice_thermodynamics/Solvers/thomas_solver.cpp",
+  "file": "/home/chuck/Desktop/ice_thermodynamics/Solvers/thomas_solver.cpp"
+},
+{
+  "directory": "/home/chuck/Desktop/ice_thermodynamics/build",
+  "command": "g++ -I../Headers -I/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST/Source/Headers -I/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST-build -g -std=gnu++1z -o CMakeFiles/ice_thermodynamics.dir/Support/vec_norms.cpp.o -c /home/chuck/Desktop/ice_thermodynamics/Support/vec_norms.cpp",
+  "file": "/home/chuck/Desktop/ice_thermodynamics/Support/vec_norms.cpp"
+},
+{
+  "directory": "/home/chuck/Desktop/ice_thermodynamics/build",
+  "command": "g++ -I../Headers -I/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST/Source/Headers -I/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST-build -g -std=gnu++1z -o CMakeFiles/ice_thermodynamics.dir/IceThermo/ice_thermo.cpp.o -c /home/chuck/Desktop/ice_thermodynamics/IceThermo/ice_thermo.cpp",
+  "file": "/home/chuck/Desktop/ice_thermodynamics/IceThermo/ice_thermo.cpp"
+},
+{
+  "directory": "/home/chuck/Desktop/ice_thermodynamics/build",
+  "command": "g++ -I../Headers -I/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST/Source/Headers -I/home/chuck/Desktop/ThermodynamicsViewer/INMOST/INMOST-build -g -std=gnu++1z -o CMakeFiles/ice_thermodynamics.dir/main.cpp.o -c /home/chuck/Desktop/ice_thermodynamics/main.cpp",
+  "file": "/home/chuck/Desktop/ice_thermodynamics/main.cpp"
+}
+]

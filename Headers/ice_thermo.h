@@ -3,10 +3,16 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include "vec_operators.h"
+#include "vec_norms.h"
 #include "thomas_solver.h"
 #include "thermo_view.h"
+#include "inmost.h"
 
-#define IS_COEFFS_SIGMA true
+#define IS_COEFFS_SIGMA false
+#define N_PSEUDOITS 10
+#define ABS_T_MIN 10
+
 #define ERR(message) {std::cerr << "Error: " << message  << std::endl; exit(1);}
 
 struct Consts
@@ -40,7 +46,7 @@ public:
                   unsigned int step_num) const;
 
 private:
-    double dt_ = 0.0;
+    double dt_ = 3600.0;
     double F_b_ = 0.0;
     double F_su_ = 0.0;
     const unsigned int n_cells_;
@@ -68,10 +74,39 @@ private:
     Consts consts;
 
     void UpdateDeltaZ();
-    void UpdateCoeffs();
+    void RecalculateCoeffs();
     void UpdateT();
     void UpdateW();
 
     double CalculateE(double T, double S);
+    double CalculateC(double T, double T_old, double S);
     double CalculateK(double T, double S);
+
+    void RecalculateTempNodes(const std::vector<double>& T_cells_array,
+                                    std::vector<double>& T_nodes_array);
+
+    void RecalculateSalNodes(const std::vector<double>& S_cells_array,
+                                   std::vector<double>& S_nodes_array);
+
+    void UpdateC_Nodes(const std::vector<double>& T_nodes_array,
+                       const std::vector<double>& T_old_nodes_array,
+                       const std::vector<double>& Sal_nodes_array,
+                             std::vector<double>& C_nodes_array);
+
+    void UpdateC_Cells(const std::vector<double>& T_cells_array,
+                       const std::vector<double>& T_old_cells_array,
+                       const std::vector<double>& Sal_cells_array,
+                             std::vector<double>& C_cells_array);
+
+    void UpdateE_Nodes(const std::vector<double>& T_nodes_array,
+                       const std::vector<double>& Sal_nodes_array,
+                             std::vector<double>& E_nodes_array);
+
+    void UpdateE_Cells(const std::vector<double>& T_cells_array,
+                       const std::vector<double>& Sal_cells_array,
+                             std::vector<double>& E_cells_array);
+
+    void UpdateK_Nodes(const std::vector<double>& T_nodes_array,
+                       const std::vector<double>& Sal_nodes_array,
+                             std::vector<double>& K_nodes_array);
 };
