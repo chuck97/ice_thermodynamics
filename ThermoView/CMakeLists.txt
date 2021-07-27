@@ -1,6 +1,0 @@
-set(
-	SOURCE
-	${SOURCE}
-	${CMAKE_CURRENT_SOURCE_DIR}/thermo_view.cpp
-	PARENT_SCOPE
-)

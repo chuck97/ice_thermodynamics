@@ -1,6 +1,0 @@
-set(
-	SOURCE
-	${SOURCE}
-	${CMAKE_CURRENT_SOURCE_DIR}/ice_thermo.cpp
-	PARENT_SCOPE
-)
