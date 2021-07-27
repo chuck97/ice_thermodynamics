@@ -11,7 +11,6 @@
 
 #define IS_COEFFS_SIGMA false
 #define N_PSEUDOITS 10
-#define ABS_T_MIN 10
 
 #define ERR(message) {std::cerr << "Error: " << message  << std::endl; exit(1);}
 
@@ -24,7 +23,7 @@ struct Consts
     const double mu_ice = 0.054;
     const double k0_ice = 2.03;
     const double k1_ice = 0.117;
-    const double sal_ice = 0.005;
+    const double sal_ice = 5.0;
 };
 
 class IceThermo
@@ -70,43 +69,43 @@ private:
     std::vector<double> b_nodes_;
     std::vector<double> S_nodes_;
     std::vector<double> S_cells_;
-
     Consts consts;
 
-    void UpdateDeltaZ();
-    void RecalculateCoeffs();
-    void UpdateT();
-    void UpdateW();
+    void RecalculateCoeffs(const std::vector<double>& dz_array);
 
     double CalculateE(double T, double S);
-    double CalculateC(double T, double T_old, double S);
+    double CalculateC(double T_last, double T_old, double S);
     double CalculateK(double T, double S);
 
-    void RecalculateTempNodes(const std::vector<double>& T_cells_array,
-                                    std::vector<double>& T_nodes_array);
+    void InterpolateScalarNodes(const std::vector<double>& scalar_cells_array,
+                                      std::vector<double>& scalar_nodes_array);
 
-    void RecalculateSalNodes(const std::vector<double>& S_cells_array,
-                                   std::vector<double>& S_nodes_array);
+    void UpdateDeltaZ();
 
-    void UpdateC_Nodes(const std::vector<double>& T_nodes_array,
-                       const std::vector<double>& T_old_nodes_array,
-                       const std::vector<double>& Sal_nodes_array,
-                             std::vector<double>& C_nodes_array);
+    void UpdateT();
 
-    void UpdateC_Cells(const std::vector<double>& T_cells_array,
-                       const std::vector<double>& T_old_cells_array,
-                       const std::vector<double>& Sal_cells_array,
-                             std::vector<double>& C_cells_array);
+    //TODO: combine functions for updating parameter in one
 
-    void UpdateE_Nodes(const std::vector<double>& T_nodes_array,
-                       const std::vector<double>& Sal_nodes_array,
-                             std::vector<double>& E_nodes_array);
+    void UpdateC(const std::vector<double>& T_old_array,
+                 const std::vector<double>& T_new_array,
+                 const std::vector<double>& S_array,
+                       std::vector<double>& C_array);
 
-    void UpdateE_Cells(const std::vector<double>& T_cells_array,
-                       const std::vector<double>& Sal_cells_array,
-                             std::vector<double>& E_cells_array);
+    void UpdateE(const std::vector<double>& T_array,
+                 const std::vector<double>& S_array,
+                       std::vector<double>& E_array);
 
-    void UpdateK_Nodes(const std::vector<double>& T_nodes_array,
-                       const std::vector<double>& Sal_nodes_array,
-                             std::vector<double>& K_nodes_array);
+    void UpdateK(const std::vector<double>& T_array,
+                 const std::vector<double>& S_array,
+                       std::vector<double>& K_array);
+
+    void UpdateW(const std::vector<double>& T_cells_array,
+                 const std::vector<double>& S_cells_array,
+                       std::vector<double>& w_nodes_array);
+
 };
+
+double C_to_K(double T);
+double K_to_C(double T);
+std::vector<double> C_to_K(const std::vector<double>& T_C_array);
+std::vector<double> K_to_C(const std::vector<double>& T_K_array);

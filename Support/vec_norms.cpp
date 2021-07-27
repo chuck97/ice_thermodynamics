@@ -1,4 +1,3 @@
-#pragma once
 #include "vec_norms.h"
 
 using namespace std;

@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <vector>
 
 #define ERR(message) {std::cerr << "Error: " << message  << std::endl; exit(1);}
 
