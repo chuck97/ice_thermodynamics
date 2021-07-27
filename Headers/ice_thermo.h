@@ -52,7 +52,7 @@ private:
     void UpdateDeltaZ();
     void UpdateCoefs();
     void UpdateT();
-    void UpdateW()
+    void UpdateW();
 };
 
 struct Consts
