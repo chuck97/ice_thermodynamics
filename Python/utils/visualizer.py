@@ -12,52 +12,66 @@ plt.rcParams["animation.html"] = "jshtml"
 import itertools
 
 
-def animate(dz_arr, dz_snow_arr,
-            temp_arr, temp_snow,
+def animate(dz_ice_arr, dz_snow_arr,
+            temp_oi, temp_ice, temp_is, temp_snow, temp_sa,
             time_arr,
             rho_ice_arr, rho_water, rho_snow,
+            snow_filter,
             t_min=None, t_max=None, cmap=None, savepath=None):
     
-    dz_arr = np.array(dz_arr)
+    dz_ice_arr = np.array(dz_ice_arr)
     dz_snow_arr = np.array(dz_snow_arr)
-    temp_arr = np.array(temp_arr)
+    temp_oi = np.array(temp_oi)
+    temp_ice = np.array(temp_ice)
+    temp_is = np.array(temp_is)
     temp_snow = np.array(temp_snow)
+    temp_sa = np.array(temp_sa)
     time_arr = np.array(time_arr)
     rho_ice_arr = np.array(rho_ice_arr)
     
     def run(data):
 
-        dz_line, dz_snow_line, T_line, T_snow, time, rho_ice_line, rho_water = data
+        dz_ice_line, dz_snow_line,\
+        T_oi, T_ice, T_is, T_snow, T_sa,\
+        time,\
+        rho_ice_line, rho_water,\
+        is_snow = data
+        
+        T_ice_full = np.concatenate(([T_oi], T_ice, [T_is]))
+        T_snow_full = np.concatenate(([T_is], T_snow, [T_sa]))
 
-        Z = (-dz_line).cumsum() + dz_line/2
-        Z = np.insert(Z, 0, 0)
-        Z = np.append(Z, -dz_line.sum())
-        Z = Z[::-1] - Z[-1] - np.dot(rho_ice_line, dz_line)/rho_water - rho_snow*sum(dz_snow_line)/rho_water
-        points = np.array([T_line, Z]).T.reshape(-1, 1, 2)
-        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+        Z_ice = (-dz_ice_line).cumsum() + dz_ice_line/2
+        Z_ice = np.insert(Z_ice, 0, 0)
+        Z_ice = np.append(Z_ice, -dz_ice_line.sum())
+        Z_ice = Z_ice[::-1] - Z_ice[-1] - np.dot(rho_ice_line, dz_ice_line)/rho_water - rho_snow*sum(dz_snow_line)/rho_water
+        points_ice = np.array([T_ice_full, Z_ice]).T.reshape(-1, 1, 2)
+        segments_ice = np.concatenate([points_ice[:-1], points_ice[1:]], axis=1)
         
-        Z_snow = dz_snow_line.cumsum() - dz_snow_line/2
-        Z_snow = np.insert(Z_snow, 0, 0)
-        Z_snow = np.append(Z_snow, dz_snow_line.sum())
-        Z_snow = Z_snow + Z[-1]
+        if is_snow:
+            Z_snow = dz_snow_line.cumsum() - dz_snow_line/2
+            Z_snow = np.insert(Z_snow, 0, 0)
+            Z_snow = np.append(Z_snow, dz_snow_line.sum())
+            Z_snow = Z_snow + Z_ice[-1]
+            line_snow.set_data(T_snow_full, Z_snow)
+        else:
+            line_snow.set_data([], [])
         
-        line.set_segments(segments)
-        line.set_array(T_line)
-        line_snow.set_data(np.insert(T_snow, 0, T_line[-1]), Z_snow)
-        markers.set_offsets([[T, z] for T, z in zip(T_line, Z)])
-        markers.set_array(T_line)
+        line_ice.set_segments(segments_ice)
+        line_ice.set_array(T_ice_full)             
+        markers.set_offsets([[T, Z] for T, Z in zip(T_ice_full, Z_ice)])
+        markers.set_array(T_ice_full)
         ax.set_title('Time: %.2f hours'%(time/3600), size=20)
-    #     ax.set_yticks(np.insert(-dz_arr.cumsum(), 0, 0))
+    #     ax.set_yticks(np.insert(-dz_ice_arr.cumsum(), 0, 0))
 
-        return line, line_snow, markers
+        return line_ice, line_snow, markers
     
     
-    z_mins = np.array([(-np.dot(rho_ice_line, dz_line) - rho_snow*sum(dz_snow_line))/rho_water\
-                      for rho_ice_line, dz_line, dz_snow_line in zip(rho_ice_arr, dz_arr, dz_snow_arr)])
+    z_mins = np.array([(-np.dot(rho_ice_line, dz_ice_line) - rho_snow*sum(dz_snow_line))/rho_water\
+                      for rho_ice_line, dz_ice_line, dz_snow_line in zip(rho_ice_arr, dz_ice_arr, dz_snow_arr)])
     z_min = min(z_mins)
-    z_max = max(z_mins + dz_arr.sum(axis=1) + dz_snow_arr.sum(axis=1))
-    temp_min = min(temp_arr.min(), temp_snow.min())
-    temp_max = max(temp_arr.max(), temp_snow.max())
+    z_max = max(z_mins + dz_ice_arr.sum(axis=1) + dz_snow_arr.sum(axis=1))
+    temp_min = min(temp_arr.min() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa])
+    temp_max = max(temp_arr.max() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa])
      
     t_min = (t_min if t_min is not None else temp_min)
     t_max = (t_max if t_max is not None else temp_max)
@@ -77,7 +91,7 @@ def animate(dz_arr, dz_snow_arr,
                          ylim=(z_min - (z_max - z_min)*0.1, z_max + (z_max - z_min)*0.1))
     norm = plt.Normalize(t_max, t_min)
     lc = LineCollection([], linewidths=3, cmap=cmap, norm=norm, animated=True)
-    line = ax.add_collection(lc)
+    line_ice = ax.add_collection(lc)
     line_snow, = ax.plot([], [], color='grey', lw=3, marker='o', animated=True)
     markers = ax.scatter([], [], s=60, animated=True)
     markers.set_cmap(cmap)
@@ -87,13 +101,14 @@ def animate(dz_arr, dz_snow_arr,
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
     ax.tick_params(axis='both', labelsize=15)
     ax.grid()
-    fig.colorbar(line)
+    fig.colorbar(line_ice)
         
-    animation = anim.FuncAnimation(fig, run, zip(dz_arr, dz_snow_arr,
-                                                 temp_arr, temp_snow,
+    animation = anim.FuncAnimation(fig, run, zip(dz_ice_arr, dz_snow_arr,
+                                                 temp_oi, temp_ice, temp_is, temp_snow, temp_sa,
                                                  time_arr,
-                                                 rho_ice_arr, [rho_water]*dz_arr.shape[0]),
-                                   save_count=dz_arr.shape[0], interval=30, blit=True)
+                                                 rho_ice_arr, [rho_water]*dz_ice_arr.shape[0],
+                                                 snow_filter),
+                                   save_count=dz_ice_arr.shape[0], interval=30, blit=True)
     
     if savepath:
         animation.save(savepath)
@@ -108,7 +123,7 @@ def paint_snow(arr, num_of_cells, snow_color):
     return arr
 
 
-def timeseries_img(dz_arr, dz_snow_arr,
+def timeseries_img(dz_ice_arr, dz_snow_arr,
                    temp_arr,
                    time_arr,
                    rho_ice_arr, rho_water, rho_snow,
@@ -118,16 +133,16 @@ def timeseries_img(dz_arr, dz_snow_arr,
                                  1.0],
                    aspect = 0.66, x_ticks=11, y_ticks=6, t_min=None, t_max=None, cmap=None, savepath=None):
 
-    dz_arr = np.array(dz_arr)
+    dz_ice_arr = np.array(dz_ice_arr)
     dz_snow_arr = np.array(dz_snow_arr)
     temp_arr = np.array(temp_arr)
     timeline = np.array(time_arr)
     rho_ice_arr = np.array(rho_ice_arr)
 
-    z_mins = np.array([(-np.dot(rho_ice_line, dz_line) - rho_snow*sum(dz_snow_line))/rho_water\
-                      for rho_ice_line, dz_line, dz_snow_line in zip(rho_ice_arr, dz_arr, dz_snow_arr)])
+    z_mins = np.array([(-np.dot(rho_ice_line, dz_ice_line) - rho_snow*sum(dz_snow_line))/rho_water\
+                      for rho_ice_line, dz_ice_line, dz_snow_line in zip(rho_ice_arr, dz_ice_arr, dz_snow_arr)])
     z_min = min(z_mins)
-    z_max = max(z_mins + dz_arr.sum(axis=1) + dz_snow_arr.sum(axis=1))
+    z_max = max(z_mins + dz_ice_arr.sum(axis=1) + dz_snow_arr.sum(axis=1))
     temp_min = temp_arr.min()
     temp_max = temp_arr.max()
 
@@ -143,10 +158,10 @@ def timeseries_img(dz_arr, dz_snow_arr,
         cmap.set_over('black')
         cmap.set_under('black')
 
-    Z = dz_arr.cumsum(axis=1) - dz_arr/2
+    Z = dz_ice_arr.cumsum(axis=1) - dz_ice_arr/2
     Z = np.insert(Z, 0, 0, axis=1)
-    Z = np.append(Z, dz_arr.sum(axis=1).reshape(-1, 1), axis=1)
-    Z -= (np.array([np.dot(rho_ice_line, dz_line) for rho_ice_line, dz_line in zip(rho_ice_arr, dz_arr)])\
+    Z = np.append(Z, dz_ice_arr.sum(axis=1).reshape(-1, 1), axis=1)
+    Z -= (np.array([np.dot(rho_ice_line, dz_ice_line) for rho_ice_line, dz_ice_line in zip(rho_ice_arr, dz_ice_arr)])\
           + rho_snow*dz_snow_arr.sum(axis=1)).reshape(-1, 1)/rho_water
 
     y_points = int(aspect*len(timeline))
