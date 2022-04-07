@@ -38,24 +38,23 @@ def animate(dz_ice_arr, dz_snow_arr,
         is_snow = data
         
         T_ice_full = np.concatenate(([T_oi], T_ice, [T_is]))
-        T_snow_full = np.concatenate(([T_is], T_snow, [T_sa]))
-
-        Z_ice = (-dz_ice_line).cumsum() + dz_ice_line/2
-        Z_ice = np.insert(Z_ice, 0, 0)
-        Z_ice = np.append(Z_ice, -dz_ice_line.sum())
-        Z_ice = Z_ice[::-1] - Z_ice[-1] - np.dot(rho_ice_line, dz_ice_line)/rho_water - rho_snow*sum(dz_snow_line)/rho_water
-        points_ice = np.array([T_ice_full, Z_ice]).T.reshape(-1, 1, 2)
-        segments_ice = np.concatenate([points_ice[:-1], points_ice[1:]], axis=1)
+        
+        Z_ice_cells = dz_ice_line.cumsum() - dz_ice_line/2
+        Z_ice = np.concatenate(([0], Z_ice_cells, [sum(dz_ice_line)]))\
+              - np.dot(rho_ice_line, dz_ice_line)/rho_water
         
         if is_snow:
-            Z_snow = dz_snow_line.cumsum() - dz_snow_line/2
-            Z_snow = np.insert(Z_snow, 0, 0)
-            Z_snow = np.append(Z_snow, dz_snow_line.sum())
-            Z_snow = Z_snow + Z_ice[-1]
+            T_snow_full = np.concatenate(([T_is], T_snow, [T_sa]))
+            Z_ice -= rho_snow*sum(dz_snow_line)/rho_water
+            
+            Z_snow_cells = dz_snow_line.cumsum() - dz_snow_line/2
+            Z_snow = np.concatenate(([0], Z_snow_cells, [sum(dz_snow_line)])) + Z_ice[-1]
             line_snow.set_data(T_snow_full, Z_snow)
         else:
             line_snow.set_data([], [])
         
+        points_ice = [[[T, Z]] for T, Z in zip(T_ice_full, Z_ice)]
+        segments_ice = np.concatenate([points_ice[:-1], points_ice[1:]], axis=1)
         line_ice.set_segments(segments_ice)
         line_ice.set_array(T_ice_full)             
         markers.set_offsets([[T, Z] for T, Z in zip(T_ice_full, Z_ice)])
@@ -113,8 +112,7 @@ def animate(dz_ice_arr, dz_snow_arr,
     if savepath:
         animation.save(savepath)
         
-    else:
-        return animation
+    return animation
     
     
 def paint_snow(arr, num_of_cells, snow_color):
