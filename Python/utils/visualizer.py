@@ -7,7 +7,7 @@ from matplotlib.ticker import FormatStrFormatter
 from matplotlib.collections import LineCollection, PathCollection
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.cm import ScalarMappable
-matplotlib.rcParams['animation.embed_limit'] = 2000
+matplotlib.rcParams['animation.embed_limit'] = 5000
 plt.rcParams["animation.html"] = "jshtml"
 import itertools
 
@@ -69,8 +69,8 @@ def animate(dz_ice_arr, dz_snow_arr,
                       for rho_ice_line, dz_ice_line, dz_snow_line in zip(rho_ice_arr, dz_ice_arr, dz_snow_arr)])
     z_min = min(z_mins)
     z_max = max(z_mins + dz_ice_arr.sum(axis=1) + dz_snow_arr.sum(axis=1))
-    temp_min = min(temp_arr.min() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa])
-    temp_max = max(temp_arr.max() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa])
+    temp_min = min(temp_arr.min() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa] if temp_arr.size > 0)
+    temp_max = max(temp_arr.max() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa] if temp_arr.size > 0)
      
     t_min = (t_min if t_min is not None else temp_min)
     t_max = (t_max if t_max is not None else temp_max)
