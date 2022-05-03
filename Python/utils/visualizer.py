@@ -11,12 +11,28 @@ matplotlib.rcParams['animation.embed_limit'] = 5000
 plt.rcParams["animation.html"] = "jshtml"
 import itertools
 
+def get_Z(dzi, dzs, rho_i, rho_s, rho_w):
+    
+    
+    bottomlines = np.array([(-np.dot(dzi_t, rho_i_t) - rho_s*sum(dzs_t))/rho_w \
+                            for dzi_t, dzs_t, rho_i_t in zip(dzi, dzs, rho_i)])
+    
+    Z_i = np.concatenate((bottomlines.reshape(-1, 1), dzi), axis=1).cumsum(axis=1)
+    Z_i = np.append(Z_i, Z_i[:, [-1]], axis=1)
+    Z_i[:, 1:-1] -= dzi/2
+    
+    Z_s = np.concatenate((Z_i[:, [-1]], dzs), axis=1).cumsum(axis=1)
+    Z_s = np.append(Z_s, Z_s[:, [-1]], axis=1)
+    Z_s[:, 1:-1] -= dzs/2
+    
+    return Z_i, Z_s
 
 def animate(dz_ice_arr, dz_snow_arr,
             temp_oi, temp_ice, temp_is, temp_snow, temp_sa,
             time_arr,
             rho_ice_arr, rho_water, rho_snow,
             snow_filter,
+            clip_start=0, clip_end=-2,
             t_min=None, t_max=None, cmap=None, savepath=None):
     
     dz_ice_arr = np.array(dz_ice_arr)
@@ -31,7 +47,7 @@ def animate(dz_ice_arr, dz_snow_arr,
     
     def run(data):
 
-        dz_ice_line, dz_snow_line,\
+        Z_ice_line, Z_snow_line,\
         T_oi, T_ice, T_is, T_snow, T_sa,\
         time,\
         rho_ice_line, rho_water,\
@@ -39,25 +55,17 @@ def animate(dz_ice_arr, dz_snow_arr,
         
         T_ice_full = np.concatenate(([T_oi], T_ice, [T_is]))
         
-        Z_ice_cells = dz_ice_line.cumsum() - dz_ice_line/2
-        Z_ice = np.concatenate(([0], Z_ice_cells, [sum(dz_ice_line)]))\
-              - np.dot(rho_ice_line, dz_ice_line)/rho_water
-        
         if is_snow:
             T_snow_full = np.concatenate(([T_is], T_snow, [T_sa]))
-            Z_ice -= rho_snow*sum(dz_snow_line)/rho_water
-            
-            Z_snow_cells = dz_snow_line.cumsum() - dz_snow_line/2
-            Z_snow = np.concatenate(([0], Z_snow_cells, [sum(dz_snow_line)])) + Z_ice[-1]
-            line_snow.set_data(T_snow_full, Z_snow)
+            line_snow.set_data(T_snow_full, Z_snow_line)
         else:
             line_snow.set_data([], [])
         
-        points_ice = [[[T, Z]] for T, Z in zip(T_ice_full, Z_ice)]
+        points_ice = [[[T, Z]] for T, Z in zip(T_ice_full, Z_ice_line)]
         segments_ice = np.concatenate([points_ice[:-1], points_ice[1:]], axis=1)
         line_ice.set_segments(segments_ice)
         line_ice.set_array(T_ice_full)             
-        markers.set_offsets([[T, Z] for T, Z in zip(T_ice_full, Z_ice)])
+        markers.set_offsets([[T, Z] for T, Z in zip(T_ice_full, Z_ice_line)])
         markers.set_array(T_ice_full)
         ax.set_title('Time: %.2f hours'%(time/3600), size=20)
     #     ax.set_yticks(np.insert(-dz_ice_arr.cumsum(), 0, 0))
@@ -65,10 +73,9 @@ def animate(dz_ice_arr, dz_snow_arr,
         return line_ice, line_snow, markers
     
     
-    z_mins = np.array([(-np.dot(rho_ice_line, dz_ice_line) - rho_snow*sum(dz_snow_line))/rho_water\
-                      for rho_ice_line, dz_ice_line, dz_snow_line in zip(rho_ice_arr, dz_ice_arr, dz_snow_arr)])
-    z_min = min(z_mins)
-    z_max = max(z_mins + dz_ice_arr.sum(axis=1) + dz_snow_arr.sum(axis=1))
+    Z_i, Z_s = get_Z(dz_ice_arr, dz_snow_arr, rho_ice_arr, rho_snow, rho_water)
+    z_min = min(Z_i[:, 0])
+    z_max = max(Z_s[:, -1])
     temp_min = min(temp_arr.min() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa] if temp_arr.size > 0)
     temp_max = max(temp_arr.max() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa] if temp_arr.size > 0)
      
@@ -102,12 +109,15 @@ def animate(dz_ice_arr, dz_snow_arr,
     ax.grid()
     fig.colorbar(line_ice)
         
-    animation = anim.FuncAnimation(fig, run, zip(dz_ice_arr, dz_snow_arr,
-                                                 temp_oi, temp_ice, temp_is, temp_snow, temp_sa,
-                                                 time_arr,
-                                                 rho_ice_arr, [rho_water]*dz_ice_arr.shape[0],
-                                                 snow_filter),
-                                   save_count=dz_ice_arr.shape[0], interval=30, blit=True)
+    animation = anim.FuncAnimation(fig, run, zip(Z_i[clip_start:clip_end+1], Z_s[clip_start:clip_end+1],
+                                                 temp_oi[clip_start:clip_end+1], temp_ice[clip_start:clip_end+1], 
+                                                 temp_is[clip_start:clip_end+1], temp_snow[clip_start:clip_end+1], 
+                                                 temp_sa[clip_start:clip_end+1],
+                                                 time_arr[clip_start:clip_end+1],
+                                                 rho_ice_arr[clip_start:clip_end+1], 
+                                                 [rho_water]*dz_ice_arr[clip_start:clip_end+1].shape[0],
+                                                 snow_filter[clip_start:clip_end+1]),
+                                   save_count=dz_ice_arr[clip_start:clip_end+1].shape[0], interval=30, blit=True)
     
     if savepath:
         animation.save(savepath)
