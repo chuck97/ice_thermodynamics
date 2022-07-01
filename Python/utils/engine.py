@@ -54,6 +54,48 @@ c_s = lambda T, T_old, S_s=0: c0_s
 E_s = lambda T, S_s=0: c0_s*T - L0_s
 L_s = lambda T, S_s=0: c0_s*T - L0_s
 
+class Process:
+    def __init__(self,
+                 dzi_arr_init=np.array([]), dzs_arr_init=np.array([]),
+                 timeline_init=np.array([]),
+                 temp_oi_arr_init=np.array([]), temp_ice_arr_init=np.array([]), temp_is_arr_init=np.array([]),
+                 temp_snow_arr_init=np.array([]), temp_sa_arr_init=np.array([]),
+                 rho_ice_arr_init=np.array([]),
+                 snow_filter_init=np.array([])):
+        
+        assert len(dzi_arr_init) == len(dzs_arr_init) == len(timeline_init) == len(temp_ice_arr_init) \
+            == len(temp_ice_arr_init) == len(temp_is_arr_init) == len(temp_snow_arr_init) == len(temp_sa_arr_init) \
+            == len(rho_ice_arr_init) == len(snow_filter_init), "Lengths of init arrays are not equal!"
+        
+        self.ice_dz_history = np.array(dzi_arr_init)
+        self.snow_dz_history = np.array(dzs_arr_init)
+        self.timeline = np.array(timeline_init)
+        self.oi_temp_history = np.array(temp_oi_arr_init)
+        self.ice_temp_history = np.array(temp_ice_arr_init)
+        self.is_temp_history = np.array(temp_is_arr_init)
+        self.snow_temp_history = np.array(temp_snow_arr_init)
+        self.sa_temp_history = np.array(temp_sa_arr_init)
+        self.ice_density_history = np.array(rho_ice_arr_init)
+        self.snow_presence_history = np.array(snow_filter_init)
+        
+    def get_zip(self, clip_start=None, clip_end=None):
+        return zip(self.ice_dz_history[clip_start:clip_end], self.snow_dz_history[clip_start:clip_end],
+                   self.timeline[clip_start:clip_end],
+                   self.oi_temp_history[clip_start:clip_end], self.ice_temp_history[clip_start:clip_end],
+                   self.is_temp_history[clip_start:clip_end],
+                   self.snow_temp_history[clip_start:clip_end], self.sa_temp_history[clip_start:clip_end],
+                   self.ice_density_history[clip_start:clip_end],
+                   self.snow_presence_history[clip_start:clip_end])
+    
+    def get_temp(self, mode):
+        temp_arrs = [self.oi_temp_history, self.ice_temp_history, self.is_temp_history,
+                     self.snow_temp_history, self.sa_temp_history]
+        if mode == 'min':
+            return min(temp_arr.min() for temp_arr in temp_arrs if temp_arr.size)
+        elif mode == 'max':
+            return max(temp_arr.max() for temp_arr in temp_arrs if temp_arr.size)
+        else:
+            raise Exception("'mode' should be either 'min' or 'max'!")
 
 def secant_solver(f, x0, x1, tol=1e-9, max_it=1000):
     x_new = x1
@@ -988,16 +1030,22 @@ def main_process(time_step, time_end,
     if Ns is None:
         Ns = len(dzs_init)
     
-    dzi_arr = [dzi_init]
-    dzs_arr = [dzs_init]
-    timeline = [time]
-    temp_oi_arr = [Tf_w]
-    temp_ice_arr = [Ti_init]
-    temp_is_arr = [Tis_new]
-    temp_snow_arr = [Ts_init]
-    temp_sa_arr = [Tsa_new]
-    rho_ice_arr = [[rho_i]*len(dzi_init)]
-    snow_filter = [sum(dzs_init) >= snow_thickness_threshold]
+    process = Process([dzi_init], [dzs_init],
+                      [time],
+                      [Tf_w], [Ti_init], [Tis_init], [Ts_init], [Tsa_init],
+                      [[rho_i]*len(dzi_init)],
+                      [sum(dzs_init) >= snow_thickness_threshold]
+                     )
+#     dzi_arr = [dzi_init]
+#     dzs_arr = [dzs_init]
+#     timeline = [time]
+#     temp_oi_arr = [Tf_w]
+#     temp_ice_arr = [Ti_init]
+#     temp_is_arr = [Tis_new]
+#     temp_snow_arr = [Ts_init]
+#     temp_sa_arr = [Tsa_new]
+#     rho_ice_arr = [[rho_i]*len(dzi_init)]
+#     snow_filter = [sum(dzs_init) >= snow_thickness_threshold]
     
     while time < time_end:
         
@@ -1042,7 +1090,7 @@ def main_process(time_step, time_end,
                     Tsa_new = Ta(time)
                     Ts_new = Tis_new + np.arange(0.5, Ns)/Ns * (Tsa_new - Tis_new)
                     
-            snow_filter.append(False)
+            process.snow_presence_history = np.append(process.snow_presence_history, False)
             
         else:
             print('Time {:.1f} h.: Snow-ice freezing...'.format(time/3600))
@@ -1067,17 +1115,16 @@ def main_process(time_step, time_end,
                              p(time), u_a(time)
                             )
                 
-            snow_filter.append(True)
+            process.snow_presence_history = np.append(process.snow_presence_history, True)
 
-        dzi_arr.append(dzi_new.copy())
-        dzs_arr.append(dzs_new.copy())
-        timeline.append(time)
-        temp_oi_arr.append(Tf_w)
-        temp_ice_arr.append(Ti_new.copy())
-        temp_is_arr.append(Tis_new)
-        temp_snow_arr.append(Ts_new.copy())
-        temp_sa_arr.append(Tsa_new)
-        rho_ice_arr.append([rho_i]*len(dzi_init))
+        process.ice_dz_history = np.append(process.ice_dz_history, [dzi_new.copy()], axis=0)
+        process.snow_dz_history = np.append(process.snow_dz_history, [dzs_new.copy()], axis=0)
+        process.timeline = np.append(process.timeline, time)
+        process.oi_temp_history = np.append(process.oi_temp_history, Tf_w)
+        process.ice_temp_history = np.append(process.ice_temp_history, [Ti_new.copy()], axis=0)
+        process.is_temp_history = np.append(process.is_temp_history, Tis_new)
+        process.snow_temp_history = np.append(process.snow_temp_history, [Ts_new.copy()], axis=0)
+        process.sa_temp_history = np.append(process.sa_temp_history, Tsa_new)
+        process.ice_density_history = np.append(process.ice_density_history, [[rho_i]*len(dzi_init)], axis=0)
     
-    return dzi_arr, dzs_arr, timeline, temp_oi_arr, temp_ice_arr, temp_is_arr, temp_snow_arr, temp_sa_arr,\
-           rho_ice_arr, snow_filter
+    return process

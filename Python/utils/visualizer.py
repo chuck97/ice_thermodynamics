@@ -12,8 +12,9 @@ matplotlib.rcParams['animation.embed_limit'] = 5000
 plt.rcParams["animation.html"] = "jshtml"
 import itertools
 
-def get_Z(dzi, dzs, rho_i, rho_s, rho_w):
+def get_Z(process, rho_s, rho_w):
     
+    dzi, dzs, rho_i = process.ice_dz_history, process.snow_dz_history, process.ice_density_history
     
     bottomlines = np.array([(-np.dot(dzi_t, rho_i_t) - rho_s*sum(dzs_t))/rho_w \
                             for dzi_t, dzs_t, rho_i_t in zip(dzi, dzs, rho_i)])
@@ -28,97 +29,115 @@ def get_Z(dzi, dzs, rho_i, rho_s, rho_w):
     
     return Z_i, Z_s
 
-def animate(dz_ice_arr, dz_snow_arr,
-            temp_oi, temp_ice, temp_is, temp_snow, temp_sa,
-            time_arr,
-            rho_ice_arr, rho_water, rho_snow,
-            has_snow_filter,
-            clip_start=0, clip_end=-2,
+def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
+    new_cmap = LinearSegmentedColormap.from_list(
+        'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
+        cmap(np.linspace(minval, maxval, n)))
+    return new_cmap
+
+def animate(processes,
+            rho_water, rho_snow,
+            clip_start=None, clip_end=None,
             t_min=None, t_max=None, cmap=None, savepath=None):
     
-    dz_ice_arr = np.array(dz_ice_arr)
-    dz_snow_arr = np.array(dz_snow_arr)
-    temp_oi = np.array(temp_oi)
-    temp_ice = np.array(temp_ice)
-    temp_is = np.array(temp_is)
-    temp_snow = np.array(temp_snow)
-    temp_sa = np.array(temp_sa)
-    time_arr = np.array(time_arr)
-    rho_ice_arr = np.array(rho_ice_arr)
-    
     def run(data):
+        
+#         print(len(data))
+#         for i, elem in enumerate(data):
+#             print(i, elem, len(elem))
 
-        Z_ice_line, Z_snow_line,\
-        T_oi, T_ice, T_is, T_snow, T_sa,\
-        time,\
-        rho_ice_line, rho_water,\
-        has_snow = data
+        Z_ice_line_procs, Z_snow_line_procs, proc_data = data
         
-        T_ice_full = np.concatenate(([T_oi], T_ice, [T_is]))
+        for Z_ice_line, Z_snow_line, \
+            (_, _,
+             time,
+             T_oi, T_ice, T_is, T_snow, T_sa,
+             rho_ice_line, has_snow), \
+            line_ice, line_snow, markers in zip(Z_ice_line_procs, Z_snow_line_procs, proc_data,
+                                                lines_ice, lines_snow, markers_ice):
         
-        if has_snow:
-            T_snow_full = np.concatenate(([T_is], T_snow, [T_sa]))
-            line_snow.set_data(T_snow_full, Z_snow_line)
-        else:
-            line_snow.set_data([], [])
-        
-        points_ice = [[[T, Z]] for T, Z in zip(T_ice_full, Z_ice_line)]
-        segments_ice = np.concatenate([points_ice[:-1], points_ice[1:]], axis=1)
-        line_ice.set_segments(segments_ice)
-        line_ice.set_array(T_ice_full)             
-        markers.set_offsets([[T, Z] for T, Z in zip(T_ice_full, Z_ice_line)])
-        markers.set_array(T_ice_full)
-        ax.set_title('Time: %.2f hours'%(time/3600), size=20)
-    #     ax.set_yticks(np.insert(-dz_ice_arr.cumsum(), 0, 0))
+            T_ice_full = np.concatenate(([T_oi], T_ice, [T_is]))
 
-        return line_ice, line_snow, markers
-    
-    
-    Z_i, Z_s = get_Z(dz_ice_arr, dz_snow_arr, rho_ice_arr, rho_snow, rho_water)
-    z_min = min(Z_i[:, 0])
-    z_max = max(Z_s[:, -1])
-    temp_min = min(temp_arr.min() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa] if temp_arr.size > 0)
-    temp_max = max(temp_arr.max() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa] if temp_arr.size > 0)
-     
-    t_min = (t_min if t_min is not None else temp_min)
-    t_max = (t_max if t_max is not None else temp_max)
-    
-    if cmap is None:
-        
-        cdict = {'red':  [[0.0,  0.0, 0.0],
-                  [1.0,  0.6, 0.6]],
-         'green':  [[0.0,  0.2, 0.2],
-                    [1.0,  0.85, 0.85]],
-         'blue':  [[0.0,  0.5, 0.5],
-                   [1.0,  1.0, 1.0]]}
-        cmap = LinearSegmentedColormap('MyCmap', segmentdata=cdict)
+            if has_snow:
+                T_snow_full = np.concatenate(([T_is], T_snow, [T_sa]))
+                line_snow.set_data(T_snow_full, Z_snow_line)
+            else:
+                line_snow.set_data([], [])
 
-    fig = plt.figure(figsize=(15, 10))
+            points_ice = [[[T, Z]] for T, Z in zip(T_ice_full, Z_ice_line)]
+            segments_ice = np.concatenate([points_ice[:-1], points_ice[1:]], axis=1)
+            line_ice.set_segments(segments_ice)
+            line_ice.set_array(T_ice_full)             
+            markers.set_offsets([[T, Z] for T, Z in zip(T_ice_full, Z_ice_line)])
+            markers.set_array(T_ice_full)
+            ax.set_title('Time: %.2f hours'%(time/3600), size=20)
+    #     ax.set_yticks(np.insert(-process.ice_dz_history.cumsum(), 0, 0))
+
+        return lines_ice + lines_snow + markers_ice
+    
+    if clip_end:
+        clip_end += 1
+    frames_count = (clip_end if clip_end else len(processes[0].timeline) + 1) - (clip_start if clip_start else 0)
+    
+    all_Z_i = []
+    all_Z_s = []
+    for process in processes:
+        Z_i, Z_s = get_Z(process, rho_snow, rho_water)
+        all_Z_i.append(Z_i)
+        all_Z_s.append(Z_s)
+    z_min = min([Z_i[:, 0].min() for Z_i in all_Z_i])
+    z_max = max([Z_s[:, -1].max() for Z_s in all_Z_s])
+    temp_pairs = [(process.get_temp('min'), process.get_temp('max')) for process in processes]
+    t_min = (t_min if t_min is not None else min(temp_pair[0] for temp_pair in temp_pairs))
+    t_max = (t_max if t_max is not None else max(temp_pair[1] for temp_pair in temp_pairs))
+    
+    cmaps = ['Blues', 'Purples', 'Greens', 'cool', 'winter'] 
+        
+#     if cmap is None:
+        
+#         cdict = {'red':  [[0.0, 0.0, 0.0],
+#                           [1.0, 0.6, 0.6]],
+#                  'green':  [[0.0, 0.2, 0.2],
+#                             [1.0, 0.85, 0.85]],
+#                  'blue':  [[0.0, 0.5, 0.5],
+#                            [1.0, 1.0, 1.0]]}
+#         cmap = LinearSegmentedColormap('MyCmap', segmentdata=cdict)
+
+    fig = plt.figure(figsize=(15, 15))
     ax = fig.add_subplot(xlim=(t_min - (t_max - t_min)*0.1, t_max + (t_max - t_min)*0.1),
                          ylim=(z_min - (z_max - z_min)*0.1, z_max + (z_max - z_min)*0.1))
-    norm = plt.Normalize(t_max, t_min)
-    lc = LineCollection([], linewidths=3, cmap=cmap, norm=norm, animated=True)
-    line_ice = ax.add_collection(lc)
-    line_snow, = ax.plot([], [], color='grey', lw=3, marker='o', animated=True)
-    markers = ax.scatter([], [], s=60, animated=True)
-    markers.set_cmap(cmap)
+    lines_ice = []
+    markers_ice = []
+    lines_snow = []
+    for i, temp_pair in enumerate(temp_pairs):
+        norm = plt.Normalize(*temp_pair)
+        cmap = truncate_colormap(plt.get_cmap(cmaps[i%len(cmaps)]), 0.3, 1)
+        lc = LineCollection([], linewidths=3, cmap=cmap, norm=norm, animated=True)
+        line_ice = ax.add_collection(lc)
+        lines_ice.append(line_ice)
+        markers = ax.scatter([], [], s=60, animated=True)
+        markers.set_cmap(cmap)
+        markers_ice.append(markers)
+        line_snow, = ax.plot([], [], color='grey', lw=3, marker='o', animated=True)
+        lines_snow.append(line_snow)
     ax.axhline(ls='--', lw=3, color='navy')
     ax.set_xlabel(r'T, $^o C$', size=20)
     ax.set_ylabel('Z, m', size=20)
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
     ax.tick_params(axis='both', labelsize=15)
     ax.grid()
-    fig.colorbar(line_ice)
+
+    pad = 0
+    for i, line_ice in enumerate(lines_ice[::-1]):
+        cbar = fig.colorbar(line_ice, orientation='horizontal', pad=pad)
+        cbar.ax.set_xlabel('process %d'%(len(lines_ice)-i), size=15)
+        cbar.ax.tick_params(labelsize=15)
+        pad += 0.08
         
-    animation = anim.FuncAnimation(fig, run, zip(Z_i[clip_start:clip_end+1], Z_s[clip_start:clip_end+1],
-                                                 temp_oi[clip_start:clip_end+1], temp_ice[clip_start:clip_end+1], 
-                                                 temp_is[clip_start:clip_end+1], temp_snow[clip_start:clip_end+1], 
-                                                 temp_sa[clip_start:clip_end+1],
-                                                 time_arr[clip_start:clip_end+1],
-                                                 rho_ice_arr[clip_start:clip_end+1], 
-                                                 [rho_water]*dz_ice_arr[clip_start:clip_end+1].shape[0],
-                                                 has_snow_filter[clip_start:clip_end+1]),
-                                   save_count=dz_ice_arr[clip_start:clip_end+1].shape[0], interval=30, blit=True)
+    animation = anim.FuncAnimation(fig, run, zip(zip(*[Z_i[clip_start:clip_end] for Z_i in all_Z_i]),
+                                                 zip(*[Z_s[clip_start:clip_end] for Z_s in all_Z_s]),
+                                                 zip(*[process.get_zip(clip_start, clip_end) for process in processes])),
+                                   save_count=frames_count, interval=30, blit=True)
     
     if savepath:
         animation.save(savepath)
@@ -141,28 +160,16 @@ def timeseries_img(dz_ice_arr, dz_snow_arr,
 #                                  0.5019607843137255,
 #                                  0.5019607843137255,
 #                                  1.0],
-                   y_points=50, max_aspect=0.66, x_ticks=11, y_ticks=6,
+                   y_points=50, x_ticks=11, y_ticks=6,
                    t_min=None, t_max=None,
                    cmap_ice='Blues', cmap_snow='Greys', color_empty='black',
                    savepath=None):
-
-    dz_ice_arr = np.array(dz_ice_arr)
-    dz_snow_arr = np.array(dz_snow_arr)
-    temp_oi = np.array(temp_oi)
-    temp_ice = np.array(temp_ice)
-    temp_is = np.array(temp_is)
-    temp_snow = np.array(temp_snow)
-    temp_sa = np.array(temp_sa)
-    time_arr = np.array(time_arr)
-    rho_ice_arr = np.array(rho_ice_arr)
 
     Z_i, Z_s = get_Z(dz_ice_arr, dz_snow_arr, rho_ice_arr, rho_snow, rho_water)
     z_min = min(Z_i[:, 0])
     z_max = max(Z_s[:, -1])
     temp_min = min(temp_arr.min() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa] if temp_arr.size > 0)
     temp_max = max(temp_arr.max() for temp_arr in [temp_oi, temp_ice, temp_is, temp_snow, temp_sa] if temp_arr.size > 0)
-    
-    y_points = min(y_points, int(max_aspect*len(time_arr)))
     
     vmin = (t_min if t_min is not None else temp_min)
     vmax = (t_max if t_max is not None else temp_max)
@@ -185,13 +192,13 @@ def timeseries_img(dz_ice_arr, dz_snow_arr,
     snow_masked = np.ma.masked_array(temp_mesh, snow_filter)
     empty_mask = np.ma.masked_array(temp_mesh, ice_filter & snow_filter)
 
-    fig = plt.figure(figsize=(15, 17))
+    fig = plt.figure(figsize=(20, 20))
     ax = fig.add_subplot()
     curr_cmap = mcm.get_cmap().copy()
     curr_cmap.set_bad(color_empty)
-    img_empty = ax.imshow(empty_mask, cmap=curr_cmap)
-    img_ice = ax.imshow(ice_masked, cmap=cmap_ice)
-    img_snow = ax.imshow(snow_masked, cmap=cmap_snow)
+    img_empty = ax.imshow(empty_mask, cmap=curr_cmap, aspect='auto')
+    img_ice = ax.imshow(ice_masked, cmap=cmap_ice, aspect='auto')
+    img_snow = ax.imshow(snow_masked, cmap=cmap_snow, aspect='auto')
     ax.set_xlabel('t, hours', size=20)
     ax.set_ylabel('Z, m', size=20)
     ax.set_xticks(np.linspace(0, len(time_arr) - 1, x_ticks, dtype=int))
