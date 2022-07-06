@@ -34,13 +34,6 @@ kappa_s = 10
 albedo_s = 0.8
 i0_s = 0.08
 
-# == функции общие == 
-F_lw = lambda T_atm: sigma*(T_atm + 273.15)**4
-F_su = lambda T, T_atm, albedo, i0, F_sw, u_a: (1 - albedo)*(1 - i0)*F_sw\
-                                             + rho_a*c_pa*C_sh*u_a*(T_atm - T)\
-                                             + emissivity*(F_lw(T_atm) - sigma*(T + 273.15)**4)
-F_bt = lambda T, T_ocn: 0.0
-
 # == функции для льда ==
 Tf_i = lambda S_i: -mu*S_i
 k_i = lambda T, S_i: rho_i/917.0 * (2.11 - 0.011*T + (0.09*S_i/T if T != 0 else 0))
@@ -606,11 +599,10 @@ def T_from_BC(T_cells, dz_cells, salinity_cells,
         return secant_solver(nonlin_func, T_cells[0]-10.0, Tf_i(salinity_cells[0])+10.0)[0] 
     
     
-def ice_freezing(Ti, Tia, To, Ta, F_sw,
+def ice_freezing(Ti, Tia, F_atm, F_ocn, F_sw,
                  dzi, salinity,
                  N_pseudoiter,
                  time_step,
-                 u_a,
                  tol=1e-6,
                  err_func=lambda T_old, T_prev, T_new: \
                  np.linalg.norm(T_new - T_prev)/np.linalg.norm(T_old)
@@ -642,7 +634,7 @@ def ice_freezing(Ti, Tia, To, Ta, F_sw,
                              dzi_new,
                              salinity_cells,
                              k_i(Tf_w, salinity_cells[0]),
-                             F_bt(Tf_w, To), 
+                             F_ocn(Tf_w), 
                              L_i,
                              is_surface=False
                             )
@@ -651,7 +643,7 @@ def ice_freezing(Ti, Tia, To, Ta, F_sw,
         Tia_new = T_from_BC(Ti_prev, dzi_new,
                             salinity_cells,
                             k_i(Tia_prev, salinity_cells[-1]), 0.0,
-                            lambda T: F_su(T, Ta, albedo_i, i0_i, F_sw, u_a), L_i,
+                            F_atm, L_i,
                             is_surface=True
                            )
         
@@ -695,11 +687,10 @@ def ice_freezing(Ti, Tia, To, Ta, F_sw,
     return Ti_new, Tia_new, dzi_new
 
 
-def ice_melting(Ti, Tia_old, To, Ta, F_sw,
+def ice_melting(Ti, Tia_old, F_atm, F_ocn, F_sw,
                 dzi, salinity,
                 N_pseudoiter,
                 time_step,
-                u_a,
                 tol=1e-6,
                 err_func=lambda T_old, T_prev, T_new: \
                 np.linalg.norm(T_new - T_prev)/np.linalg.norm(T_old)):
@@ -725,7 +716,7 @@ def ice_melting(Ti, Tia_old, To, Ta, F_sw,
                              dzi_new,
                              salinity_cells,
                              k_i(Tf_w, salinity_cells[0]),
-                             F_bt(Tf_w, To), 
+                             F_ocn(Tf_w), 
                              L_i,
                              is_surface=False)
         
@@ -734,7 +725,7 @@ def ice_melting(Ti, Tia_old, To, Ta, F_sw,
                              dzi_new,
                              salinity_cells,
                              k_i(Tf_i(salinity_cells[-1]), salinity_cells[-1]),
-                             F_su(Tf_i(salinity_cells[-1]), Ta, albedo_i, i0_i, F_sw, u_a),
+                             F_atm(Tf_i(salinity_cells[-1])),
                              L_i,
                              is_surface=True,
                              time_step=time_step)
@@ -768,11 +759,11 @@ def ice_melting(Ti, Tia_old, To, Ta, F_sw,
     return Ti_new, dzi_new
 
 
-def snow_ice_freezing(Ti, Ts, Tis, Tsa, To, Ta, F_sw, 
+def snow_ice_freezing(Ti, Ts, Tis, Tsa, Ta, F_ocn, F_atm, F_sw,
                       dzi, dzs, salinity,
                       N_pseudoiter,
                       time_step,
-                      p, u_a,
+                      p,
                       tol=1e-6,
                       err_func=lambda T_old, T_prev, T_new: \
                       np.linalg.norm(T_new - T_prev)/np.linalg.norm(T_old)
@@ -812,7 +803,7 @@ def snow_ice_freezing(Ti, Ts, Tis, Tsa, To, Ta, F_sw,
                              dzi_new,
                              salinity_cells,
                              k_i(Tf_w, salinity_cells[0]),
-                             F_bt(Tf_w, To), 
+                             F_ocn(Tf_w), 
                              L_i,
                              is_surface=False
                             )
@@ -821,7 +812,7 @@ def snow_ice_freezing(Ti, Ts, Tis, Tsa, To, Ta, F_sw,
         Tsa_new = T_from_BC(Ts_prev, dzs_new,
                             salinity_cells,
                             k_s(Tsa_prev, salinity_cells[-1]), 0.0,
-                            lambda T: F_su(T, Ta, albedo_s, i0_s, F_sw, u_a), L_s,
+                            F_atm, L_s,
                             is_surface=True,
                             rho=rho_s
                            )
@@ -890,11 +881,11 @@ def snow_ice_freezing(Ti, Ts, Tis, Tsa, To, Ta, F_sw,
     return Ti_new, Ts_new, Tis_new, Tsa_new, dzi_new, dzs_new
 
 
-def snow_melting(Ti, Ts, Tis, Tsa_old, To, Ta, F_sw,
+def snow_melting(Ti, Ts, Tis, Tsa_old, Ta, F_ocn, F_atm, F_sw,
                  dzi, dzs, salinity,
                  N_pseudoiter,
                  time_step,
-                 p, u_a,
+                 p,
                  tol=1e-6,
                  err_func=lambda T_old, T_prev, T_new: \
                  np.linalg.norm(T_new - T_prev)/np.linalg.norm(T_old)):
@@ -931,7 +922,7 @@ def snow_melting(Ti, Ts, Tis, Tsa_old, To, Ta, F_sw,
                              dzi_new,
                              salinity_cells,
                              k_i(Tf_w, salinity_cells[0]),
-                             F_bt(Tf_w, To), 
+                             F_ocn(Tf_w), 
                              L_i,
                              is_surface=False)
         
@@ -940,7 +931,7 @@ def snow_melting(Ti, Ts, Tis, Tsa_old, To, Ta, F_sw,
                              dzs_new,
                              salinity_cells,
                              k_s(0.0, salinity_cells[-1]),
-                             F_su(0.0, Ta, albedo_s, i0_s, F_sw, u_a),
+                             F_atm(0.0),
                              L_s,
                              is_surface=True,
                              rho=rho_s,
@@ -1004,7 +995,10 @@ def main_process(time_step, time_end,
                  dzi_init, dzs_init,
                  salinity,
                  snow_thickness_threshold,
-                 To, Ta, p, F_sw, u_a,
+                 Ta, p,
+                 F_atm_ice, F_atm_snow,
+                 F_sw,
+                 F_ocn,
                  Ns=None
                 ):
     
@@ -1034,18 +1028,7 @@ def main_process(time_step, time_end,
                       [time],
                       [Tf_w], [Ti_init], [Tis_init], [Ts_init], [Tsa_init],
                       [[rho_i]*len(dzi_init)],
-                      [sum(dzs_init) >= snow_thickness_threshold]
-                     )
-#     dzi_arr = [dzi_init]
-#     dzs_arr = [dzs_init]
-#     timeline = [time]
-#     temp_oi_arr = [Tf_w]
-#     temp_ice_arr = [Ti_init]
-#     temp_is_arr = [Tis_new]
-#     temp_snow_arr = [Ts_init]
-#     temp_sa_arr = [Tsa_new]
-#     rho_ice_arr = [[rho_i]*len(dzi_init)]
-#     snow_filter = [sum(dzs_init) >= snow_thickness_threshold]
+                      [sum(dzs_init) >= snow_thickness_threshold])
     
     while time < time_end:
         
@@ -1060,23 +1043,28 @@ def main_process(time_step, time_end,
         
         if sum(dzs_new) < snow_thickness_threshold:
             print('Time {:.1f} h.: Ice freezing...'.format(time/3600))
-            Ti_new, Tis_new, dzi_new = ice_freezing(Ti_old, Tis_old, To(time), Ta(time), F_sw(time),
+            Ti_new, Tis_new, dzi_new = ice_freezing(Ti_old,
+                                                    Tis_old,
+                                                    lambda T: F_atm_ice(T, time),
+                                                    lambda T: F_ocn(T, time),
+                                                    F_sw(time),
                                                     dzi_old,
                                                     salinity_cells,
                                                     N_pseudoiter,
-                                                    time_step,
-                                                    u_a(time)
-                                                   )
+                                                    time_step)
+            
             if Tis_new >= Tf_i(salinity_cells[-1]):
                 print('Time {:.1f} h.: Ice melting...'.format(time/3600))
                 Tis_new = Tf_i(salinity_cells[-1])
-                Ti_new, dzi_new = ice_melting(Ti_old, Tis_old, To(time), Ta(time), F_sw(time),
+                Ti_new, dzi_new = ice_melting(Ti_old,
+                                              Tis_old,
+                                              lambda T: F_atm_ice(T, time),
+                                              lambda T: F_ocn(T, time),
+                                              F_sw(time),
                                               dzi_old,
                                               salinity_cells,
                                               N_pseudoiter,
-                                              time_step,
-                                              u_a(time)
-                                             )
+                                              time_step)
                 
             # присыпем чуть снега сверху, если он падает
             if Ta(time) < 0:
@@ -1095,25 +1083,29 @@ def main_process(time_step, time_end,
         else:
             print('Time {:.1f} h.: Snow-ice freezing...'.format(time/3600))
             Ti_new, Ts_new, Tis_new, Tsa_new, dzi_new, dzs_new =\
-            snow_ice_freezing(Ti_old, Ts_old, Tis_old, Tsa_old, To(time), Ta(time), F_sw(time),
+            snow_ice_freezing(Ti_old, Ts_old, Tis_old, Tsa_old, Ta(time),
+                              lambda T: F_atm_snow(T, time),
+                              lambda T: F_ocn(T, time),
+                              F_sw(time),
                               dzi_old, dzs_old,
                               salinity_cells,
                               N_pseudoiter,
                               time_step,
-                              p(time), u_a(time)
-                             )
+                              p(time))
             
             if Tsa_new >= 0:
                 print('Time {:.1f} h.: Snow-ice melting...'.format(time/3600))
                 Tsa_new = 0
                 Ti_new, Ts_new, Tis_new, dzi_new, dzs_new =\
-                snow_melting(Ti_old, Ts_old, Tis_old, Tsa_old, To(time), Ta(time), F_sw(time),
+                snow_melting(Ti_old, Ts_old, Tis_old, Tsa_old, Ta(time),
+                             lambda T: F_atm_snow(T, time),
+                             lambda T: F_ocn(T, time),
+                             F_sw(time),
                              dzi_old, dzs_old,
                              salinity_cells,
                              N_pseudoiter,
                              time_step,
-                             p(time), u_a(time)
-                            )
+                             p(time))
                 
             process.snow_presence_history = np.append(process.snow_presence_history, True)
 
