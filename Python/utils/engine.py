@@ -759,7 +759,7 @@ def ice_melting(Ti, Tia_old, F_atm, F_ocn, F_sw,
     return Ti_new, dzi_new
 
 
-def snow_ice_freezing(Ti, Ts, Tis, Tsa, Ta, F_ocn, F_atm, F_sw,
+def snow_ice_freezing(Ti, Ts, Tis, Tsa, Ta, F_atm, F_ocn, F_sw,
                       dzi, dzs, salinity,
                       N_pseudoiter,
                       time_step,
@@ -881,7 +881,7 @@ def snow_ice_freezing(Ti, Ts, Tis, Tsa, Ta, F_ocn, F_atm, F_sw,
     return Ti_new, Ts_new, Tis_new, Tsa_new, dzi_new, dzs_new
 
 
-def snow_melting(Ti, Ts, Tis, Tsa_old, Ta, F_ocn, F_atm, F_sw,
+def snow_melting(Ti, Ts, Tis, Tsa_old, Ta, F_atm, F_ocn, F_sw,
                  dzi, dzs, salinity,
                  N_pseudoiter,
                  time_step,
