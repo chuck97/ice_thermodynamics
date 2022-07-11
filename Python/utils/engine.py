@@ -63,6 +63,10 @@ class Process:
                  rho_ice_arr_init=np.array([]),
                  snow_filter_init=np.array([])):
         
+        print(len(dzi_arr_init), len(dzs_arr_init), len(timeline_init), len(temp_ice_arr_init) \
+           , len(temp_ice_arr_init), len(temp_is_arr_init), len(temp_snow_arr_init), len(temp_sa_arr_init) \
+           , len(rho_ice_arr_init), len(snow_filter_init))
+        
         assert len(dzi_arr_init) == len(dzs_arr_init) == len(timeline_init) == len(temp_ice_arr_init) \
             == len(temp_ice_arr_init) == len(temp_is_arr_init) == len(temp_snow_arr_init) == len(temp_sa_arr_init) \
             == len(rho_ice_arr_init) == len(snow_filter_init), "Lengths of init arrays are not equal!"
@@ -77,7 +81,7 @@ class Process:
         self.sa_temp_history = np.array(temp_sa_arr_init)
         self.ice_density_history = np.array(rho_ice_arr_init)
         self.snow_presence_history = np.array(snow_filter_init)
-        
+    
     def get_zip(self, clip_start=None, clip_end=None):
         return zip(self.ice_dz_history[clip_start:clip_end], self.snow_dz_history[clip_start:clip_end],
                    self.timeline[clip_start:clip_end],
@@ -96,6 +100,74 @@ class Process:
             return max(temp_arr.max() for temp_arr in temp_arrs if temp_arr.size)
         else:
             raise Exception("'mode' should be either 'min' or 'max'!")
+            
+def process_from_data(levels,
+                      temp_array, temp_ss, temp_is,
+                      h_ib, h_is, h_ss,
+                      dsigma_ice, dsigma_snow,
+                      timeline, rho_ice,
+                      snow_thickness_tol=1e-3):
+    
+    assert len(temp_array) == len(temp_ss) == len(temp_is) == len(h_ib) == len(h_is) == len(h_ss) == len(timeline), \
+           "Lenghts of input arrays should be equal!"
+    
+    # == Interpolating boundary values ==
+    mesh_Z = np.array([levels]*len(temp_array))
+    inds_ib = np.searchsorted(-mesh_Z[0], -h_ib)
+    inds_is = np.searchsorted(-mesh_Z[0], -h_is, side='right')
+    has_snow = (abs(h_is - h_ib) > 1e-3)
+    
+    Tib_interp = [(data[ind-1]*(Z[ind] - z_i) + data[ind]*(z_i - Z[ind-1])) / (Z[ind] - Z[ind-1]) \
+                  for z_i, Z, data, ind \
+                  in zip(h_ib, mesh_Z, temp_array, inds_ib)]
+    Tis_interp = [(data[ind-1]*(Z[ind] - z_f) + data[ind]*(z_f - Z[ind-1])) / (Z[ind] - Z[ind-1]) \
+                  if snow else Tis 
+                  for z_f, Tis, snow, Z, data, ind \
+                  in zip(h_is, temp_is, has_snow, mesh_Z, temp_array, inds_is)]
+    
+    # == Formation of mesh and temperature arrays for snow and ice ==
+    filter_ice = (h_ib.reshape(-1, 1) < mesh_Z) & (mesh_Z < h_is.reshape(-1, 1))
+    filter_snow = (h_is.reshape(-1, 1) < mesh_Z) & (mesh_Z < h_ss.reshape(-1, 1))
+    
+    Z_ice = [np.concatenate(([surf], line_ice[filt_ice], [base])) \
+             for surf, line_ice, filt_ice, base \
+             in zip(h_is, mesh_Z, filter_ice, h_ib)]
+    Z_snow = [np.concatenate(([surf], line_snow[filt_snow], [base])) \
+              for surf, line_snow, filt_snow, base \
+              in zip(h_ss, mesh_Z, filter_snow, h_is)]
+    
+    temp_ice = [np.concatenate(([surf], line_ice[filt_ice], [base])) \
+                for surf, line_ice, filt_ice, base \
+                in zip(Tis_interp, temp_array, filter_ice, Tib_interp)]
+    temp_snow = [np.concatenate(([surf], line_ice[filt_ice], [base])) \
+                 for surf, line_ice, filt_ice, base \
+                 in zip(temp_ss, temp_array, filter_snow, Tis_interp)]
+    
+    # == Interpolating internal nodes into the new mesh ==
+    sigma_ice_nodes = np.concatenate(([0.0], dsigma_ice.cumsum()))
+    sigma_ice_centers = (sigma_ice_nodes[:-1] + sigma_ice_nodes[1:])/2
+    Z_points_ice = [Z_ice_line[-1] + sigma_ice_centers*(Z_ice_line[0] - Z_ice_line[-1]) for Z_ice_line in Z_ice]
+    T_points_ice = [np.interp(Z_points_ice_line, Z_ice_line[::-1], temp_ice_line[::-1]) \
+                    for Z_points_ice_line, Z_ice_line, temp_ice_line \
+                    in zip(Z_points_ice, Z_ice, temp_ice)]
+    
+    sigma_snow_nodes = np.concatenate(([0.0], dsigma_snow.cumsum()))
+    sigma_snow_centers = (sigma_snow_nodes[:-1] + sigma_snow_nodes[1:])/2
+    Z_points_snow = [Z_snow_line[-1] + sigma_snow_centers*(Z_snow_line[0] - Z_snow_line[-1]) if snow else [] \
+                     for Z_snow_line, snow in zip(Z_snow, has_snow)]
+    T_points_snow = [np.interp(Z_points_snow_line, Z_snow_line[::-1], temp_snow_line[::-1]) if snow else [] \
+                    for Z_points_snow_line, Z_snow_line, temp_snow_line, snow \
+                    in zip(Z_points_snow, Z_snow, temp_snow, has_snow)]
+    
+    return Process(dzi_arr_init=dsigma_ice*(h_is - h_ib).reshape(-1, 1),
+                   dzs_arr_init=np.array([dsigma_snow*(hs - hi) if snow else [] \
+                                          for hs, hi, snow \
+                                          in zip(h_ss, h_is, has_snow)]),
+                   timeline_init=timeline,
+                   temp_oi_arr_init=Tib_interp, temp_ice_arr_init=T_points_ice, temp_is_arr_init=Tis_interp,
+                   temp_snow_arr_init=T_points_snow, temp_sa_arr_init=temp_ss,
+                   rho_ice_arr_init=np.ones((len(timeline), len(dsigma_ice)))*rho_ice,
+                   snow_filter_init=has_snow)
 
 def secant_solver(f, x0, x1, tol=1e-9, max_it=1000):
     x_new = x1
