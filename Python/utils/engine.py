@@ -63,10 +63,6 @@ class Process:
                  rho_ice_arr_init=np.array([]),
                  snow_filter_init=np.array([])):
         
-        print(len(dzi_arr_init), len(dzs_arr_init), len(timeline_init), len(temp_ice_arr_init) \
-           , len(temp_ice_arr_init), len(temp_is_arr_init), len(temp_snow_arr_init), len(temp_sa_arr_init) \
-           , len(rho_ice_arr_init), len(snow_filter_init))
-        
         assert len(dzi_arr_init) == len(dzs_arr_init) == len(timeline_init) == len(temp_ice_arr_init) \
             == len(temp_ice_arr_init) == len(temp_is_arr_init) == len(temp_snow_arr_init) == len(temp_sa_arr_init) \
             == len(rho_ice_arr_init) == len(snow_filter_init), "Lengths of init arrays are not equal!"
