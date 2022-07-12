@@ -97,6 +97,9 @@ class Process:
         else:
             raise Exception("'mode' should be either 'min' or 'max'!")
             
+    def get_length(self):
+        return self.timeline.size
+            
 def process_from_data(levels,
                       temp_array, temp_ss, temp_is,
                       h_ib, h_is, h_ss,
