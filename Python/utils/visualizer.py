@@ -184,7 +184,7 @@ def timeseries_img(process, rho_water, rho_snow,
     snow_masked = np.ma.masked_array(temp_mesh, snow_filter)
     empty_mask = np.ma.masked_array(temp_mesh, ice_filter & snow_filter)
 
-    fig = plt.figure(figsize=(20, 20))
+    fig = plt.figure(figsize=(40, 20))
     ax = fig.add_subplot()
     curr_cmap = mcm.get_cmap().copy()
     curr_cmap.set_bad(color_empty)
