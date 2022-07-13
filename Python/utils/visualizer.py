@@ -11,6 +11,7 @@ from matplotlib.cm import ScalarMappable
 matplotlib.rcParams['animation.embed_limit'] = 5000
 plt.rcParams["animation.html"] = "jshtml"
 import itertools
+from utils.engine import rho_s, rho_w
 
 def get_Z(process, rho_s, rho_w):
     
@@ -36,7 +37,7 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     return new_cmap
 
 def animate(processes,
-            rho_water, rho_snow,
+            rho_water=rho_w, rho_snow=rho_s,
             clip_start=None, clip_end=None,
             t_min=None, t_max=None, cmap=None, savepath=None):
     
@@ -147,7 +148,7 @@ def paint_snow(arr, num_of_cells, snow_color):
     return arr
 
 
-def timeseries_img(process, rho_water, rho_snow,
+def timeseries_img(process, rho_water=rho_w, rho_snow=rho_s,
                    y_points=50, x_ticks=11, y_ticks=6,
                    t_min=None, t_max=None,
                    cmap_ice='Blues', cmap_snow='Greys', color_empty='black',

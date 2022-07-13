@@ -4,18 +4,25 @@ import matplotlib.pyplot as plt
 # == общие ==
 mu = 0.054
 sigma = 5.67e-8
+T0 = 273.16
 emissivity = 0.99
+C_sh = 1.0e-3
+C_lh = 1.0e-3
+p_ms = 1e-6/3.6 # перевод осадков из миллиметров в час в метры в секунду
 
 # == воздух ==
 rho_a = 1.28
 c_pa = 1.01e3
-C_sh = 1.0e-3
+P_surf = 1013.25
 
 # == вода ==
 c_w = 3.99e3
+c_pw = 4.17e3
 rho_w = 1023.0
 S_w = 30.0
 Tf_w = -mu*S_w
+c1_w = 17.27
+c2_w = 35.86
 
 # == лёд ==
 c0_i = 2.06e3
@@ -24,12 +31,15 @@ L0_i = 3.34e5
 kappa_i = 1.5
 albedo_i = 0.6
 i0_i = 0.15
+c1_i = 21.87
+c2_i = 7.66
 
 # == снег ==
 c0_s = 2.06e3
 rho_s = 330.0
 k0_s = 0.31
-L0_s = 3.33e5
+L_f0 = 3.33e5
+L_s0 = 2.83e6
 kappa_s = 10
 albedo_s = 0.8
 i0_s = 0.08
@@ -44,8 +54,8 @@ L_i = lambda T, S_i: c0_i*(T - Tf_i(S_i)) - L0_i*(1.0 - Tf_i(S_i)/T)
 # == функции для снега ==
 k_s = lambda T, S_s=0: k0_s
 c_s = lambda T, T_old, S_s=0: c0_s
-E_s = lambda T, S_s=0: c0_s*T - L0_s
-L_s = lambda T, S_s=0: c0_s*T - L0_s
+E_s = lambda T, S_s=0: c0_s*T - L_f0
+L_s = lambda T, S_s=0: c0_s*T - L_f0
 
 class Process:
     def __init__(self,
@@ -98,7 +108,7 @@ def process_from_data(levels,
                       h_ib, h_is, h_ss,
                       dsigma_ice, dsigma_snow,
                       timeline, rho_ice,
-                      snow_thickness_tol=1e-3):
+                      snow_thickness_threshold=1e-3):
     
     assert len(temp_array) == len(temp_ss) == len(temp_is) == len(h_ib) == len(h_is) == len(h_ss) == len(timeline), \
            "Lenghts of input arrays should be equal!"
@@ -107,7 +117,7 @@ def process_from_data(levels,
     mesh_Z = np.array([levels]*len(temp_array))
     inds_ib = np.searchsorted(-mesh_Z[0], -h_ib)
     inds_is = np.searchsorted(-mesh_Z[0], -h_is, side='right')
-    has_snow = (abs(h_ss - h_is) > 1e-3)
+    has_snow = (abs(h_ss - h_is) >= snow_thickness_threshold)
     
     Tib_interp = [(data[ind-1]*(Z[ind] - z_i) + data[ind]*(z_i - Z[ind-1])) / (Z[ind] - Z[ind-1]) \
                   for z_i, Z, data, ind \
@@ -175,6 +185,11 @@ def secant_solver(f, x0, x1, tol=1e-9, max_it=1000):
         x_old = temp
     
     if it == max_it:
+        X = np.linspace(x0, x1, 100)
+        plt.figure(figsize=(15, 10))
+        plt.plot(X, [f(x) for x in X])
+        plt.grid()
+        plt.show()
         raise Exception("secant solver won't converge!")
         
     return x_new, it
