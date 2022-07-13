@@ -84,9 +84,9 @@ class Process:
         temp_arrs = [self.oi_temp_history, self.ice_temp_history, self.is_temp_history,
                      self.snow_temp_history, self.sa_temp_history]
         if mode == 'min':
-            return min(temp_arr.min() for temp_arr in temp_arrs if temp_arr.size)
+            return min(np.nanmin(temp_arr) for temp_arr in temp_arrs if not np.isnan(temp_arr).all())
         elif mode == 'max':
-            return max(temp_arr.max() for temp_arr in temp_arrs if temp_arr.size)
+            return max(np.nanmax(temp_arr) for temp_arr in temp_arrs if not np.isnan(temp_arr).all())
         else:
             raise Exception("'mode' should be either 'min' or 'max'!")
             
@@ -107,7 +107,7 @@ def process_from_data(levels,
     mesh_Z = np.array([levels]*len(temp_array))
     inds_ib = np.searchsorted(-mesh_Z[0], -h_ib)
     inds_is = np.searchsorted(-mesh_Z[0], -h_is, side='right')
-    has_snow = (abs(h_is - h_ib) > 1e-3)
+    has_snow = (abs(h_ss - h_is) > 1e-3)
     
     Tib_interp = [(data[ind-1]*(Z[ind] - z_i) + data[ind]*(z_i - Z[ind-1])) / (Z[ind] - Z[ind-1]) \
                   for z_i, Z, data, ind \
@@ -145,19 +145,22 @@ def process_from_data(levels,
     
     sigma_snow_nodes = np.concatenate(([0.0], dsigma_snow.cumsum()))
     sigma_snow_centers = (sigma_snow_nodes[:-1] + sigma_snow_nodes[1:])/2
-    Z_points_snow = [Z_snow_line[-1] + sigma_snow_centers*(Z_snow_line[0] - Z_snow_line[-1]) if snow else [] \
+    Z_points_snow = [Z_snow_line[-1] + sigma_snow_centers*(Z_snow_line[0] - Z_snow_line[-1]) \
                      for Z_snow_line, snow in zip(Z_snow, has_snow)]
-    T_points_snow = [np.interp(Z_points_snow_line, Z_snow_line[::-1], temp_snow_line[::-1]) if snow else [] \
-                    for Z_points_snow_line, Z_snow_line, temp_snow_line, snow \
-                    in zip(Z_points_snow, Z_snow, temp_snow, has_snow)]
+    T_points_snow = [np.interp(Z_points_snow_line, Z_snow_line[::-1], temp_snow_line[::-1]) if snow\
+                     else np.array([np.nan]*len(dsigma_snow)) \
+                     for Z_points_snow_line, Z_snow_line, temp_snow_line, snow \
+                     in zip(Z_points_snow, Z_snow, temp_snow, has_snow)]
+    
+    print(np.array(dsigma_ice*(h_is - h_ib).reshape(-1, 1)))
+    print(np.array(dsigma_snow*(h_ss - h_is).reshape(-1, 1)))
     
     return Process(dzi_arr_init=dsigma_ice*(h_is - h_ib).reshape(-1, 1),
-                   dzs_arr_init=np.array([dsigma_snow*(hs - hi) if snow else [] \
-                                          for hs, hi, snow \
-                                          in zip(h_ss, h_is, has_snow)]),
+                   dzs_arr_init=dsigma_snow*(h_ss - h_is).reshape(-1, 1),
                    timeline_init=timeline,
                    temp_oi_arr_init=Tib_interp, temp_ice_arr_init=T_points_ice, temp_is_arr_init=Tis_interp,
-                   temp_snow_arr_init=T_points_snow, temp_sa_arr_init=temp_ss,
+                   temp_snow_arr_init=T_points_snow,
+                   temp_sa_arr_init=[temp if snow else np.nan for temp, snow in zip(temp_ss, has_snow)],
                    rho_ice_arr_init=np.ones((len(timeline), len(dsigma_ice)))*rho_ice,
                    snow_filter_init=has_snow)
 
@@ -1069,8 +1072,7 @@ def main_process(time_step, time_end,
                  Ta, p,
                  F_atm_ice, F_atm_snow,
                  F_sw,
-                 F_ocn,
-                 Ns=None
+                 F_ocn
                 ):
     
     time = 0.0
@@ -1092,8 +1094,7 @@ def main_process(time_step, time_end,
     
     salinity_cells = salinity
     
-    if Ns is None:
-        Ns = len(dzs_init)
+    Ns = len(dzs_init)
     
     process = Process([dzi_init], [dzs_init],
                       [time],
@@ -1142,12 +1143,17 @@ def main_process(time_step, time_end,
                 if sum(dzs_old) != 0:
                     dzs_new = Update_dz(dzs_old, 0.0, -p(time)*rho_w/rho_s, time_step)
                 else:
-                    dzs_new = np.full(len(dzs_old), time_step*p(time)*rho_w/rho_s/Ns)
+                    dzs_new = np.full(Ns, time_step*p(time)*rho_w/rho_s/Ns)
                     
-                if sum(dzs_new) > snow_thickness_threshold:
+                if sum(dzs_new) >= snow_thickness_threshold:
                     # инициализируем температуру появившегося снега
                     Tsa_new = Ta(time)
                     Ts_new = Tis_new + np.arange(0.5, Ns)/Ns * (Tsa_new - Tis_new)
+                    
+                else:
+                    # задаём профиль и и интерфейс пустыми
+                    Tsa_new = np.nan
+                    Ts_new = np.array([np.nan]*Ns)
                     
             process.snow_presence_history = np.append(process.snow_presence_history, False)
             

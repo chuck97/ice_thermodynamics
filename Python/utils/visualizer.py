@@ -211,3 +211,6 @@ def timeseries_img(process, rho_water, rho_snow,
     
     if savepath is not None:
         fig.savefig(savepath, bbox_inches='tight')
+
+        
+    return Z_i, Z_s
