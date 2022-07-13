@@ -1,2 +1,4 @@
 CMakeLists.txt
+Python/Validation/*
 Python/.ipynb_checkpoints/*
+Python/utils/__pycache__/*
