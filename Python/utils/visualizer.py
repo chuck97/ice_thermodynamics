@@ -38,7 +38,8 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
 def animate(processes,
             rho_water, rho_snow,
             clip_start=None, clip_end=None,
-            t_min=None, t_max=None, cmap=None, savepath=None):
+            t_min=None, t_max=None, cmap=None,
+            savepath=None, dpi=None):
     
     def run(data):
 
@@ -76,7 +77,8 @@ def animate(processes,
     
     if clip_end:
         clip_end += 1
-    frames_count = (clip_end if clip_end else len(processes[0].timeline) + 1) - (clip_start if clip_start else 0)
+    frames_count = (clip_end if clip_end else len(processes[0].timeline) + 1) \
+                 - (clip_start if clip_start else 0)
     
     all_Z_i = []
     all_Z_s = []
@@ -141,7 +143,7 @@ def animate(processes,
                                    save_count=frames_count, interval=30, blit=True)
     
     if savepath:
-        animation.save(savepath)
+        animation.save(savepath, dpi=dpi)
         
     return animation
     
