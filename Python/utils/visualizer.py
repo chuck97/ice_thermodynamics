@@ -164,7 +164,7 @@ def timeseries_img(process, rho_water, rho_snow,
     ice_filter = ((Z_i[:, [0]] > z_mesh) | (z_mesh >= Z_i[:, [-1]]))[:, ::-1].T
     snow_filter = ((Z_s[:, [0]] > z_mesh) | (z_mesh >= Z_s[:, [-1]]))[:, ::-1].T
     
-    temp_mesh = np.array([np.interp(x=np.linspace(z_min, z_max, y_points + 1),
+    temp_mesh = np.array([np.interp(x=Z_new,
                                     xp=np.concatenate((Z_i_line, (Z_s_line[1:] if has_snow else []))),
                                     fp=np.concatenate(([T_oi], T_i_line, [T_is],
                                                        (T_s_line if has_snow else []),
@@ -172,8 +172,8 @@ def timeseries_img(process, rho_water, rho_snow,
                                                       )),
                                     left=0.0, right=0.0
                                    ) \
-                          for Z_i_line, Z_s_line, T_oi, T_i_line, T_is, T_s_line, T_sa, has_snow \
-                          in zip(Z_i, Z_s,
+                          for Z_new, Z_i_line, Z_s_line, T_oi, T_i_line, T_is, T_s_line, T_sa, has_snow \
+                          in zip(z_mesh, Z_i, Z_s,
                                  process.oi_temp_history, process.ice_temp_history, process.is_temp_history,
                                  process.snow_temp_history, process.sa_temp_history,
                                  process.snow_presence_history
@@ -189,8 +189,8 @@ def timeseries_img(process, rho_water, rho_snow,
     curr_cmap = mcm.get_cmap().copy()
     curr_cmap.set_bad(color_empty)
     img_empty = ax.imshow(empty_mask, cmap=curr_cmap, aspect='auto')
-    img_ice = ax.imshow(ice_masked, cmap=cmap_ice, aspect='auto')
-    img_snow = ax.imshow(snow_masked, cmap=cmap_snow, aspect='auto')
+    img_ice = ax.imshow(ice_masked, cmap=cmap_ice, aspect='auto')#, interpolation='bilinear')
+    img_snow = ax.imshow(snow_masked, cmap=cmap_snow, aspect='auto')#, interpolation='bilinear')
     ax.set_xlabel('t, hours', size=20)
     ax.set_ylabel('Z, m', size=20)
     ax.set_xticks(np.linspace(0, process.get_length() - 1, x_ticks, dtype=int))
@@ -205,12 +205,12 @@ def timeseries_img(process, rho_water, rho_snow,
         cbar_snow.ax.set_xlabel(r'Temperature of snow, $^o C$', size=20)
         cbar_snow.ax.tick_params(labelsize=15)
         
-    cbar_ice = fig.colorbar(img_ice, orientation='horizontal', pad=0.08)
-    cbar_ice.ax.set_xlabel(r'Temperature of ice, $^o C$', size=20)
-    cbar_ice.ax.tick_params(labelsize=15)
+#     cbar_ice = fig.colorbar(img_ice, orientation='horizontal', pad=0.08)
+#     cbar_ice.ax.set_xlabel(r'Temperature of ice, $^o C$', size=20)
+#     cbar_ice.ax.tick_params(labelsize=15)
     
     if savepath is not None:
         fig.savefig(savepath, bbox_inches='tight')
 
         
-    return Z_i, Z_s
+    return temp_mesh, ice_filter, snow_filter
