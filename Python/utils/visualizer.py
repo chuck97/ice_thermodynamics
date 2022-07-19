@@ -42,7 +42,7 @@ def animate(processes,
     
     def run(data):
 
-        Z_ice_line_procs, Z_snow_line_procs, proc_data = data
+        Z_ice_line_procs, Z_snow_line_procs, proc_data, frame_number = data
         
         for Z_ice_line, Z_snow_line, \
             (_, _,
@@ -68,6 +68,9 @@ def animate(processes,
             markers.set_array(T_ice_full)
             ax.set_title('Time: %.2f hours'%(time/3600), size=20)
     #     ax.set_yticks(np.insert(-process.ice_dz_history.cumsum(), 0, 0))
+    
+        if frame_number%(frames_count//20) == 0:
+            print("Rendered {:.0%} ({}) frames".format(frame_number/frames_count, frame_number), end="\r")
 
         return lines_ice + lines_snow + markers_ice
     
@@ -132,7 +135,9 @@ def animate(processes,
         
     animation = anim.FuncAnimation(fig, run, zip(zip(*[Z_i[clip_start:clip_end] for Z_i in all_Z_i]),
                                                  zip(*[Z_s[clip_start:clip_end] for Z_s in all_Z_s]),
-                                                 zip(*[process.get_zip(clip_start, clip_end) for process in processes])),
+                                                 zip(*[process.get_zip(clip_start, clip_end) for process in processes]),
+                                                 range(1, frames_count + 1)
+                                                ),
                                    save_count=frames_count, interval=30, blit=True)
     
     if savepath:
