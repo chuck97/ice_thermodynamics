@@ -69,8 +69,8 @@ def animate(processes,
             ax.set_title('Time: %.2f hours'%(time/3600), size=20)
     #     ax.set_yticks(np.insert(-process.ice_dz_history.cumsum(), 0, 0))
     
-        if frame_number%(frames_count//20) == 0:
-            print("Rendered {:.0%} ({}) frames".format(frame_number/frames_count, frame_number), end="\r")
+#         if frame_number%(frames_count//100) == 0:
+        print("Rendered {:.0%} ({}/{}) frames".format(frame_number/frames_count, frame_number, frames_count), end="\r")
 
         return lines_ice + lines_snow + markers_ice
     
