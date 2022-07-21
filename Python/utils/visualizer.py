@@ -10,7 +10,9 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.cm import ScalarMappable
 matplotlib.rcParams['animation.embed_limit'] = 5000
 plt.rcParams["animation.html"] = "jshtml"
+from utils.engine import rho_w as water_density, rho_s as snow_density
 import itertools
+
 
 def get_Z(process, rho_s, rho_w):
     
@@ -36,7 +38,7 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     return new_cmap
 
 def animate(processes,
-            rho_water, rho_snow,
+            rho_water=water_density, rho_snow=snow_density,
             clip_start=None, clip_end=None,
             t_min=None, t_max=None, cmap=None,
             savepath=None, dpi=None):
@@ -137,7 +139,7 @@ def animate(processes,
         
     animation = anim.FuncAnimation(fig, run, zip(zip(*[Z_i[clip_start:clip_end] for Z_i in all_Z_i]),
                                                  zip(*[Z_s[clip_start:clip_end] for Z_s in all_Z_s]),
-                                                 zip(*[process.get_zip(clip_start, clip_end) for process in processes]),
+                                                 zip(*[process[clip_start:clip_end].get_zip() for process in processes]),
                                                  range(1, frames_count + 1)
                                                 ),
                                    save_count=frames_count, interval=30, blit=True)

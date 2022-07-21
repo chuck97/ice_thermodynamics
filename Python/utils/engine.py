@@ -82,25 +82,38 @@ class Process:
         self.snow_presence_history = np.array(snow_filter_init)
         
     def __getitem__(self, key):
-        return Process(self.ice_dz_history[[key]],
-                       self.snow_dz_history[[key]],
-                       self.timeline[[key]],
-                       self.oi_temp_history[[key]],
-                       self.ice_temp_history[[key]],
-                       self.is_temp_history[[key]],
-                       self.snow_temp_history[[key]],
-                       self.sa_temp_history[[key]],
-                       self.ice_density_history[[key]],
-                       self.snow_presence_history[[key]])
+        if isinstance(key, slice):
+            return Process(self.ice_dz_history[key],
+                           self.snow_dz_history[key],
+                           self.timeline[key],
+                           self.oi_temp_history[key],
+                           self.ice_temp_history[key],
+                           self.is_temp_history[key],
+                           self.snow_temp_history[key],
+                           self.sa_temp_history[key],
+                           self.ice_density_history[key],
+                           self.snow_presence_history[key])
+        elif isinstance(key, int):
+            return Process(self.ice_dz_history[[key]],
+                           self.snow_dz_history[[key]],
+                           self.timeline[[key]],
+                           self.oi_temp_history[[key]],
+                           self.ice_temp_history[[key]],
+                           self.is_temp_history[[key]],
+                           self.snow_temp_history[[key]],
+                           self.sa_temp_history[[key]],
+                           self.ice_density_history[[key]],
+                           self.snow_presence_history[[key]])
     
-    def get_zip(self, clip_start=None, clip_end=None):
-        return zip(self.ice_dz_history[clip_start:clip_end], self.snow_dz_history[clip_start:clip_end],
-                   self.timeline[clip_start:clip_end],
-                   self.oi_temp_history[clip_start:clip_end], self.ice_temp_history[clip_start:clip_end],
-                   self.is_temp_history[clip_start:clip_end],
-                   self.snow_temp_history[clip_start:clip_end], self.sa_temp_history[clip_start:clip_end],
-                   self.ice_density_history[clip_start:clip_end],
-                   self.snow_presence_history[clip_start:clip_end])
+    def get_zip(self):
+        return zip(*self.__dict__.values()) 
+# zip(self.ice_dz_history[clip_start:clip_end], self.snow_dz_history[clip_start:clip_end],
+#                    self.timeline[clip_start:clip_end],
+#                    self.oi_temp_history[clip_start:clip_end], self.ice_temp_history[clip_start:clip_end],
+#                    self.is_temp_history[clip_start:clip_end],
+#                    self.snow_temp_history[clip_start:clip_end], self.sa_temp_history[clip_start:clip_end],
+#                    self.ice_density_history[clip_start:clip_end],
+#                    self.snow_presence_history[clip_start:clip_end])
     
     def get_temp(self, mode):
         temp_arrs = [self.oi_temp_history, self.ice_temp_history, self.is_temp_history,
@@ -119,28 +132,28 @@ class Process:
         return len(self.ice_dz_history), len(self.snow_dz_history)
             
 def process_from_data(levels,
-                      temp_array, temp_ss, temp_is,
+                      temp_array, Tib, Tis, Tss,
                       h_ib, h_is, h_ss,
                       dsigma_ice, dsigma_snow,
                       timeline, rho_ice,
                       snow_thickness_threshold=1e-3):
     
-    assert len(temp_array) == len(temp_ss) == len(temp_is) == len(h_ib) == len(h_is) == len(h_ss) == len(timeline), \
-           "Lenghts of input arrays ({}, {}, {}, {}, {}, {}, {}) should be equal!".format(len(temp_array), len(temp_ss), len(temp_is), len(h_ib), len(h_is), len(h_ss), len(timeline))
+    assert len(temp_array) == len(Tss) == len(Tis) == len(Tib) == len(h_ib) == len(h_is) == len(h_ss) == len(timeline), \
+           "Lenghts of input arrays ({}, {}, {}, {}, {}, {}, {}, {}) should be equal!".format(len(temp_array), len(Tss), len(Tis), len(T_ib), len(h_ib), len(h_is), len(h_ss), len(timeline))
     
     # == Interpolating boundary values ==
     mesh_Z = np.array([levels]*len(temp_array))
-    inds_ib = np.searchsorted(-mesh_Z[0], -h_ib)
-    inds_is = np.searchsorted(-mesh_Z[0], -h_is, side='right')
+#     inds_ib = np.searchsorted(-mesh_Z[0], -h_ib)
+#     inds_is = np.searchsorted(-mesh_Z[0], -h_is, side='right')
     has_snow = (abs(h_ss - h_is) >= snow_thickness_threshold)
     
-    Tib_interp = [(data[ind-1]*(Z[ind] - z_i) + data[ind]*(z_i - Z[ind-1])) / (Z[ind] - Z[ind-1]) \
-                  for z_i, Z, data, ind \
-                  in zip(h_ib, mesh_Z, temp_array, inds_ib)]
-    Tis_interp = [(data[ind-1]*(Z[ind] - z_f) + data[ind]*(z_f - Z[ind-1])) / (Z[ind] - Z[ind-1]) \
-                  if snow else Tis 
-                  for z_f, Tis, snow, Z, data, ind \
-                  in zip(h_is, temp_is, has_snow, mesh_Z, temp_array, inds_is)]
+#     Tib_interp = [(data[ind-1]*(Z[ind] - z_i) + data[ind]*(z_i - Z[ind-1])) / (Z[ind] - Z[ind-1]) \
+#                   for z_i, Z, data, ind \
+#                   in zip(h_ib, mesh_Z, temp_array, inds_ib)]
+#     Tis_interp = [(data[ind-1]*(Z[ind] - z_f) + data[ind]*(z_f - Z[ind-1])) / (Z[ind] - Z[ind-1]) \
+#                   if snow else Tis 
+#                   for z_f, Tis, snow, Z, data, ind \
+#                   in zip(h_is, temp_is, has_snow, mesh_Z, temp_array, inds_is)]
     
     # == Formation of mesh and temperature arrays for snow and ice ==
     filter_ice = (h_ib.reshape(-1, 1) < mesh_Z) & (mesh_Z < h_is.reshape(-1, 1))
@@ -155,10 +168,10 @@ def process_from_data(levels,
     
     temp_ice = [np.concatenate(([surf], line_ice[filt_ice], [base])) \
                 for surf, line_ice, filt_ice, base \
-                in zip(Tis_interp, temp_array, filter_ice, Tib_interp)]
+                in zip(Tis, temp_array, filter_ice, Tib)]
     temp_snow = [np.concatenate(([surf], line_ice[filt_ice], [base])) \
                  for surf, line_ice, filt_ice, base \
-                 in zip(temp_ss, temp_array, filter_snow, Tis_interp)]
+                 in zip(Tss, temp_array, filter_snow, Tis)]
     
     # == Interpolating internal nodes into the new mesh ==
     sigma_ice_nodes = np.concatenate(([0.0], dsigma_ice.cumsum()))
@@ -183,11 +196,11 @@ def process_from_data(levels,
     return Process(dzi_arr_init=dsigma_ice*(h_is - h_ib).reshape(-1, 1),
                    dzs_arr_init=dsigma_snow*(h_ss - h_is).reshape(-1, 1),
                    timeline_init=timeline,
-                   temp_oi_arr_init=Tib_interp,
+                   temp_oi_arr_init=Tib,
                    temp_ice_arr_init=T_points_ice,
-                   temp_is_arr_init=Tis_interp,
+                   temp_is_arr_init=Tis,
                    temp_snow_arr_init=T_points_snow,
-                   temp_sa_arr_init=[temp if snow else np.nan for temp, snow in zip(temp_ss, has_snow)],
+                   temp_sa_arr_init=[temp if snow else np.nan for temp, snow in zip(Tss, has_snow)],
                    rho_ice_arr_init=np.ones((len(timeline), len(dsigma_ice)))*rho_ice,
                    snow_filter_init=has_snow)
 
@@ -416,167 +429,6 @@ def get_matrix_upwind(T_cells_prev, T_cells_old,
     rho*E_cells[N-1]*(dz_cells_new[N-1] - dz_cells_old[N-1])/time_step - \
     (radiation_nodes[N] - radiation_nodes[N-1]) + \
     (2.0*k_nodes[N]*T_ice_atm_new)/(dz_cells_new[N-1])
-    
-    if (omega_nodes[N-1] >= 0):
-        A[N-1] += -rho*c_cells[N-2]*omega_nodes[N-1]
-        RHS[N-1] += -rho*(c_cells[N-2]*T_cells_old[N-2] - E_cells[N-2])*omega_nodes[N-1]
-    else:
-        B[N-1] += -rho*c_cells[N-1]*omega_nodes[N-1]
-        RHS[N-1] += -rho*(c_cells[N-1]*T_cells_old[N-1] - E_cells[N-1])*omega_nodes[N-1]
-            
-    if (omega_nodes[N] >= 0):
-        B[N-1] += rho*c_cells[N-1]*omega_nodes[N]
-        RHS[N-1] += rho*(c_cells[N-1]*T_cells_old[N-1] - E_cells[N-1])*omega_nodes[N]
-    else:
-        RHS[N-1] += -rho*c_ice_atm*T_ice_atm_new*omega_nodes[N] + \
-        rho*(c_ice_atm*T_ice_atm_old - E_ice_atm)*omega_nodes[N]
-        
-    return A[1:], B, C[:-1], RHS
-
-
-def get_matrix_upwind_2(T_cells_prev, T_cells_old,
-                        T_ice_ocn_new, T_ice_ocn_prev, T_ice_ocn_old,
-                        T_ice_atm_new, T_ice_atm_prev, T_ice_atm_old,
-                        omega_ice_ocn, omega_ice_atm,
-                        dz_cells_new, dz_cells_old,
-                        salinity_cells,
-                        radiation_nodes,
-                        E, c, k, rho,
-                        time_step, is_snow=False):
-    
-    N = len(T_cells_old)
-    
-    # проверка идентичности размеров массивов температур
-    assert len(T_cells_prev) == N
-    
-    # проверка размерности массивов толщин ячеек
-    assert len(dz_cells_new) == N
-    assert len(dz_cells_old) == N
-    
-    # проверка размерности массива радиации
-    assert len(radiation_nodes) == (N + 1)
-    
-    # расчет коэффициентов интерполяции (в каждом узле будет 2 коэффициента,
-    # в первом и последнем узле коэффициенты нулевые) 
-    a = np.zeros(N+1)
-    b = np.zeros(N+1)
-    
-    if not is_snow:
-    
-        for i in range(1, N):
-            k_nodes[i] = a[i]*k(T_cells_prev[i-1], salinity_cells[i-1]) + \
-                         b[i]*k(T_cells_prev[i], salinity_cells[i])
-
-        k_nodes[0] = k(T_cells_prev[0], salinity_cells[0])
-        k_nodes[-1] = k(T_cells_prev[-1], salinity_cells[-1])
-
-        c_ice_ocn = c(T_ice_ocn_prev, T_ice_ocn_old, salinity_cells[0])
-        c_ice_atm = c(T_ice_atm_prev, T_ice_atm_old, salinity_cells[-1])
-
-        E_ice_ocn = E(T_ice_ocn_old, salinity_cells[0])
-        E_ice_atm = E(T_ice_atm_old, salinity_cells[-1])
-        
-    else:
-        
-        for i in range(1, N):
-            k_nodes[i] = a[i]*k(T_cells_prev[i-1]) + \
-                         b[i]*k(T_cells_prev[i])
-
-        k_nodes[0] = k(T_cells_prev[0])
-        k_nodes[-1] = k(T_cells_prev[-1])
-
-        c_ice_ocn = c(T_ice_ocn_prev, T_ice_ocn_old)
-        c_ice_atm = c(T_ice_atm_prev, T_ice_atm_old)
-
-        E_ice_ocn = E(T_ice_ocn_old)
-        E_ice_atm = E(T_ice_atm_old)
-    
-    # расчет узловых значений omega, теплоемкости и энтальпии
-    omega_nodes = np.zeros(N+1)
-    
-    for i in range(0, N+1): 
-        omega_nodes[i] = omega_ice_ocn\
-                       + (sum(dz_cells_new[:i])/sum(dz_cells_new))*(omega_ice_atm - omega_ice_ocn)
-    
-    # расчет значений энтальпии, теплоемкости в ячейках
-    E_cells = np.zeros(N)
-    c_cells = np.zeros(N)
-    
-    for i in range(0, N):
-        
-        if not is_snow: 
-            E_cells[i] = E(T_cells_old[i], salinity_cells[i])
-            c_cells[i] = c(T_cells_prev[i], T_cells_old[i], salinity_cells[i])
-        else:
-            E_cells[i] = E(T_cells_old[i])
-            c_cells[i] = c(T_cells_prev[i], T_cells_old[i])
-        
-    ### сборка диагоналей матрицы и вектора правой части
-    A = np.zeros(N)
-    B = np.zeros(N)
-    C = np.zeros(N)
-    RHS = np.zeros(N)
-    
-    # первая строка 
-    B[0] = rho*c_cells[0]*dz_cells_new[0]/time_step + k_eff_nodes[0] + k_eff_nodes[1]
-    
-    C[0] = -k_eff_nodes[1]
-    
-    RHS[0] = rho*c_cells[0]*dz_cells_new[0]*T_cells_old[0]/time_step - \
-    rho*E_cells[0]*(dz_cells_new[0] - dz_cells_old[0])/time_step + \
-    (radiation_nodes[1] - radiation_nodes[0]) + \
-    k_eff_nodes[0]*T_ice_ocn_new
-    
-    if (omega_nodes[0] >= 0):
-        RHS[0] += +rho*c_ice_ocn*T_ice_ocn_new*omega_nodes[0] - \
-        rho*(c_ice_ocn*T_ice_ocn_old - E_ice_ocn)*omega_nodes[0]
-    else:
-        B[0] += -rho*c_cells[0]*omega_nodes[0]
-        RHS[0] += -rho*(c_cells[0]*T_cells_old[0] - E_cells[0])*omega_nodes[0]
-            
-    if (omega_nodes[1] >= 0):
-        B[0] += rho*c_cells[0]*omega_nodes[1]
-        RHS[0] += rho*(c_cells[0]*T_cells_old[0] - E_cells[0])*omega_nodes[1]
-    else:
-        C[0] += rho*c_cells[1]*omega_nodes[1]
-        RHS[0] += rho*(c_cells[1]*T_cells_old[1] - E_cells[1])*omega_nodes[1]
-        
-    # серединные строки
-    for i in range(1, N-1):
-        
-        A[i] = -k_eff_nodes[i]
-        
-        B[i] = rho*c_cells[i]*dz_cells_new[i]/time_step + k_eff_nodes[i] + k_eff_nodes[i+1]
-        
-        C[i] = -k_eff_nodes[i+1]
-        
-        RHS[i] = rho*c_cells[i]*dz_cells_new[i]*T_cells_old[i]/time_step - \
-        rho*E_cells[i]*(dz_cells_new[i] - dz_cells_old[i])/time_step + \
-        (radiation_nodes[i+1] - radiation_nodes[i])
-        
-        if (omega_nodes[i] >= 0):
-            A[i] += -rho*c_cells[i-1]*omega_nodes[i]
-            RHS[i] += -rho*(c_cells[i-1]*T_cells_old[i-1] - E_cells[i-1])*omega_nodes[i]
-        else:
-            B[i] += -rho*c_cells[i]*omega_nodes[i]
-            RHS[i] += -rho*(c_cells[i]*T_cells_old[i] - E_cells[i])*omega_nodes[i]
-            
-        if (omega_nodes[i+1] >= 0):
-            B[i] += rho*c_cells[i]*omega_nodes[i+1]
-            RHS[i] += rho*(c_cells[i]*T_cells_old[i] - E_cells[i])*omega_nodes[i+1]
-        else:
-            C[i] += rho*c_cells[i+1]*omega_nodes[i+1]
-            RHS[i] += rho*(c_cells[i+1]*T_cells_old[i+1] - E_cells[i+1])*omega_nodes[i+1]
-        
-    # последняя строка
-    A[N-1] = -k_eff_nodes[N-1]
-
-    B[N-1] = rho*c_cells[N-1]*dz_cells_new[N-1]/time_step + k_eff_nodes[N-1] + k_eff_nodes[N]
-    
-    RHS[N-1] = rho*c_cells[N-1]*T_cells_old[N-1]*dz_cells_new[N-1]/time_step - \
-    rho*E_cells[N-1]*(dz_cells_new[N-1] - dz_cells_old[N-1])/time_step - \
-    (radiation_nodes[N] - radiation_nodes[N-1]) + \
-    k_eff_nodes[N]*T_ice_atm_new
     
     if (omega_nodes[N-1] >= 0):
         A[N-1] += -rho*c_cells[N-2]*omega_nodes[N-1]
