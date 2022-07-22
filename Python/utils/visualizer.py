@@ -40,8 +40,14 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
 def animate(processes,
             rho_water=water_density, rho_snow=snow_density,
             clip_start=None, clip_end=None,
-            t_min=None, t_max=None, cmap=None,
+            t_min=None, t_max=None,
+            cmap=None, names=None,
             savepath=None, dpi=None):
+    
+    assert len(set(process.get_length() for process in processes)) == 1, "Length of processes are not equal!"
+    
+    if names is not None: 
+        assert len(names) == len(processes), "Number of names and number of processes should be equal!"
     
     def run(data):
 
@@ -72,7 +78,6 @@ def animate(processes,
             ax.set_title('Time: %.2f hours'%(time/3600), size=20)
     #     ax.set_yticks(np.insert(-process.ice_dz_history.cumsum(), 0, 0))
     
-#         if frame_number%(frames_count//100) == 0:
         print("Rendered {:.0%} ({}/{}) frames".format(frame_number/frames_count, frame_number, frames_count), end="\r")
 
         return lines_ice + lines_snow + markers_ice
@@ -133,7 +138,10 @@ def animate(processes,
     pad = 0
     for i, line_ice in enumerate(lines_ice[::-1]):
         cbar = fig.colorbar(line_ice, orientation='horizontal', pad=pad)
-        cbar.ax.set_xlabel('process %d'%(len(lines_ice)-i), size=15)
+        if names is None:
+            cbar.ax.set_xlabel('process %d'%(len(lines_ice)-i), size=15)
+        else:
+            cbar.ax.set_xlabel(names[i], size=15)
         cbar.ax.tick_params(labelsize=15)
         pad += 0.08
         

@@ -8,7 +8,7 @@ T0 = 273.16
 emissivity = 0.99
 C_sh = 1e-3
 C_lh = 1e-3
-mmd_to_ms = 1e-3/3600/24 # перевод осадков из миллиметров в час в метры в секунду
+mmd_to_ms = 1e-3/3600/24 # перевод осадков из миллиметров в сутки в метры в секунду
 
 # == воздух ==
 rho_a = 1.28
@@ -19,8 +19,6 @@ P_surf = 1013.25
 c_w = 3.99e3
 c_pw = 4.17e3
 rho_w = 1023.0
-# S_w = 30.0
-# Tf_w = -mu*S_w
 c1_w = 17.27
 c2_w = 35.86
 
@@ -141,19 +139,9 @@ def process_from_data(levels,
     assert len(temp_array) == len(Tss) == len(Tis) == len(Tib) == len(h_ib) == len(h_is) == len(h_ss) == len(timeline), \
            "Lenghts of input arrays ({}, {}, {}, {}, {}, {}, {}, {}) should be equal!".format(len(temp_array), len(Tss), len(Tis), len(T_ib), len(h_ib), len(h_is), len(h_ss), len(timeline))
     
-    # == Interpolating boundary values ==
-    mesh_Z = np.array([levels]*len(temp_array))
-#     inds_ib = np.searchsorted(-mesh_Z[0], -h_ib)
-#     inds_is = np.searchsorted(-mesh_Z[0], -h_is, side='right')
-    has_snow = (abs(h_ss - h_is) >= snow_thickness_threshold)
     
-#     Tib_interp = [(data[ind-1]*(Z[ind] - z_i) + data[ind]*(z_i - Z[ind-1])) / (Z[ind] - Z[ind-1]) \
-#                   for z_i, Z, data, ind \
-#                   in zip(h_ib, mesh_Z, temp_array, inds_ib)]
-#     Tis_interp = [(data[ind-1]*(Z[ind] - z_f) + data[ind]*(z_f - Z[ind-1])) / (Z[ind] - Z[ind-1]) \
-#                   if snow else Tis 
-#                   for z_f, Tis, snow, Z, data, ind \
-#                   in zip(h_is, temp_is, has_snow, mesh_Z, temp_array, inds_is)]
+    mesh_Z = np.array([levels]*len(temp_array))
+    has_snow = (abs(h_ss - h_is) >= snow_thickness_threshold)
     
     # == Formation of mesh and temperature arrays for snow and ice ==
     filter_ice = (h_ib.reshape(-1, 1) < mesh_Z) & (mesh_Z < h_is.reshape(-1, 1))
