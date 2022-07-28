@@ -136,7 +136,7 @@ def animate(processes,
     ax.grid()
 
     pad = 0
-    for i, line_ice in enumerate(lines_ice[::-1]):
+    for i, line_ice in enumerate(lines_ice):
         cbar = fig.colorbar(line_ice, orientation='horizontal', pad=pad)
         if names is None:
             cbar.ax.set_xlabel('process %d'%(len(lines_ice)-i), size=15)
