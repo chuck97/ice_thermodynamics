@@ -45,8 +45,8 @@ i0_s = 0.08
 
 # == функции для льда ==
 Tf_i = lambda S_i: -mu*S_i
-#k_i = lambda T, S_i: rho_i/917.0 * (2.11 - 0.011*T + (0.09*S_i/T if T != 0 else 0))
-k_i = lambda T, S_i: (2.03 + 0.1172 * (S_i/T if T != 0.0 else 0.0))
+k_i = lambda T, S_i: rho_i/917.0 * (2.11 - 0.011*T + (0.09*S_i/T if T != 0 else 0))
+#k_i = lambda T, S_i: (2.03 + 0.1172 * (S_i/T if T != 0.0 else 0.0))
 c_i = lambda T, T_old, S_i: c0_i - L0_i*Tf_i(S_i)/(T*T_old)
 E_i = lambda T, S_i: c0_i*(T - Tf_i(S_i)) - L0_i*(1.0 - Tf_i(S_i)/T) + c_w*Tf_i(S_i)
 L_i = lambda T, S_i: c0_i*(T - Tf_i(S_i)) - L0_i*(1.0 - Tf_i(S_i)/T)
@@ -518,8 +518,8 @@ def W_from_BC(T_node, T_cells,
         
     else:
         
-        h1 = dz_cells[0]/2.0
-        h2 = dz_cells[0] + dz_cells[1]/2.0
+        #h1 = dz_cells[0]/2.0
+        #h2 = dz_cells[0] + dz_cells[1]/2.0
         # grad = lambda T: (-T*(h2**2 - h1**2) + T_cells[0]*h2**2 - T_cells[1]*h1**2)/(h1*h2*(h2-h1))
         
         level = dz_cells[0]/2
@@ -529,7 +529,16 @@ def W_from_BC(T_node, T_cells,
                 break
             
         grad = (T_cells[i] - T_node)/level
-        omega = (k*grad - F)/(rho_i*L(T_cells[0], salinity_cells[0]))
+        #omega = (k*grad + F)/(rho_i*L(T_cells[0], salinity_cells[0]))
+        
+        omega = 0
+        if (k*grad + F) > 0:
+            # basal melt
+            omega = (k*grad + F)/(rho_i*L(T_cells[0], 4.0))
+        else:
+            # basal growth
+            omega = (k*grad + F)/(rho_i*L(T_cells[0], 10.0))
+            
         return omega, k*grad
     
     
@@ -775,8 +784,6 @@ def snow_ice_freezing(Toi, Ti, Ts, Tis, Tsa, Ta, F_atm, F_ocn, F_sw,
                             rho=rho_s
                            )
         
-        omega_sa = 0
-        
         # пересчет толщин слоев
         dzi_new = Update_dz(dzi_old, omega_io, 0.0, time_step)
         dzs_new = Update_dz(dzs_old, 0.0, omega_sa, time_step)
@@ -976,7 +983,6 @@ def main_process(time_step, time_end,
     
     salinity_cells = salinity
     
-    conds = []
     Fs = []
     
     Ns = len(dzs_init)
@@ -1073,10 +1079,10 @@ def main_process(time_step, time_end,
                 
             process.snow_presence_history = np.append(process.snow_presence_history, True)
             
-        conds.append(cond)
+        
 
         process.ice_dz_history = np.append(process.ice_dz_history, [dzi_new.copy()], axis=0)
-        process.snow_dz_history = np.append(process.snow_dz_history, [dzs_new.copy()], axis=0)
+        process.snow_dz_history = np.append(process.snow_dz_history, [dzs_new.copy() if dzs_new.sum() > 0 else 0.0*dzs_new], axis=0)
         process.timeline = np.append(process.timeline, time)
         process.oi_temp_history = np.append(process.oi_temp_history, Toi(time))
         process.ice_temp_history = np.append(process.ice_temp_history, [Ti_new.copy()], axis=0)
@@ -1086,4 +1092,4 @@ def main_process(time_step, time_end,
         process.ice_density_history = np.append(process.ice_density_history, [[rho_i]*len(dzi_init)],
                                                 axis=0)
     
-    return process, conds
+    return process
