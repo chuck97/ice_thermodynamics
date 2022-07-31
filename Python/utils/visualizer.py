@@ -3,11 +3,10 @@ import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
-from matplotlib import cm as mcm
+import matplotlib.cm as mcm
+import matplotlib.colors as clr
 from matplotlib.ticker import FormatStrFormatter
-from matplotlib.collections import LineCollection, PathCollection
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.cm import ScalarMappable
+from matplotlib.collections import LineCollection
 matplotlib.rcParams['animation.embed_limit'] = 5000
 plt.rcParams["animation.html"] = "jshtml"
 from utils.engine import rho_w as water_density, rho_s as snow_density
@@ -32,13 +31,13 @@ def get_Z(process, rho_s, rho_w):
     return Z_i, Z_s
 
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
-    new_cmap = LinearSegmentedColormap.from_list(
+    new_cmap = clr.LinearSegmentedColormap.from_list(
         'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
 def animate(processes,
-            rho_water=water_density, rho_snow=snow_density,
+            rho_snow=snow_density, rho_water=water_density,
             clip_start=None, clip_end=None,
             t_min=None, t_max=None,
             cmap=None, names=None,
@@ -100,16 +99,6 @@ def animate(processes,
     t_max = (t_max if t_max is not None else max(temp_pair[1] for temp_pair in temp_pairs))
     
     cmaps = ['Blues', 'Purples', 'Greens', 'cool', 'winter'] 
-        
-#     if cmap is None:
-        
-#         cdict = {'red':  [[0.0, 0.0, 0.0],
-#                           [1.0, 0.6, 0.6]],
-#                  'green':  [[0.0, 0.2, 0.2],
-#                             [1.0, 0.85, 0.85]],
-#                  'blue':  [[0.0, 0.5, 0.5],
-#                            [1.0, 1.0, 1.0]]}
-#         cmap = LinearSegmentedColormap('MyCmap', segmentdata=cdict)
 
     fig = plt.figure(figsize=(15, 15))
     ax = fig.add_subplot(xlim=(t_min - (t_max - t_min)*0.1, t_max + (t_max - t_min)*0.1),
@@ -156,78 +145,102 @@ def animate(processes,
         animation.save(savepath, dpi=dpi)
         
     return animation
+
     
+def discretize_cmap(cmap, bounds=None, vmin=None, vmax=None, prec=None):
     
-def paint_snow(arr, num_of_cells, snow_color):
-    ind_snow = (arr != [0, 0, 0, 1]).nonzero()[0].max() + 1
-    arr[ind_snow:(ind_snow+num_of_cells)] = snow_color
-    return arr
+    assert bounds is not None or (vmin is not None and vmax is not None), \
+           "Either bounds or limits should be set!"
+    
+    cmap_base = mcm.get_cmap(cmap)
+    
+    if bounds is None:
+        if prec is None:
+            prec = (vmax - vmin)*.1
+        bounds = np.arange(vmin, vmax, prec)
+        if bounds[-1] != vmax:
+            bounds = np.concatenate((bounds, [vmax]))
+            
+    norm_custom = clr.BoundaryNorm(bounds, cmap_base.N, extend='both')
+    
+    return cmap_base, norm_custom, bounds
 
 
-def timeseries_img(process, rho_water, rho_snow,
-                   y_points=50, x_ticks=11, y_ticks=6,
-                   t_min=None, t_max=None,
-                   cmap_ice='Blues', cmap_snow='Greys', color_empty='black',
+def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
+                   y_points=100,
+                   tmin_ice=None, tmax_ice=None, prec_ice=None, bounds_ice=None,
+                   tmin_snow=None, tmax_snow=None, prec_snow=None, bounds_snow=None,
+                   cmap_ice='Blues', cmap_snow='Greys', color_empty=[208, 245, 226],
                    savepath=None):
 
     Z_i, Z_s = get_Z(process, rho_snow, rho_water)
     z_min = min(Z_i[:, 0])
     z_max = max(Z_s[:, -1])
-    
-    vmin = (t_min if t_min is not None else process.get_temp('min'))
-    vmax = (t_max if t_max is not None else process.get_temp('max'))
 
-    z_mesh = np.tile(np.linspace(z_min, z_max, y_points + 1), (process.get_length(), 1))
-    ice_filter = ((Z_i[:, [0]] > z_mesh) | (z_mesh >= Z_i[:, [-1]]))[:, ::-1].T
-    snow_filter = ((Z_s[:, [0]] > z_mesh) | (z_mesh >= Z_s[:, [-1]]))[:, ::-1].T
-    
-    temp_mesh = np.array([np.interp(x=Z_new,
+    Z_mesh = np.linspace(z_min, z_max, y_points + 1)
+    temp_mesh = np.array([np.interp(x=Z_mesh,
                                     xp=np.concatenate((Z_i_line, (Z_s_line[1:] if has_snow else []))),
                                     fp=np.concatenate(([T_oi], T_i_line, [T_is],
                                                        (T_s_line if has_snow else []),
                                                        ([T_sa] if has_snow else [])
                                                       )),
-                                    left=0.0, right=0.0
+                                    left=np.nan, right=np.nan
                                    ) \
-                          for Z_new, Z_i_line, Z_s_line, T_oi, T_i_line, T_is, T_s_line, T_sa, has_snow \
-                          in zip(z_mesh, Z_i, Z_s,
+                          for Z_i_line, Z_s_line, T_oi, T_i_line, T_is, T_s_line, T_sa, has_snow \
+                          in zip(Z_i, Z_s,
                                  process.oi_temp_history, process.ice_temp_history, process.is_temp_history,
                                  process.snow_temp_history, process.sa_temp_history,
                                  process.snow_presence_history
                                 )
-                         ])[:, ::-1].T
+                         ])
 
-    ice_masked = np.ma.masked_array(temp_mesh, ice_filter)
-    snow_masked = np.ma.masked_array(temp_mesh, snow_filter)
-    empty_mask = np.ma.masked_array(temp_mesh, ice_filter & snow_filter)
+    nan_filter = np.isnan(temp_mesh)
+    ice_filter = ((Z_i[:, [0]] <= Z_mesh) & (Z_mesh <= Z_i[:, [-1]]))
+    snow_filter = ((Z_s[:, [0]] < Z_mesh) & (Z_mesh <= Z_s[:, [-1]]))
+    
+    img = np.array([[[np.nan]*4]*(y_points+1) for i in range(process.get_length())])
+    img[nan_filter] = np.concatenate((np.array(color_empty)/256, [1.0]))
 
-    fig = plt.figure(figsize=(40, 20))
-    ax = fig.add_subplot()
-    curr_cmap = mcm.get_cmap().copy()
-    curr_cmap.set_bad(color_empty)
-    img_empty = ax.imshow(empty_mask, cmap=curr_cmap, aspect='auto')
-    img_ice = ax.imshow(ice_masked, cmap=cmap_ice, aspect='auto')#, interpolation='bilinear')
-    img_snow = ax.imshow(snow_masked, cmap=cmap_snow, aspect='auto')#, interpolation='bilinear')
+    if bounds_ice is None:
+        if tmin_ice is None:
+            tmin_ice = np.nanmin(process.ice_temp_history)
+        if tmax_ice is None:
+            tmax_ice = np.nanmax(process.ice_temp_history)
+    cmap_ice, norm_ice, bounds_ice = discretize_cmap(cmap_ice, bounds_ice, tmin_ice, tmax_ice, prec_ice)
+    img[ice_filter] = cmap_ice(norm_ice(temp_mesh[ice_filter]))
+
+    if process.snow_temp_history.any():
+        if bounds_snow is None:
+            if tmin_snow is None:
+                tmin_snow = np.nanmin(process.snow_temp_history)
+            if tmax_snow is None:
+                tmax_snow = np.nanmax(process.snow_temp_history)
+        cmap_snow, norm_snow, bounds_snow = discretize_cmap(cmap_snow, bounds_snow, tmin_snow, tmax_snow, prec_snow)
+        img[snow_filter] = cmap_snow(norm_snow(temp_mesh[snow_filter]))
+        
+    fig = plt.figure(figsize=(30, 10))
+    ax = plt.axes()
+    ax.imshow(img.swapaxes(0, 1), aspect='auto', origin='lower',
+              extent=[process.timeline[0]/3600, process.timeline[-1]/3600, Z_mesh[0], Z_mesh[-1]])
     ax.set_xlabel('t, hours', size=20)
     ax.set_ylabel('Z, m', size=20)
-    ax.set_xticks(np.linspace(0, process.get_length() - 1, x_ticks, dtype=int))
-    ax.set_yticks(np.linspace(0, y_points, y_ticks, dtype=int))
-    ax.set_xticklabels(round(process.timeline[int(tick)]/3600, 2) for tick in ax.get_xticks())
-    ax.set_yticklabels(np.round(np.linspace(z_max, z_min, y_ticks), 2))
-    ax.axhline(y_points*z_max/(z_max-z_min), lw=3, ls='--', color='c')
     ax.tick_params(axis='both', labelsize=15)
-    
-    if process.snow_presence_history.any():
-        cbar_snow = fig.colorbar(img_snow, orientation='horizontal', pad=-0.01)
-        cbar_snow.ax.set_xlabel(r'Temperature of snow, $^o C$', size=20)
-        cbar_snow.ax.tick_params(labelsize=15)
-        
-#     cbar_ice = fig.colorbar(img_ice, orientation='horizontal', pad=0.08)
-#     cbar_ice.ax.set_xlabel(r'Temperature of ice, $^o C$', size=20)
-#     cbar_ice.ax.tick_params(labelsize=15)
+    ax.axhline(lw=3, ls='--', color='c')
+
+    cax_ice = fig.add_axes([ax.get_position().x0, ax.get_position().y0 - 0.15,
+                            ax.get_position().width, 0.05])
+    fig.colorbar(mcm.ScalarMappable(norm_ice, cmap_ice), cax=cax_ice,
+                 orientation='horizontal', ticks=bounds_ice)
+    cax_ice.set_xlabel('ice', size=20)
+    cax_ice.tick_params(axis='x', labelsize=15)
+
+    if process.snow_temp_history.any():
+        cax_snow = fig.add_axes([ax.get_position().x0, ax.get_position().y0 - 0.3,
+                                 ax.get_position().width, 0.05])
+        fig.colorbar(mcm.ScalarMappable(norm_snow, cmap_snow), cax=cax_snow,
+                     orientation='horizontal', ticks=bounds_snow)
+        cax_snow.set_xlabel('snow', size=20)
+        cax_snow.tick_params(axis='x', labelsize=15)
     
     if savepath is not None:
         fig.savefig(savepath, bbox_inches='tight')
-
-        
-    return temp_mesh, ice_filter, snow_filter

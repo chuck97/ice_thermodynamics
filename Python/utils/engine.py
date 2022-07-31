@@ -107,13 +107,6 @@ class Process:
     
     def get_zip(self):
         return zip(*self.__dict__.values()) 
-# zip(self.ice_dz_history[clip_start:clip_end], self.snow_dz_history[clip_start:clip_end],
-#                    self.timeline[clip_start:clip_end],
-#                    self.oi_temp_history[clip_start:clip_end], self.ice_temp_history[clip_start:clip_end],
-#                    self.is_temp_history[clip_start:clip_end],
-#                    self.snow_temp_history[clip_start:clip_end], self.sa_temp_history[clip_start:clip_end],
-#                    self.ice_density_history[clip_start:clip_end],
-#                    self.snow_presence_history[clip_start:clip_end])
     
     def get_temp(self, mode):
         temp_arrs = [self.oi_temp_history, self.ice_temp_history, self.is_temp_history,
@@ -529,8 +522,8 @@ def W_from_BC(T_node, T_cells,
                 break
             
         grad = (T_cells[i] - T_node)/level
-        omega = (k*grad - F)/(rho_i*L(T_cells[0], salinity_cells[0]))
-        return omega, k*grad
+        omega = (k*grad + F)/(rho_i*L(T_cells[0], salinity_cells[0]))
+        return omega
     
     
 def T_from_BC(T_cells, dz_cells, salinity_cells,
@@ -586,7 +579,7 @@ def ice_freezing(Toi, Ti, Tia, F_atm, F_ocn, F_sw,
         
         prev_surface_err = surface_err
         
-        omega_io, cond = W_from_BC(Toi, Ti_prev,
+        omega_io = W_from_BC(Toi, Ti_prev,
                              dzi_new,
                              salinity_cells,
                              k_i(Toi, salinity_cells[0]),
@@ -640,7 +633,7 @@ def ice_freezing(Toi, Ti, Tia, F_atm, F_ocn, F_sw,
         if current_err < tol:
             break
     
-    return Ti_new, Tia_new, dzi_new, cond
+    return Ti_new, Tia_new, dzi_new
 
 
 def ice_melting(Toi, Ti, Tia_old, F_atm, F_ocn, F_sw,
@@ -668,7 +661,7 @@ def ice_melting(Toi, Ti, Tia_old, F_atm, F_ocn, F_sw,
         Ti_prev = Ti_new
 
         # оценка omega на границе лед-океан
-        omega_io, cond = W_from_BC(Toi, Ti_prev,
+        omega_io = W_from_BC(Toi, Ti_prev,
                              dzi_new,
                              salinity_cells,
                              k_i(Toi, salinity_cells[0]),
@@ -712,7 +705,7 @@ def ice_melting(Toi, Ti, Tia_old, F_atm, F_ocn, F_sw,
         if current_err < tol:
             break
             
-    return Ti_new, dzi_new, cond
+    return Ti_new, dzi_new
 
 
 def snow_ice_freezing(Toi, Ti, Ts, Tis, Tsa, Ta, F_atm, F_ocn, F_sw,
@@ -757,7 +750,7 @@ def snow_ice_freezing(Toi, Ti, Ts, Tis, Tsa, Ta, F_atm, F_ocn, F_sw,
         
         prev_surface_err = surface_err
         
-        omega_io, cond = W_from_BC(Toi, Ti_prev,
+        omega_io = W_from_BC(Toi, Ti_prev,
                              dzi_new,
                              salinity_cells,
                              k_i(Toi, salinity_cells[0]),
@@ -833,8 +826,8 @@ def snow_ice_freezing(Toi, Ti, Ts, Tis, Tsa, Ta, F_atm, F_ocn, F_sw,
         
         if current_err < tol:
             break
-            
-    return Ti_new, Ts_new, Tis_new, Tsa_new, dzi_new, dzs_new, cond
+    
+    return Ti_new, Ts_new, Tis_new, Tsa_new, dzi_new, dzs_new
 
 
 def snow_melting(Toi, Ti, Ts, Tis, Tsa_old, Ta, F_atm, F_ocn, F_sw,
@@ -874,7 +867,7 @@ def snow_melting(Toi, Ti, Ts, Tis, Tsa_old, Ta, F_atm, F_ocn, F_sw,
         T_vec_prev = T_vec_new
 
         # оценка omega на границе лед-океан
-        omega_io, cond = W_from_BC(Toi, Ti_prev,
+        omega_io = W_from_BC(Toi, Ti_prev,
                              dzi_new,
                              salinity_cells,
                              k_i(Toi, salinity_cells[0]),
@@ -942,7 +935,7 @@ def snow_melting(Toi, Ti, Ts, Tis, Tsa_old, Ta, F_atm, F_ocn, F_sw,
         if current_err < tol:
             break
             
-    return Ti_new, Ts_new, Tis_new, dzi_new, dzs_new, cond
+    return Ti_new, Ts_new, Tis_new, dzi_new, dzs_new
 
 
 def main_process(time_step, time_end,
@@ -976,9 +969,6 @@ def main_process(time_step, time_end,
     
     salinity_cells = salinity
     
-    conds = []
-    Fs = []
-    
     Ns = len(dzs_init)
     
     process = Process([dzi_init], [dzs_init],
@@ -1000,7 +990,7 @@ def main_process(time_step, time_end,
         
         if sum(dzs_new) < snow_thickness_threshold:
             print('Time {:.1f} h.: Ice freezing...'.format(time/3600))
-            Ti_new, Tis_new, dzi_new, cond = ice_freezing(Toi(time),
+            Ti_new, Tis_new, dzi_new = ice_freezing(Toi(time),
                                                     Ti_old,
                                                     Tis_old,
                                                     lambda T: F_atm_ice(T, time),
@@ -1014,7 +1004,7 @@ def main_process(time_step, time_end,
             if Tis_new >= Tf_i(salinity_cells[-1]):
                 print('Time {:.1f} h.: Ice melting...'.format(time/3600))
                 Tis_new = Tf_i(salinity_cells[-1])
-                Ti_new, dzi_new, cond = ice_melting(Toi(time),
+                Ti_new, dzi_new = ice_melting(Toi(time),
                                               Ti_old,
                                               Tis_old,
                                               lambda T: F_atm_ice(T, time),
@@ -1046,7 +1036,7 @@ def main_process(time_step, time_end,
             
         else:
             print('Time {:.1f} h.: Snow-ice freezing...'.format(time/3600))
-            Ti_new, Ts_new, Tis_new, Tsa_new, dzi_new, dzs_new, cond =\
+            Ti_new, Ts_new, Tis_new, Tsa_new, dzi_new, dzs_new =\
             snow_ice_freezing(Toi(time), Ti_old, Ts_old, Tis_old, Tsa_old, Ta(time),
                               lambda T: F_atm_snow(T, time),
                               lambda T: F_ocn(T, time),
@@ -1060,7 +1050,7 @@ def main_process(time_step, time_end,
             if Tsa_new >= 0:
                 print('Time {:.1f} h.: Snow-ice melting...'.format(time/3600))
                 Tsa_new = 0
-                Ti_new, Ts_new, Tis_new, dzi_new, dzs_new, cond =\
+                Ti_new, Ts_new, Tis_new, dzi_new, dzs_new =\
                 snow_melting(Toi(time), Ti_old, Ts_old, Tis_old, Tsa_old, Ta(time),
                              lambda T: F_atm_snow(T, time),
                              lambda T: F_ocn(T, time),
@@ -1072,8 +1062,6 @@ def main_process(time_step, time_end,
                              p(time))
                 
             process.snow_presence_history = np.append(process.snow_presence_history, True)
-            
-        conds.append(cond)
 
         process.ice_dz_history = np.append(process.ice_dz_history, [dzi_new.copy()], axis=0)
         process.snow_dz_history = np.append(process.snow_dz_history, [dzs_new.copy()], axis=0)
@@ -1086,4 +1074,4 @@ def main_process(time_step, time_end,
         process.ice_density_history = np.append(process.ice_density_history, [[rho_i]*len(dzi_init)],
                                                 axis=0)
     
-    return process, conds
+    return process
