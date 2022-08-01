@@ -123,6 +123,49 @@ class Process:
     
     def get_nodes_num(self):
         return len(self.ice_dz_history), len(self.snow_dz_history)
+    
+    
+def get_init_from_data(data, Z, dsigma_ice, dsigma_snow, snow_thickness_threshold=0.05, index=0):
+    
+    has_snow = (data.loc[index, 'hs_best'] - data.loc[index, 'hf_best']) >= snow_thickness_threshold
+    
+    filter_ice = (data.loc[index, 'hi_best'] < Z) & (Z < data.loc[index, 'hf_best'])
+    filter_snow = (data.loc[index, 'hf_best'] < Z) & (Z < data.loc[index, 'hs_best'])
+
+    Z_ice = np.concatenate((data.loc[index, ['hf_best']],
+                            np.array(Z)[filter_ice],
+                            data.loc[index, ['hi_best']]))
+
+    Z_snow = np.concatenate((data.loc[index, ['hs_best']],
+                            np.array(Z)[filter_snow],
+                            data.loc[index, ['hf_best']]))
+
+    T_ice = np.concatenate((data.loc[index, ['Tis_interp']],
+                            data.loc[index, 'T_1':'T_50'][filter_ice],
+                            data.loc[index, ['Tib_interp']]))
+
+    T_snow = np.concatenate((data.loc[index, ['Tss']],
+                             data.loc[index, 'T_1':'T_50'][filter_snow],
+                             data.loc[index, ['Tis_interp']]))
+
+    sigma_ice_nodes = np.concatenate(([0.0], dsigma_ice.cumsum()))
+    sigma_ice_centers = (sigma_ice_nodes[:-1] + sigma_ice_nodes[1:])/2
+    Z_ice_new = Z_ice[-1] + sigma_ice_centers*(Z_ice[0] - Z_ice[-1])
+
+    sigma_snow_nodes = np.concatenate(([0.0], dsigma_snow.cumsum()))
+    sigma_snow_centers = (sigma_snow_nodes[:-1] + sigma_snow_nodes[1:])/2
+    Z_snow_new = Z_snow[-1] + sigma_snow_centers*(Z_snow[0] - Z_snow[-1])
+
+    T_ice_new = np.interp(Z_ice_new, Z_ice[::-1], T_ice[::-1])
+    T_snow_new = np.interp(Z_snow_new, Z_snow[::-1], T_snow[::-1])
+    
+    return T_ice_new, T_snow_new, \
+            data.loc[index, 'Tib_interp'], data.loc[index, 'Tis_interp'], \
+            (data.loc[index, 'Tss'] if has_snow else np.nan), \
+            dsigma_ice*(data.loc[index, 'hf_best'] - data.loc[index, 'hi_best']), \
+            (1.0 if has_snow else np.nan)*dsigma_snow \
+            *(data.loc[index, 'hs_best'] - data.loc[index, 'hf_best'])
+
             
 def process_from_data(levels,
                       temp_array, Tib, Tis, Tss,

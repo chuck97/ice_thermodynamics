@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.ndimage as spndim
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
@@ -30,11 +31,60 @@ def get_Z(process, rho_s, rho_w):
     
     return Z_i, Z_s
 
+
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     new_cmap = clr.LinearSegmentedColormap.from_list(
         'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
+
+
+def get_bounds(vmin, vmax, step):
+    
+    if step is None:
+        step = (vmax - vmin)*.1
+        
+    bounds = np.arange(vmin, vmax, step)
+    if bounds[-1] != vmax:
+        bounds = np.concatenate((bounds, [vmax]))
+        
+    return bounds
+
+
+def discretize_cmap(cmap, bounds=None, vmin=None, vmax=None, step=None):
+    
+    assert bounds is not None or (vmin is not None and vmax is not None), \
+           "Either bounds or limits should be set!"
+    
+    cmap_base = mcm.get_cmap(cmap)
+    
+    if bounds is None:
+        bounds = get_bounds(vmin, vmax, step)
+            
+    norm_custom = clr.BoundaryNorm(bounds, cmap_base.N, extend='both')
+    
+    return cmap_base, norm_custom, bounds
+
+
+def gauss_filter_with_nans(arr, sigma):
+    
+    nan_msk = np.isnan(arr)
+
+    loss = np.zeros(arr.shape)
+    loss[nan_msk] = 1
+    loss = spndim.gaussian_filter(
+            loss, sigma=sigma, mode='constant', cval=1)
+
+    gauss = arr.copy()
+    gauss[nan_msk] = 0
+    gauss = spndim.gaussian_filter(
+            gauss, sigma=sigma, mode='constant', cval=0)
+    gauss[nan_msk] = np.nan
+
+    gauss += loss * arr
+
+    return gauss
+
 
 def animate(processes,
             rho_snow=snow_density, rho_water=water_density,
@@ -146,30 +196,11 @@ def animate(processes,
         
     return animation
 
-    
-def discretize_cmap(cmap, bounds=None, vmin=None, vmax=None, prec=None):
-    
-    assert bounds is not None or (vmin is not None and vmax is not None), \
-           "Either bounds or limits should be set!"
-    
-    cmap_base = mcm.get_cmap(cmap)
-    
-    if bounds is None:
-        if prec is None:
-            prec = (vmax - vmin)*.1
-        bounds = np.arange(vmin, vmax, prec)
-        if bounds[-1] != vmax:
-            bounds = np.concatenate((bounds, [vmax]))
-            
-    norm_custom = clr.BoundaryNorm(bounds, cmap_base.N, extend='both')
-    
-    return cmap_base, norm_custom, bounds
-
 
 def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
-                   y_points=100,
-                   tmin_ice=None, tmax_ice=None, prec_ice=None, bounds_ice=None,
-                   tmin_snow=None, tmax_snow=None, prec_snow=None, bounds_snow=None,
+                   figsize=(30, 10), y_points=100, 
+                   tmin_ice=None, tmax_ice=None, step_ice=None, bounds_ice=None,
+                   tmin_snow=None, tmax_snow=None, step_snow=None, bounds_snow=None,
                    cmap_ice='Blues', cmap_snow='Greys', color_empty=[208, 245, 226],
                    savepath=None):
 
@@ -206,7 +237,7 @@ def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
             tmin_ice = np.nanmin(process.ice_temp_history)
         if tmax_ice is None:
             tmax_ice = np.nanmax(process.ice_temp_history)
-    cmap_ice, norm_ice, bounds_ice = discretize_cmap(cmap_ice, bounds_ice, tmin_ice, tmax_ice, prec_ice)
+    cmap_ice, norm_ice, bounds_ice = discretize_cmap(cmap_ice, bounds_ice, tmin_ice, tmax_ice, step_ice)
     img[ice_filter] = cmap_ice(norm_ice(temp_mesh[ice_filter]))
 
     if process.snow_temp_history.any():
@@ -215,10 +246,10 @@ def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
                 tmin_snow = np.nanmin(process.snow_temp_history)
             if tmax_snow is None:
                 tmax_snow = np.nanmax(process.snow_temp_history)
-        cmap_snow, norm_snow, bounds_snow = discretize_cmap(cmap_snow, bounds_snow, tmin_snow, tmax_snow, prec_snow)
+        cmap_snow, norm_snow, bounds_snow = discretize_cmap(cmap_snow, bounds_snow, tmin_snow, tmax_snow, step_snow)
         img[snow_filter] = cmap_snow(norm_snow(temp_mesh[snow_filter]))
         
-    fig = plt.figure(figsize=(30, 10))
+    fig = plt.figure(figsize=figsize)
     ax = plt.axes()
     ax.imshow(img.swapaxes(0, 1), aspect='auto', origin='lower',
               extent=[process.timeline[0]/3600, process.timeline[-1]/3600, Z_mesh[0], Z_mesh[-1]])
@@ -241,6 +272,105 @@ def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
                      orientation='horizontal', ticks=bounds_snow)
         cax_snow.set_xlabel('snow', size=20)
         cax_snow.tick_params(axis='x', labelsize=15)
+    
+    if savepath is not None:
+        fig.savefig(savepath, bbox_inches='tight')
+        
+        
+def timeseries_err(process_sim, process_data,
+                   rho_snow=snow_density, rho_water=water_density,
+                   figsize=(30, 10), y_points=100,
+                   tmin_err=None, tmax_err=None, step_err=None,
+                   levels_fill=None, levels_border = [-2, -1, -0.5, 0.5, 1, 2],
+                   sigma_x=0, sigma_y=None,
+                   cmap='seismic', rgb_background = [208, 245, 226],
+                   savepath=None):
+
+    Z_i_data, Z_s_data = get_Z(process_data, rho_snow, rho_water)
+    Z_i_sim, Z_s_sim = get_Z(process_sim, rho_snow, rho_water)
+    z_min = min(np.concatenate((Z_i_sim[:, 0], Z_i_data[:, 0])))
+    z_max = max(np.concatenate((Z_s_sim[:, -1], Z_s_data[:, -1])))
+
+    Z_mesh = np.linspace(z_min, z_max, y_points + 1)
+    temp_mesh_data = np.array([np.interp(x=Z_mesh,
+                                         xp=np.concatenate((Z_i_line, (Z_s_line[1:] if has_snow else []))),
+                                         fp=np.concatenate(([T_oi], T_i_line, [T_is],
+                                                           (T_s_line if has_snow else []),
+                                                           ([T_sa] if has_snow else [])
+                                                           )),
+                                         left=np.nan, right=np.nan
+                                         ) \
+                          for Z_i_line, Z_s_line, T_oi, T_i_line, T_is, T_s_line, T_sa, has_snow \
+                          in zip(Z_i_data, Z_s_data,
+                                 process_data.oi_temp_history, process_data.ice_temp_history,
+                                 process_data.is_temp_history, process_data.snow_temp_history,
+                                 process_data.sa_temp_history, process_data.snow_presence_history
+                                )
+                               ])
+    temp_mesh_sim = np.array([np.interp(x=Z_mesh,
+                                        xp=np.concatenate((Z_i_line, (Z_s_line[1:] if has_snow else []))),
+                                        fp=np.concatenate(([T_oi], T_i_line, [T_is],
+                                                           (T_s_line if has_snow else []),
+                                                           ([T_sa] if has_snow else [])
+                                                           )),
+                                        left=np.nan, right=np.nan
+                                        ) \
+                          for Z_i_line, Z_s_line, T_oi, T_i_line, T_is, T_s_line, T_sa, has_snow \
+                          in zip(Z_i_sim, Z_s_sim,
+                                 process_sim.oi_temp_history, process_sim.ice_temp_history,
+                                 process_sim.is_temp_history, process_sim.snow_temp_history,
+                                 process_sim.sa_temp_history, process_sim.snow_presence_history
+                                )
+                              ])
+
+    data = (temp_mesh_sim - temp_mesh_data).T
+        
+    if levels_fill is None:
+        if tmin_err is None:
+            tmin_err = np.nanmin(data)
+        if tmax_err is None:
+            tmax_err = np.nanmax(data)
+        levels_fill = get_bounds(tmin_err, tmax_err, step_err)
+        
+    if sigma_y is None:
+        sigma_y = data.shape[1]/500.0
+
+    fig = plt.figure(figsize=figsize)
+    ax = plt.axes()
+    ax.set_facecolor(np.array(rgb_background)/256.0)
+    contourf = ax.contourf(gauss_filter_with_nans(data, (sigma_x, sigma_y)),
+                           levels=levels_fill, cmap=cmap, extend='both',
+                           extent=[process_data.timeline[0]/3600, process_data.timeline[-1]/3600,
+                                   Z_mesh[0], Z_mesh[-1]]
+                          )
+    contour = ax.contour(gauss_filter_with_nans(data, (sigma_x, sigma_y)),
+                         levels=levels_border, cmap=cmap, norm=clr.Normalize(tmin_err/3, tmax_err/3, clip=True),
+                         linewidths=2.5, linestyles='--',
+                         extent=[process_data.timeline[0]/3600, process_data.timeline[-1]/3600,
+                                 Z_mesh[0], Z_mesh[-1]])
+    ax.clabel(contour, fontsize=20)
+
+    # ax.axhline(lw=3, ls='--', color='c')
+    ax.plot(process_data.timeline/3600.0, Z_i_data[:, 0], lw=1.5, color='black')
+    ax.plot(process_data.timeline/3600.0, Z_i_data[:, -1], lw=1.5, color='black')
+    ax.plot(process_data.timeline/3600.0, Z_s_data[:, -1], lw=1.5, color='black', label='data')
+    ax.plot(process_data.timeline/3600.0, Z_i_sim[:, 0], lw=3, ls=':', color='black')
+    ax.plot(process_data.timeline/3600.0, Z_i_sim[:, -1], lw=3, ls=':', color='black')
+    ax.plot(process_data.timeline/3600.0, Z_s_sim[:, -1], lw=3, ls=':', color='black', label='simulation')
+
+    ax.set_xlabel('t, hours', size=20)
+    ax.set_ylabel('Z, m', size=20)
+    ax.tick_params(axis='both', labelsize=15)
+
+
+    cax = fig.add_axes([ax.get_position().x0, ax.get_position().y0 - 0.15,
+                        ax.get_position().width, 0.05])
+    colorbar = fig.colorbar(contourf, cax=cax, orientation='horizontal', ticks=contourf.levels, drawedges=True)
+    colorbar.outline.set_linewidth(3)
+    colorbar.dividers.set_linewidth(3)
+    colorbar.dividers.set_dashes((-0.5, (2.5, 6.5)))
+    cax.tick_params(axis='x', labelsize=15)
+    ax.legend(prop={'size':20})
     
     if savepath is not None:
         fig.savefig(savepath, bbox_inches='tight')
