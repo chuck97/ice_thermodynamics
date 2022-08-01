@@ -558,13 +558,42 @@ def W_from_BC(T_node, T_cells,
         #h2 = dz_cells[0] + dz_cells[1]/2.0
         # grad = lambda T: (-T*(h2**2 - h1**2) + T_cells[0]*h2**2 - T_cells[1]*h1**2)/(h1*h2*(h2-h1))
         
-        level = dz_cells[0]/2
-        for i, (dz_prev, dz_curr) in enumerate(zip(dz_cells[:-1], dz_cells[1:]), start=1):
-            level += (dz_prev + dz_curr)/2
-            if level >= 0.4:
-                break
+        T_low, T_high, z_low, z_high = T_node, T_cells[0], 0, dz_cells[0]/2
+        if z_high < 0.4: 
+            for dz_prev, dz_curr, T_low, T_high in zip(dz_cells[:-1], dz_cells[1:], T_cells[:-1], T_cells[1:]):
+                z_low = z_high
+                z_high += (dz_curr + dz_prev) / 2
+                if z_high >= 0.4:
+                    break
+        
+        if z_high < 0.4:
+            print('sic!')
+            grad = (T_cells[-1] - T_node)/(sum(dz_cells) - dz_cells[-1]/2)
+        else:
+            T_interp = (T_high*(0.4 - z_low) + T_low*(z_high - 0.4))/(z_high - z_low)
+            grad = (T_interp - T_node)/0.4
             
-        grad = (T_cells[i] - T_node)/level
+            
+#         curr_z = dz_cells[0]/2.0
+#         for i in range(len(dz_cells)-1):
+#             if curr_z >= 0.4:
+#                 break
+#             curr_z += (dz_cells[i] + dz_cells[i+1])/2.0
+            
+#         z_high = curr_z
+#         z_low = (sum(dz_cells[:(i-1)]) - dz_cells[i-1]/2.0 if i > 0 else 0.0)
+        
+#         T_high = T_cells[i]
+#         T_low = (T_cells[i-1] if i > 0 else T_node)
+
+        
+#         level = dz_cells[0]/2
+#         for i, (dz_prev, dz_curr) in enumerate(zip(dz_cells[:-1], dz_cells[1:]), start=1):
+#             level += (dz_prev + dz_curr)/2
+#             if level >= 0.4:
+#                 break
+            
+#         grad = (T_cells[i] - T_node)/level
         
         if (k*grad + F) > 0:
             # basal melt
