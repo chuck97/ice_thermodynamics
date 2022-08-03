@@ -240,7 +240,7 @@ def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
     cmap_ice, norm_ice, bounds_ice = discretize_cmap(cmap_ice, bounds_ice, tmin_ice, tmax_ice, step_ice)
     img[ice_filter] = cmap_ice(norm_ice(temp_mesh[ice_filter]))
 
-    if process.snow_temp_history.any():
+    if process.snow_presence_history.any():
         if bounds_snow is None:
             if tmin_snow is None:
                 tmin_snow = np.nanmin(process.snow_temp_history)
@@ -265,7 +265,7 @@ def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
     cax_ice.set_xlabel('ice', size=20)
     cax_ice.tick_params(axis='x', labelsize=15)
 
-    if process.snow_temp_history.any():
+    if process.snow_presence_history.any():
         cax_snow = fig.add_axes([ax.get_position().x0, ax.get_position().y0 - 0.3,
                                  ax.get_position().width, 0.05])
         fig.colorbar(mcm.ScalarMappable(norm_snow, cmap_snow), cax=cax_snow,
