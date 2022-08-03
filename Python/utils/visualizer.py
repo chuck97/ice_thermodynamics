@@ -1,17 +1,21 @@
 import numpy as np
 import scipy.ndimage as spndim
 import pandas as pd
+import datetime as dt
+import itertools
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
 import matplotlib.cm as mcm
 import matplotlib.colors as clr
-from matplotlib.ticker import FormatStrFormatter
+import matplotlib.ticker as mtk
+import matplotlib.dates as mdt
 from matplotlib.collections import LineCollection
 matplotlib.rcParams['animation.embed_limit'] = 5000
 plt.rcParams["animation.html"] = "jshtml"
+
 from utils.engine import rho_w as water_density, rho_s as snow_density
-import itertools
+
 
 
 def get_Z(process, rho_s, rho_w):
@@ -133,7 +137,7 @@ def animate(processes,
     
     if clip_end:
         clip_end += 1
-    frames_count = (clip_end if clip_end else len(processes[0].timeline) + 1) \
+    frames_count = (clip_end if clip_end else processes[0].get_length() + 1) \
                  - (clip_start if clip_start else 0)
     
     all_Z_i = []
@@ -170,7 +174,7 @@ def animate(processes,
     ax.axhline(ls='--', lw=3, color='navy')
     ax.set_xlabel(r'T, $^o C$', size=20)
     ax.set_ylabel('Z, m', size=20)
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+    ax.yaxis.set_major_formatter(mtk.FormatStrFormatter('%.2f'))
     ax.tick_params(axis='both', labelsize=15)
     ax.grid()
 
@@ -280,6 +284,7 @@ def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
 def timeseries_err(process_sim, process_data,
                    rho_snow=snow_density, rho_water=water_density,
                    figsize=(30, 10), y_points=100,
+                   mode='hours', year=1997, x_ticks=None, y_ticks=None,
                    tmin_err=None, tmax_err=None, step_err=None,
                    levels_fill=None, levels_border = [-2, -1, -0.5, 0.5, 1, 2],
                    sigma_x=0, sigma_y=None,
@@ -337,31 +342,59 @@ def timeseries_err(process_sim, process_data,
 
     fig = plt.figure(figsize=figsize)
     ax = plt.axes()
+    
+    if mode == 'month':
+        daystart = (dt.datetime(year, 1, 1) - dt.datetime(1970, 1, 1)).days
+        T_axis = daystart + process_data.timeline
+        ax.xaxis.set_major_locator(mdt.MonthLocator())
+        ax.xaxis.set_major_formatter(mdt.DateFormatter('%b'))
+        xlabel = 'month'
+        
+    else:
+        if x_ticks is not None:
+            ax.xaxis.set_major_locator(mtk.LinearLocator(x_ticks))
+            ax.xaxis.set_major_formatter(mtk.FormatStrFormatter("%d"))
+        if mode == 'hours':
+            T_axis = process_data.timeline*24
+            xlabel = 'Time, h.'
+        elif mode == 'days':
+            T_axis = process_data.timeline
+            xlabel = 'Time, days'
+        else:
+            raise Exception("invalid mode!")
+    
+    if y_ticks is not None:
+        ax.yaxis.set_major_locator(mtk.LinearLocator(y_ticks))
+        ax.yaxis.set_major_formatter(mtk.FormatStrFormatter("%.2f"))
+        
     ax.set_facecolor(np.array(rgb_background)/256.0)
     contourf = ax.contourf(gauss_filter_with_nans(data, (sigma_x, sigma_y)),
                            levels=levels_fill, cmap=cmap, extend='both',
-                           extent=[process_data.timeline[0]/3600, process_data.timeline[-1]/3600,
-                                   Z_mesh[0], Z_mesh[-1]]
+                           extent=[T_axis[0], T_axis[-1], Z_mesh[0], Z_mesh[-1]]
                           )
     contour = ax.contour(gauss_filter_with_nans(data, (sigma_x, sigma_y)),
                          levels=levels_border, cmap=cmap, norm=clr.Normalize(tmin_err/3, tmax_err/3, clip=True),
                          linewidths=2.5, linestyles='--',
-                         extent=[process_data.timeline[0]/3600, process_data.timeline[-1]/3600,
-                                 Z_mesh[0], Z_mesh[-1]])
+                         extent=[T_axis[0], T_axis[-1], Z_mesh[0], Z_mesh[-1]]
+                        )
     ax.clabel(contour, fontsize=20)
 
     # ax.axhline(lw=3, ls='--', color='c')
-    ax.plot(process_data.timeline/3600.0, Z_i_data[:, 0], lw=1.5, color='black')
-    ax.plot(process_data.timeline/3600.0, Z_i_data[:, -1], lw=1.5, color='black')
-    ax.plot(process_data.timeline/3600.0, Z_s_data[:, -1], lw=1.5, color='black', label='data')
-    ax.plot(process_data.timeline/3600.0, Z_i_sim[:, 0], lw=3, ls=':', color='black')
-    ax.plot(process_data.timeline/3600.0, Z_i_sim[:, -1], lw=3, ls=':', color='black')
-    ax.plot(process_data.timeline/3600.0, Z_s_sim[:, -1], lw=3, ls=':', color='black', label='simulation')
+    ax.plot(T_axis, Z_i_data[:, 0], lw=1.5, color='black')
+    ax.plot(T_axis, Z_i_data[:, -1], lw=1.5, color='black')
+    ax.plot(T_axis, Z_s_data[:, -1], lw=1.5, color='black', label='data')
+    ax.plot(T_axis, Z_i_sim[:, 0], lw=3, ls=':', color='black')
+    ax.plot(T_axis, Z_i_sim[:, -1], lw=3, ls=':', color='black')
+    ax.plot(T_axis, Z_s_sim[:, -1], lw=3, ls=':', color='black', label='simulation')
 
-    ax.set_xlabel('t, hours', size=20)
+    ax.set_xlabel(xlabel, size=20)
     ax.set_ylabel('Z, m', size=20)
     ax.tick_params(axis='both', labelsize=15)
-
+#     if mode != 'month':
+#         if x_ticks is not None:
+#             ax.xaxis.set_major_locator(ticker.LinearLocator(x_ticks))
+#         if y_ticks is not None:
+#             ax.xaxis.set_major_locator()
 
     cax = fig.add_axes([ax.get_position().x0, ax.get_position().y0 - 0.15,
                         ax.get_position().width, 0.05])
