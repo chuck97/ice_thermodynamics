@@ -92,7 +92,7 @@ def gauss_filter_with_nans(arr, sigma):
 
 def animate(processes,
             rho_snow=snow_density, rho_water=water_density,
-            clip_start=None, clip_end=None,
+            figsize=(25, 20),
             t_min=None, t_max=None,
             cmap=None, names=None,
             savepath=None, dpi=None):
@@ -104,7 +104,7 @@ def animate(processes,
     
     def run(data):
 
-        Z_ice_line_procs, Z_snow_line_procs, proc_data, frame_number = data
+        frame_number, (Z_ice_line_procs, Z_snow_line_procs, proc_data) = data
         
         for Z_ice_line, Z_snow_line, \
             (_, _,
@@ -128,17 +128,14 @@ def animate(processes,
             line_ice.set_array(T_ice_full)             
             markers.set_offsets([[T, Z] for T, Z in zip(T_ice_full, Z_ice_line)])
             markers.set_array(T_ice_full)
-            ax.set_title('Time: %.2f hours'%(time/3600), size=20)
+            ax.set_title('Time: {}'.format(time), size=25)
     #     ax.set_yticks(np.insert(-process.ice_dz_history.cumsum(), 0, 0))
     
         print("Rendered {:.0%} ({}/{}) frames".format(frame_number/frames_count, frame_number, frames_count), end="\r")
 
         return lines_ice + lines_snow + markers_ice
     
-    if clip_end:
-        clip_end += 1
-    frames_count = (clip_end if clip_end else processes[0].get_length() + 1) \
-                 - (clip_start if clip_start else 0)
+    frames_count = processes[0].get_length()
     
     all_Z_i = []
     all_Z_s = []
@@ -154,9 +151,12 @@ def animate(processes,
     
     cmaps = ['Blues', 'Purples', 'Greens', 'cool', 'winter'] 
 
-    fig = plt.figure(figsize=(15, 15))
-    ax = fig.add_subplot(xlim=(t_min - (t_max - t_min)*0.1, t_max + (t_max - t_min)*0.1),
-                         ylim=(z_min - (z_max - z_min)*0.1, z_max + (z_max - z_min)*0.1))
+    fig, axes = plt.subplots(nrows=len(processes) + 1, figsize=figsize, \
+                             gridspec_kw={"height_ratios":[1] + [0.05]*len(processes)})
+    ax = axes[0]
+    ax.set_xlim(t_min - (t_max - t_min)*0.1, t_max + (t_max - t_min)*0.1)
+    ax.set_ylim(z_min - (z_max - z_min)*0.1, z_max + (z_max - z_min)*0.1)
+    print(ax.get_position())
     lines_ice = []
     markers_ice = []
     lines_snow = []
@@ -177,22 +177,19 @@ def animate(processes,
     ax.yaxis.set_major_formatter(mtk.FormatStrFormatter('%.2f'))
     ax.tick_params(axis='both', labelsize=15)
     ax.grid()
-
-    pad = 0
-    for i, line_ice in enumerate(lines_ice):
-        cbar = fig.colorbar(line_ice, orientation='horizontal', pad=pad)
+    
+    for i, (cax, line_ice) in enumerate(zip(axes[1:], lines_ice)):
+        cbar = fig.colorbar(line_ice, cax=cax, orientation='horizontal')
         if names is None:
-            cbar.ax.set_xlabel('process %d'%(len(lines_ice)-i), size=15)
+            cbar.ax.set_xlabel('process %d'%i, size=20)
         else:
-            cbar.ax.set_xlabel(names[i], size=15)
+            cbar.ax.set_xlabel(names[i], size=20)
         cbar.ax.tick_params(labelsize=15)
-        pad += 0.08
         
-    animation = anim.FuncAnimation(fig, run, zip(zip(*[Z_i[clip_start:clip_end] for Z_i in all_Z_i]),
-                                                 zip(*[Z_s[clip_start:clip_end] for Z_s in all_Z_s]),
-                                                 zip(*[process[clip_start:clip_end].get_zip() for process in processes]),
-                                                 range(1, frames_count + 1)
-                                                ),
+    animation = anim.FuncAnimation(fig, run, enumerate(zip(zip(*[Z_i for Z_i in all_Z_i]),
+                                                           zip(*[Z_s for Z_s in all_Z_s]),
+                                                           zip(*[process.get_zip() for process in processes])),
+                                                       start=1),
                                    save_count=frames_count, interval=30, blit=True)
     
     if savepath:
@@ -377,7 +374,7 @@ def timeseries_err(process_sim, process_data,
                          linewidths=2.5, linestyles='--',
                          extent=[T_axis[0], T_axis[-1], Z_mesh[0], Z_mesh[-1]]
                         )
-    ax.clabel(contour, fontsize=20)
+    ax.clabel(contour, fmt='%1.1f', fontsize=25)
 
     # ax.axhline(lw=3, ls='--', color='c')
     ax.plot(T_axis, Z_i_data[:, 0], lw=1.5, color='black')
