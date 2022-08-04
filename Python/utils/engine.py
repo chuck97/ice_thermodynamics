@@ -1024,8 +1024,7 @@ def main_process(time_step, time_end,
                  Toi, Ta, p,
                  F_atm_ice, F_atm_snow,
                  F_sw,
-                 F_ocn
-                ):
+                 F_ocn):
     
     time = 0.0
     
