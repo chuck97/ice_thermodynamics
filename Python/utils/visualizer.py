@@ -199,7 +199,7 @@ def animate(processes,
 
 
 def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
-                   figsize=(30, 10), y_points=100, 
+                   figsize=(30, 10), y_points=100,
                    tmin_ice=None, tmax_ice=None, step_ice=None, bounds_ice=None,
                    tmin_snow=None, tmax_snow=None, step_snow=None, bounds_snow=None,
                    cmap_ice='Blues', cmap_snow='Greys', color_empty=[208, 245, 226],
@@ -334,6 +334,8 @@ def timeseries_err(process_sim, process_data,
             tmax_err = np.nanmax(data)
         levels_fill = get_bounds(tmin_err, tmax_err, step_err)
         
+    max_abs_err = max(abs(tmin_err), tmax_err)
+        
     if sigma_y is None:
         sigma_y = data.shape[1]/500.0
 
@@ -366,11 +368,11 @@ def timeseries_err(process_sim, process_data,
         
     ax.set_facecolor(np.array(rgb_background)/256.0)
     contourf = ax.contourf(gauss_filter_with_nans(data, (sigma_x, sigma_y)),
-                           levels=levels_fill, cmap=cmap, extend='both',
-                           extent=[T_axis[0], T_axis[-1], Z_mesh[0], Z_mesh[-1]]
+                           levels=levels_fill, cmap=cmap, norm=clr.Normalize(-max_abs_err, max_abs_err),
+                           extend='both', extent=[T_axis[0], T_axis[-1], Z_mesh[0], Z_mesh[-1]]
                           )
     contour = ax.contour(gauss_filter_with_nans(data, (sigma_x, sigma_y)),
-                         levels=levels_border, cmap=cmap, norm=clr.Normalize(tmin_err/3, tmax_err/3, clip=True),
+                         levels=levels_border, cmap=cmap, norm=clr.Normalize(-max_abs_err/3, max_abs_err/3, clip=True),
                          linewidths=2.5, linestyles='--',
                          extent=[T_axis[0], T_axis[-1], Z_mesh[0], Z_mesh[-1]]
                         )
@@ -387,11 +389,6 @@ def timeseries_err(process_sim, process_data,
     ax.set_xlabel(xlabel, size=20)
     ax.set_ylabel('Z, m', size=20)
     ax.tick_params(axis='both', labelsize=15)
-#     if mode != 'month':
-#         if x_ticks is not None:
-#             ax.xaxis.set_major_locator(ticker.LinearLocator(x_ticks))
-#         if y_ticks is not None:
-#             ax.xaxis.set_major_locator()
 
     cax = fig.add_axes([ax.get_position().x0, ax.get_position().y0 - 0.15,
                         ax.get_position().width, 0.05])
