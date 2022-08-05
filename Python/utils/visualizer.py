@@ -285,6 +285,8 @@ def timeseries_err(process_sim, process_data,
                    rho_snow=snow_density, rho_water=water_density,
                    figsize=(30, 10), y_points=100,
                    mode='hours', year=1997, x_ticks=None, y_ticks=None,
+                   label_data='data', label_sim='simulation',
+                   legend_loc='best',
                    tmin_err=None, tmax_err=None, step_err=None,
                    levels_fill=None, levels_border = [-2, -1, -0.5, 0.5, 1, 2],
                    sigma_x=0, sigma_y=None,
@@ -382,10 +384,10 @@ def timeseries_err(process_sim, process_data,
     # ax.axhline(lw=3, ls='--', color='c')
     ax.plot(T_axis, Z_i_data[:, 0], lw=1.5, color='black')
     ax.plot(T_axis, Z_i_data[:, -1], lw=1.5, color='black')
-    ax.plot(T_axis, Z_s_data[:, -1], lw=1.5, color='black', label='data')
+    ax.plot(T_axis, Z_s_data[:, -1], lw=1.5, color='black', label=label_data)
     ax.plot(T_axis, Z_i_sim[:, 0], lw=3, ls=':', color='black')
     ax.plot(T_axis, Z_i_sim[:, -1], lw=3, ls=':', color='black')
-    ax.plot(T_axis, Z_s_sim[:, -1], lw=3, ls=':', color='black', label='simulation')
+    ax.plot(T_axis, Z_s_sim[:, -1], lw=3, ls=':', color='black', label=label_sim)
 
     ax.set_xlabel(xlabel, size=20)
     ax.set_ylabel('Z, m', size=20)
@@ -403,7 +405,7 @@ def timeseries_err(process_sim, process_data,
     colorbar.dividers.set_linewidth(3)
     colorbar.dividers.set_dashes((-0.5, (2.5, 6.5)))
     cax.tick_params(axis='x', labelsize=15)
-    ax.legend(prop={'size':20})
+    ax.legend(loc=legend_loc, prop={'size':20})
     
     if savepath is not None:
         fig.savefig(savepath, bbox_inches='tight')
