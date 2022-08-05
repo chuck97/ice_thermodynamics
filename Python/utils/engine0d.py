@@ -182,9 +182,6 @@ def ice_melting_0d(Toi,
         if (err < tol):
             break
 
-<<<<<<< HEAD
-    return thickness_new
-=======
     return thickness_new
 
 def snow_ice_freezing_0d(Toi,
@@ -507,4 +504,3 @@ def main_process_0d(time_step,
         process.ice_density_history = np.append(process.ice_density_history, [[ue.rho_i]*N_cells_ice], axis=0)
     
     return process
->>>>>>> c39d55f... fixed bug in engin0d
