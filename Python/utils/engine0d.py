@@ -503,5 +503,6 @@ def main_process_0d(time_step,
         process.snow_temp_history = np.append(process.snow_temp_history, [T_snow_cells_out.copy()], axis=0)
         process.sa_temp_history = np.append(process.sa_temp_history, T_sa_out)
         process.ice_density_history = np.append(process.ice_density_history, [[ue.rho_i]*N_cells_ice], axis=0)
-    
+        
     return process
+
