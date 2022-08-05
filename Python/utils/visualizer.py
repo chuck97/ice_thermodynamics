@@ -95,7 +95,7 @@ def animate(processes,
             figsize=(25, 20),
             t_min=None, t_max=None,
             cmap=None, names=None,
-            savepath=None, dpi=None):
+            interval=50, savepath=None, dpi=None):
     
     assert len(set(process.get_length() for process in processes)) == 1, "Length of processes are not equal!"
     
@@ -190,7 +190,7 @@ def animate(processes,
                                                            zip(*[Z_s for Z_s in all_Z_s]),
                                                            zip(*[process.get_zip() for process in processes])),
                                                        start=1),
-                                   save_count=frames_count, interval=30, blit=True)
+                                   save_count=frames_count, interval=interval, blit=True)
     
     if savepath:
         animation.save(savepath, dpi=dpi)
