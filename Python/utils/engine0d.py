@@ -477,7 +477,7 @@ def main_process_0d(time_step,
                                 ice_thickness_init=ice_thickness_old,
                                 snow_thickness_init=snow_thickness_old,
                                 N_pseudoiter=N_pseudoiter,
-                                time_step=time,
+                                time_step=time_step,
                                 p=p(time))
                 
             process.snow_presence_history = np.append(process.snow_presence_history, True)
