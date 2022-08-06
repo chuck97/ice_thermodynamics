@@ -428,7 +428,7 @@ def plot_characteristics(process_list, labels, savepath=None):
     ax_snow_th.legend(prop={'size': 20})
     ax_snow_th.grid()
     
-    ax_Tsu.set_title('Temperature of interface', size=25)
+    ax_Tsu.set_title('Surface temperature', size=25)
     ax_Tsu.set_ylabel(r'Temperature, $^o C.$', size=20)
     ax_Tsu.set_xlabel('Time', size=20)
     ax_Tsu.tick_params(axis='both', labelsize=15)
@@ -439,3 +439,51 @@ def plot_characteristics(process_list, labels, savepath=None):
         fig.savefig(savepath, bbox_inches='tight')
     else:
         plt.show()
+        
+        
+def plot_errors(process_data, sim_process_list, labels, savepath=None):
+    assert len(sim_process_list) == len(labels) - 1, \
+    "Length of labels should be more than length of simulation processes list by one!"
+    
+    fig, (ax_ice_err, ax_snow_err, ax_Tsu_err) = plt.subplots(nrows=3, figsize=(15, 35))
+    
+    for process, label in zip(sim_process_list, labels):
+        ax_ice_err.plot(process_data.timeline, process_data.ice_dz_history.sum(axis=1) \
+                                             - process.ice_dz_history.sum(axis=1), 
+                        label=label, lw=2.5)
+        ax_snow_err.plot(process_data.timeline, process_data.snow_dz_history.sum(axis=1) \
+                                              - process.snow_dz_history.sum(axis=1), 
+                        label=label, lw=2.5)
+        ax_Tsu_err.plot(process.timeline,
+                    np.where(process_data.snow_presence_history,
+                             process_data.sa_temp_history, process_data.is_temp_history) \
+                  - np.where(process.snow_presence_history,
+                             process.sa_temp_history, process.is_temp_history),
+                    label=label, lw=2.5)
+    
+    ax_ice_err.set_title('Ice thickness error', size=25)
+    ax_ice_err.set_ylabel('Level, m.', size=20)
+    ax_ice_err.set_xlabel('Time', size=20)
+    ax_ice_err.tick_params(axis='both', labelsize=15)
+    ax_ice_err.legend(prop={'size': 20})
+    ax_ice_err.grid()
+    
+    ax_snow_err.set_title('Snow thickness error', size=25)
+    ax_snow_err.set_ylabel('Level, m.', size=20)
+    ax_snow_err.set_xlabel('Time', size=20)
+    ax_snow_err.tick_params(axis='both', labelsize=15)
+    ax_snow_err.legend(prop={'size': 20})
+    ax_snow_err.grid()
+    
+    ax_Tsu_err.set_title('Surface temperature error', size=25)
+    ax_Tsu_err.set_ylabel(r'Temperature, $^o C.$', size=20)
+    ax_Tsu_err.set_xlabel('Time', size=20)
+    ax_Tsu_err.tick_params(axis='both', labelsize=15)
+    ax_Tsu_err.legend(prop={'size': 20})
+    ax_Tsu_err.grid()
+    
+    if savepath is not None:
+        fig.savefig(savepath, bbox_inches='tight')
+    else:
+        plt.show()
+
