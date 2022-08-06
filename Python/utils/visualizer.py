@@ -17,7 +17,6 @@ plt.rcParams["animation.html"] = "jshtml"
 from utils.engine import rho_w as water_density, rho_s as snow_density
 
 
-
 def get_Z(process, rho_s, rho_w):
     
     dzi, dzs, rho_i = process.ice_dz_history, process.snow_dz_history, process.ice_density_history
@@ -403,3 +402,40 @@ def timeseries_err(process_sim, process_data,
     
     if savepath is not None:
         fig.savefig(savepath, bbox_inches='tight')
+        
+        
+def plot_characteristics(process_list, labels, savepath=None):
+    fig, (ax_ice_th, ax_snow_th, ax_Tsu) = plt.subplots(nrows=3, figsize=(15, 35))
+    
+    for process, label in zip(process_list, labels):
+        ax_ice_th.plot(process.timeline, process.ice_dz_history.sum(axis=1), label=label, lw=2.5)
+        ax_snow_th.plot(process.timeline, process.snow_dz_history.sum(axis=1), label=label, lw=2.5)
+        ax_Tsu.plot(process.timeline,
+                    np.where(process.snow_presence_history, process.sa_temp_history, process.is_temp_history),
+                    label=label, lw=2.5)
+    
+    ax_ice_th.set_title('Ice thickness', size=25)
+    ax_ice_th.set_ylabel('Level, m.', size=20)
+    ax_ice_th.set_xlabel('Time', size=20)
+    ax_ice_th.tick_params(axis='both', labelsize=15)
+    ax_ice_th.legend(prop={'size': 20})
+    ax_ice_th.grid()
+    
+    ax_snow_th.set_title('Snow thickness', size=25)
+    ax_snow_th.set_ylabel('Level, m.', size=20)
+    ax_snow_th.set_xlabel('Time', size=20)
+    ax_snow_th.tick_params(axis='both', labelsize=15)
+    ax_snow_th.legend(prop={'size': 20})
+    ax_snow_th.grid()
+    
+    ax_Tsu.set_title('Temperature of interface', size=25)
+    ax_Tsu.set_ylabel(r'Temperature, $^o C.$', size=20)
+    ax_Tsu.set_xlabel('Time', size=20)
+    ax_Tsu.tick_params(axis='both', labelsize=15)
+    ax_Tsu.legend(prop={'size': 20})
+    ax_Tsu.grid()
+    
+    if savepath is not None:
+        fig.savefig(savepath, bbox_inches='tight')
+    else:
+        plt.show()
