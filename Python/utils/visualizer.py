@@ -17,7 +17,6 @@ plt.rcParams["animation.html"] = "jshtml"
 from utils.engine import rho_w as water_density, rho_s as snow_density
 
 
-
 def get_Z(process, rho_s, rho_w):
     
     dzi, dzs, rho_i = process.ice_dz_history, process.snow_dz_history, process.ice_density_history
@@ -92,10 +91,10 @@ def gauss_filter_with_nans(arr, sigma):
 
 def animate(processes,
             rho_snow=snow_density, rho_water=water_density,
-            clip_start=None, clip_end=None,
+            figsize=(25, 20),
             t_min=None, t_max=None,
             cmap=None, names=None,
-            savepath=None, dpi=None):
+            interval=50, savepath=None, dpi=None):
     
     assert len(set(process.get_length() for process in processes)) == 1, "Length of processes are not equal!"
     
@@ -104,7 +103,7 @@ def animate(processes,
     
     def run(data):
 
-        Z_ice_line_procs, Z_snow_line_procs, proc_data, frame_number = data
+        frame_number, (Z_ice_line_procs, Z_snow_line_procs, proc_data) = data
         
         for Z_ice_line, Z_snow_line, \
             (_, _,
@@ -128,17 +127,14 @@ def animate(processes,
             line_ice.set_array(T_ice_full)             
             markers.set_offsets([[T, Z] for T, Z in zip(T_ice_full, Z_ice_line)])
             markers.set_array(T_ice_full)
-            ax.set_title('Time: %.2f hours'%(time/3600), size=20)
+            ax.set_title('Time: {}'.format(time), size=25)
     #     ax.set_yticks(np.insert(-process.ice_dz_history.cumsum(), 0, 0))
     
         print("Rendered {:.0%} ({}/{}) frames".format(frame_number/frames_count, frame_number, frames_count), end="\r")
 
         return lines_ice + lines_snow + markers_ice
     
-    if clip_end:
-        clip_end += 1
-    frames_count = (clip_end if clip_end else processes[0].get_length() + 1) \
-                 - (clip_start if clip_start else 0)
+    frames_count = processes[0].get_length()
     
     all_Z_i = []
     all_Z_s = []
@@ -154,9 +150,12 @@ def animate(processes,
     
     cmaps = ['Blues', 'Purples', 'Greens', 'cool', 'winter'] 
 
-    fig = plt.figure(figsize=(15, 15))
-    ax = fig.add_subplot(xlim=(t_min - (t_max - t_min)*0.1, t_max + (t_max - t_min)*0.1),
-                         ylim=(z_min - (z_max - z_min)*0.1, z_max + (z_max - z_min)*0.1))
+    fig, axes = plt.subplots(nrows=len(processes) + 1, figsize=figsize, \
+                             gridspec_kw={"height_ratios":[1] + [0.05]*len(processes)})
+    ax = axes[0]
+    ax.set_xlim(t_min - (t_max - t_min)*0.1, t_max + (t_max - t_min)*0.1)
+    ax.set_ylim(z_min - (z_max - z_min)*0.1, z_max + (z_max - z_min)*0.1)
+    print(ax.get_position())
     lines_ice = []
     markers_ice = []
     lines_snow = []
@@ -177,23 +176,20 @@ def animate(processes,
     ax.yaxis.set_major_formatter(mtk.FormatStrFormatter('%.2f'))
     ax.tick_params(axis='both', labelsize=15)
     ax.grid()
-
-    pad = 0
-    for i, line_ice in enumerate(lines_ice):
-        cbar = fig.colorbar(line_ice, orientation='horizontal', pad=pad)
+    
+    for i, (cax, line_ice) in enumerate(zip(axes[1:], lines_ice)):
+        cbar = fig.colorbar(line_ice, cax=cax, orientation='horizontal')
         if names is None:
-            cbar.ax.set_xlabel('process %d'%(len(lines_ice)-i), size=15)
+            cbar.ax.set_xlabel('process %d'%i, size=20)
         else:
-            cbar.ax.set_xlabel(names[i], size=15)
+            cbar.ax.set_xlabel(names[i], size=20)
         cbar.ax.tick_params(labelsize=15)
-        pad += 0.08
         
-    animation = anim.FuncAnimation(fig, run, zip(zip(*[Z_i[clip_start:clip_end] for Z_i in all_Z_i]),
-                                                 zip(*[Z_s[clip_start:clip_end] for Z_s in all_Z_s]),
-                                                 zip(*[process[clip_start:clip_end].get_zip() for process in processes]),
-                                                 range(1, frames_count + 1)
-                                                ),
-                                   save_count=frames_count, interval=30, blit=True)
+    animation = anim.FuncAnimation(fig, run, enumerate(zip(zip(*[Z_i for Z_i in all_Z_i]),
+                                                           zip(*[Z_s for Z_s in all_Z_s]),
+                                                           zip(*[process.get_zip() for process in processes])),
+                                                       start=1),
+                                   save_count=frames_count, interval=interval, blit=True)
     
     if savepath:
         animation.save(savepath, dpi=dpi)
@@ -202,7 +198,7 @@ def animate(processes,
 
 
 def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
-                   figsize=(30, 10), y_points=100, 
+                   figsize=(30, 10), y_points=100,
                    tmin_ice=None, tmax_ice=None, step_ice=None, bounds_ice=None,
                    tmin_snow=None, tmax_snow=None, step_snow=None, bounds_snow=None,
                    cmap_ice='Blues', cmap_snow='Greys', color_empty=[208, 245, 226],
@@ -339,6 +335,8 @@ def timeseries_err(process_sim, process_data,
             tmax_err = np.nanmax(data)
         levels_fill = get_bounds(tmin_err, tmax_err, step_err)
         
+    max_abs_err = max(abs(tmin_err), tmax_err)
+        
     if sigma_y is None:
         sigma_y = data.shape[1]/500.0
 
@@ -371,15 +369,15 @@ def timeseries_err(process_sim, process_data,
         
     ax.set_facecolor(np.array(rgb_background)/256.0)
     contourf = ax.contourf(gauss_filter_with_nans(data, (sigma_x, sigma_y)),
-                           levels=levels_fill, cmap=cmap, extend='both',
-                           extent=[T_axis[0], T_axis[-1], Z_mesh[0], Z_mesh[-1]]
+                           levels=levels_fill, cmap=cmap, norm=clr.Normalize(-max_abs_err, max_abs_err),
+                           extend='both', extent=[T_axis[0], T_axis[-1], Z_mesh[0], Z_mesh[-1]]
                           )
     contour = ax.contour(gauss_filter_with_nans(data, (sigma_x, sigma_y)),
-                         levels=levels_border, cmap=cmap, norm=clr.Normalize(tmin_err/3, tmax_err/3, clip=True),
+                         levels=levels_border, cmap=cmap, norm=clr.Normalize(-max_abs_err/3, max_abs_err/3, clip=True),
                          linewidths=2.5, linestyles='--',
                          extent=[T_axis[0], T_axis[-1], Z_mesh[0], Z_mesh[-1]]
                         )
-    ax.clabel(contour, fontsize=20)
+    ax.clabel(contour, fmt='%1.1f', fontsize=25)
 
     # ax.axhline(lw=3, ls='--', color='c')
     ax.plot(T_axis, Z_i_data[:, 0], lw=1.5, color='black')
@@ -392,11 +390,6 @@ def timeseries_err(process_sim, process_data,
     ax.set_xlabel(xlabel, size=20)
     ax.set_ylabel('Z, m', size=20)
     ax.tick_params(axis='both', labelsize=15)
-#     if mode != 'month':
-#         if x_ticks is not None:
-#             ax.xaxis.set_major_locator(ticker.LinearLocator(x_ticks))
-#         if y_ticks is not None:
-#             ax.xaxis.set_major_locator()
 
     cax = fig.add_axes([ax.get_position().x0, ax.get_position().y0 - 0.15,
                         ax.get_position().width, 0.05])
@@ -409,3 +402,87 @@ def timeseries_err(process_sim, process_data,
     
     if savepath is not None:
         fig.savefig(savepath, bbox_inches='tight')
+        
+        
+def plot_characteristics(process_list, labels, savepath=None):
+    fig, (ax_ice_th, ax_snow_th, ax_Tsu) = plt.subplots(nrows=3, figsize=(15, 35))
+    
+    for process, label in zip(process_list, labels):
+        ax_ice_th.plot(process.timeline, process.ice_dz_history.sum(axis=1), label=label, lw=2.5)
+        ax_snow_th.plot(process.timeline, process.snow_dz_history.sum(axis=1), label=label, lw=2.5)
+        ax_Tsu.plot(process.timeline,
+                    np.where(process.snow_presence_history, process.sa_temp_history, process.is_temp_history),
+                    label=label, lw=2.5)
+    
+    ax_ice_th.set_title('Ice thickness', size=25)
+    ax_ice_th.set_ylabel('Level, m.', size=20)
+    ax_ice_th.set_xlabel('Time', size=20)
+    ax_ice_th.tick_params(axis='both', labelsize=15)
+    ax_ice_th.legend(prop={'size': 20})
+    ax_ice_th.grid()
+    
+    ax_snow_th.set_title('Snow thickness', size=25)
+    ax_snow_th.set_ylabel('Level, m.', size=20)
+    ax_snow_th.set_xlabel('Time', size=20)
+    ax_snow_th.tick_params(axis='both', labelsize=15)
+    ax_snow_th.legend(prop={'size': 20})
+    ax_snow_th.grid()
+    
+    ax_Tsu.set_title('Surface temperature', size=25)
+    ax_Tsu.set_ylabel(r'Temperature, $^o C.$', size=20)
+    ax_Tsu.set_xlabel('Time', size=20)
+    ax_Tsu.tick_params(axis='both', labelsize=15)
+    ax_Tsu.legend(prop={'size': 20})
+    ax_Tsu.grid()
+    
+    if savepath is not None:
+        fig.savefig(savepath, bbox_inches='tight')
+    else:
+        plt.show()
+        
+        
+def plot_errors(process_data, sim_process_list, labels, savepath=None):
+    assert len(sim_process_list) == len(labels) - 1, \
+    "Length of labels should be more than length of simulation processes list by one!"
+    
+    fig, (ax_ice_err, ax_snow_err, ax_Tsu_err) = plt.subplots(nrows=3, figsize=(15, 35))
+    
+    for process, label in zip(sim_process_list, labels):
+        ax_ice_err.plot(process_data.timeline, process_data.ice_dz_history.sum(axis=1) \
+                                             - process.ice_dz_history.sum(axis=1), 
+                        label=label, lw=2.5)
+        ax_snow_err.plot(process_data.timeline, process_data.snow_dz_history.sum(axis=1) \
+                                              - process.snow_dz_history.sum(axis=1), 
+                        label=label, lw=2.5)
+        ax_Tsu_err.plot(process.timeline,
+                    np.where(process_data.snow_presence_history,
+                             process_data.sa_temp_history, process_data.is_temp_history) \
+                  - np.where(process.snow_presence_history,
+                             process.sa_temp_history, process.is_temp_history),
+                    label=label, lw=2.5)
+    
+    ax_ice_err.set_title('Ice thickness error', size=25)
+    ax_ice_err.set_ylabel('Level, m.', size=20)
+    ax_ice_err.set_xlabel('Time', size=20)
+    ax_ice_err.tick_params(axis='both', labelsize=15)
+    ax_ice_err.legend(prop={'size': 20})
+    ax_ice_err.grid()
+    
+    ax_snow_err.set_title('Snow thickness error', size=25)
+    ax_snow_err.set_ylabel('Level, m.', size=20)
+    ax_snow_err.set_xlabel('Time', size=20)
+    ax_snow_err.tick_params(axis='both', labelsize=15)
+    ax_snow_err.legend(prop={'size': 20})
+    ax_snow_err.grid()
+    
+    ax_Tsu_err.set_title('Surface temperature error', size=25)
+    ax_Tsu_err.set_ylabel(r'Temperature, $^o C.$', size=20)
+    ax_Tsu_err.set_xlabel('Time', size=20)
+    ax_Tsu_err.tick_params(axis='both', labelsize=15)
+    ax_Tsu_err.legend(prop={'size': 20})
+    ax_Tsu_err.grid()
+    
+    if savepath is not None:
+        fig.savefig(savepath, bbox_inches='tight')
+    else:
+        plt.show()
