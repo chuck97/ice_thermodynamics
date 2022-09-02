@@ -1,5 +1,0 @@
-Python/Validation/*
-Python/.ipynb_checkpoints/*
-Python/utils/__pycache__/*
-
-!Python/Validation/full_data.csv
