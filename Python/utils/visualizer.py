@@ -155,7 +155,6 @@ def animate(processes,
     ax = axes[0]
     ax.set_xlim(t_min - (t_max - t_min)*0.1, t_max + (t_max - t_min)*0.1)
     ax.set_ylim(z_min - (z_max - z_min)*0.1, z_max + (z_max - z_min)*0.1)
-    print(ax.get_position())
     lines_ice = []
     markers_ice = []
     lines_snow = []
@@ -174,7 +173,7 @@ def animate(processes,
     ax.set_xlabel(r'T, $^o C$', size=20)
     ax.set_ylabel('Z, m', size=20)
     ax.yaxis.set_major_formatter(mtk.FormatStrFormatter('%.2f'))
-    ax.tick_params(axis='both', labelsize=15)
+    ax.tick_params(labelsize=15)
     ax.grid()
     
     for i, (cax, line_ice) in enumerate(zip(axes[1:], lines_ice)):
@@ -199,10 +198,11 @@ def animate(processes,
 
 def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
                    figsize=(30, 10), y_points=100,
+                   mode='hours', year=1997, x_ticks=None, y_ticks=None,
                    tmin_ice=None, tmax_ice=None, step_ice=None, bounds_ice=None,
                    tmin_snow=None, tmax_snow=None, step_snow=None, bounds_snow=None,
-                   cmap_ice='Blues', cmap_snow='Greys', color_empty=[208, 245, 226],
-                   savepath=None):
+                   cmap_ice='Blues', cmap_snow='Greys', color_waterline='c', color_empty=[208, 245, 226],
+                   savepath=None, dpi=200):
 
     Z_i, Z_s = get_Z(process, rho_snow, rho_water)
     z_min = min(Z_i[:, 0])
@@ -251,30 +251,55 @@ def timeseries_img(process, rho_snow=snow_density, rho_water=water_density,
         
     fig = plt.figure(figsize=figsize)
     ax = plt.axes()
+    
+    if mode == 'month':
+        daystart = (dt.datetime(year, 1, 1) - dt.datetime(1970, 1, 1)).days
+        T_axis = daystart + process.timeline
+        ax.xaxis.set_major_locator(mdt.MonthLocator())
+        ax.xaxis.set_major_formatter(mdt.DateFormatter('%b'))
+        xlabel = 'month'
+        
+    else:
+        if x_ticks is not None:
+            ax.xaxis.set_major_locator(mtk.LinearLocator(x_ticks))
+            ax.xaxis.set_major_formatter(mtk.FormatStrFormatter("%d"))
+        if mode == 'hours':
+            T_axis = process.timeline*24
+            xlabel = 'Time, h.'
+        elif mode == 'days':
+            T_axis = process.timeline
+            xlabel = 'Time, days'
+        else:
+            raise Exception("invalid mode!")
+    
+    if y_ticks is not None:
+        ax.yaxis.set_major_locator(mtk.LinearLocator(y_ticks))
+        ax.yaxis.set_major_formatter(mtk.FormatStrFormatter("%.2f"))
+    
     ax.imshow(img.swapaxes(0, 1), aspect='auto', origin='lower',
-              extent=[process.timeline[0]/3600, process.timeline[-1]/3600, Z_mesh[0], Z_mesh[-1]])
-    ax.set_xlabel('t, hours', size=20)
-    ax.set_ylabel('Z, m', size=20)
-    ax.tick_params(axis='both', labelsize=15)
-    ax.axhline(lw=3, ls='--', color='c')
+              extent=[T_axis[0], T_axis[-1], Z_mesh[0], Z_mesh[-1]])
+    ax.set_xlabel('t, hours', size=25)
+    ax.set_ylabel('Z, m', size=25)
+    ax.tick_params(labelsize=20)
+    ax.axhline(lw=3, ls='--', color=color_waterline)
 
     cax_ice = fig.add_axes([ax.get_position().x0, ax.get_position().y0 - 0.15,
                             ax.get_position().width, 0.05])
     fig.colorbar(mcm.ScalarMappable(norm_ice, cmap_ice), cax=cax_ice,
                  orientation='horizontal', ticks=bounds_ice)
-    cax_ice.set_xlabel('ice', size=20)
-    cax_ice.tick_params(axis='x', labelsize=15)
+    cax_ice.set_xlabel(r'Ice temperature, $^{\circ}$C', size=25)
+    cax_ice.tick_params(axis='x', labelsize=20)
 
     if process.snow_presence_history.any():
         cax_snow = fig.add_axes([ax.get_position().x0, ax.get_position().y0 - 0.3,
                                  ax.get_position().width, 0.05])
         fig.colorbar(mcm.ScalarMappable(norm_snow, cmap_snow), cax=cax_snow,
                      orientation='horizontal', ticks=bounds_snow)
-        cax_snow.set_xlabel('snow', size=20)
-        cax_snow.tick_params(axis='x', labelsize=15)
+        cax_snow.set_xlabel(r'Snow temperature, $^{\circ}$C', size=25)
+        cax_snow.tick_params(axis='x', labelsize=20)
     
     if savepath is not None:
-        fig.savefig(savepath, bbox_inches='tight')
+        fig.savefig(savepath, bbox_inches='tight', dpi=dpi)
         
         
 def timeseries_err(process_sim, process_data,
@@ -287,7 +312,7 @@ def timeseries_err(process_sim, process_data,
                    levels_fill=None, levels_border = [-2, -1, -0.5, 0.5, 1, 2],
                    sigma_x=0, sigma_y=None,
                    cmap='seismic', rgb_background = [208, 245, 226],
-                   savepath=None):
+                   savepath=None, dpi=200):
 
     Z_i_data, Z_s_data = get_Z(process_data, rho_snow, rho_water)
     Z_i_sim, Z_s_sim = get_Z(process_sim, rho_snow, rho_water)
@@ -387,9 +412,9 @@ def timeseries_err(process_sim, process_data,
     ax.plot(T_axis, Z_i_sim[:, -1], lw=3, ls=':', color='black')
     ax.plot(T_axis, Z_s_sim[:, -1], lw=3, ls=':', color='black', label=label_sim)
 
-    ax.set_xlabel(xlabel, size=20)
-    ax.set_ylabel('Z, m', size=20)
-    ax.tick_params(axis='both', labelsize=15)
+    ax.set_xlabel(xlabel, size=25)
+    ax.set_ylabel('Z, m', size=25)
+    ax.tick_params(labelsize=20)
 
     cax = fig.add_axes([ax.get_position().x0, ax.get_position().y0 - 0.15,
                         ax.get_position().width, 0.05])
@@ -397,11 +422,12 @@ def timeseries_err(process_sim, process_data,
     colorbar.outline.set_linewidth(3)
     colorbar.dividers.set_linewidth(3)
     colorbar.dividers.set_dashes((-0.5, (2.5, 6.5)))
-    cax.tick_params(axis='x', labelsize=15)
+    cax.tick_params(axis='x', labelsize=20)
+    cax.set_xlabel(r'Temperature error, $^{\circ}$C', size=25)
     ax.legend(loc=legend_loc, prop={'size':20})
     
     if savepath is not None:
-        fig.savefig(savepath, bbox_inches='tight')
+        fig.savefig(savepath, bbox_inches='tight', dpi=dpi)
         
         
 def plot_characteristics(process_list, labels, savepath=None):
@@ -417,21 +443,21 @@ def plot_characteristics(process_list, labels, savepath=None):
     ax_ice_th.set_title('Ice thickness', size=25)
     ax_ice_th.set_ylabel('Level, m.', size=20)
     ax_ice_th.set_xlabel('Time', size=20)
-    ax_ice_th.tick_params(axis='both', labelsize=15)
+    ax_ice_th.tick_params(labelsize=15)
     ax_ice_th.legend(prop={'size': 20})
     ax_ice_th.grid()
     
     ax_snow_th.set_title('Snow thickness', size=25)
     ax_snow_th.set_ylabel('Level, m.', size=20)
     ax_snow_th.set_xlabel('Time', size=20)
-    ax_snow_th.tick_params(axis='both', labelsize=15)
+    ax_snow_th.tick_params(labelsize=15)
     ax_snow_th.legend(prop={'size': 20})
     ax_snow_th.grid()
     
     ax_Tsu.set_title('Surface temperature', size=25)
     ax_Tsu.set_ylabel(r'Temperature, $^o C.$', size=20)
     ax_Tsu.set_xlabel('Time', size=20)
-    ax_Tsu.tick_params(axis='both', labelsize=15)
+    ax_Tsu.tick_params(labelsize=15)
     ax_Tsu.legend(prop={'size': 20})
     ax_Tsu.grid()
     
@@ -464,21 +490,21 @@ def plot_errors(process_data, sim_process_list, labels, savepath=None):
     ax_ice_err.set_title('Ice thickness error', size=25)
     ax_ice_err.set_ylabel('Level, m.', size=20)
     ax_ice_err.set_xlabel('Time', size=20)
-    ax_ice_err.tick_params(axis='both', labelsize=15)
+    ax_ice_err.tick_params(labelsize=15)
     ax_ice_err.legend(prop={'size': 20})
     ax_ice_err.grid()
     
     ax_snow_err.set_title('Snow thickness error', size=25)
     ax_snow_err.set_ylabel('Level, m.', size=20)
     ax_snow_err.set_xlabel('Time', size=20)
-    ax_snow_err.tick_params(axis='both', labelsize=15)
+    ax_snow_err.tick_params(labelsize=15)
     ax_snow_err.legend(prop={'size': 20})
     ax_snow_err.grid()
     
     ax_Tsu_err.set_title('Surface temperature error', size=25)
     ax_Tsu_err.set_ylabel(r'Temperature, $^o C.$', size=20)
     ax_Tsu_err.set_xlabel('Time', size=20)
-    ax_Tsu_err.tick_params(axis='both', labelsize=15)
+    ax_Tsu_err.tick_params(labelsize=15)
     ax_Tsu_err.legend(prop={'size': 20})
     ax_Tsu_err.grid()
     

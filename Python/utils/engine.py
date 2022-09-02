@@ -46,7 +46,6 @@ i0_s = 0.08
 # == функции для льда ==
 Tf_i = lambda S_i: -mu*S_i
 k_i = lambda T, S_i: rho_i/917.0 * (2.11 - 0.011*T + (0.09*S_i/T if T != 0 else 0))
-#k_i = lambda T, S_i: (2.03 + 0.1172 * (S_i/T if T != 0.0 else 0.0))
 c_i = lambda T, T_old, S_i: c0_i - L0_i*Tf_i(S_i)/(T*T_old)
 E_i = lambda T, S_i: c0_i*(T - Tf_i(S_i)) - L0_i*(1.0 - Tf_i(S_i)/T) + c_w*Tf_i(S_i)
 L_i = lambda T, S_i: c0_i*(T - Tf_i(S_i)) - L0_i*(1.0 - Tf_i(S_i)/T)
