@@ -1,7 +1,0 @@
-CMakeLists.txt
-Python/.ipynb_checkpoints/*
-Python/Vaidation/*
-Python/utils/__pycache__/*
-Python/media/*
-
-!Python/Validation/full_data.csv
