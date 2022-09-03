@@ -4,16 +4,19 @@
 #include <string>
 #include "defines.hpp"
 
-
-typedef double(*FuncPtr)(double);
+// https://stackoverflow.com/questions/14848924/how-to-define-typedef-of-function-pointer-which-has-template-arguments
+template <typename NumType>
+using FuncPtr = NumType(*)(NumType);
 
 // 1-D secant solver
-std::pair<double, int> secant_solver(FuncPtr func,
-                                     double x_left, double x_right,
-                                     double tol = 1e-9, int max_it = 1000);
+template <typename NumType>
+std::pair<NumType, int> secant_solver(FuncPtr<NumType> func,
+                                      NumType x_left, NumType x_right,
+                                      NumType tol = 1e-9, int max_it = 1000);
 
 // SLAE Thomas solver
-std::vector<double> thomas_solver(const std::vector<double>& T_under,
-                                  const std::vector<double>& T_diag,
-                                  const std::vector<double>& T_over,
-                                  const std::vector<double>& rhs);
+template <typename NumType>
+std::vector<NumType> thomas_solver(const std::vector<NumType>& T_under,
+                                   const std::vector<NumType>& T_diag,
+                                   const std::vector<NumType>& T_over,
+                                   const std::vector<NumType>& rhs);
