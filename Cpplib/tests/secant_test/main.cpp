@@ -24,8 +24,8 @@ double sin_func_double(double x)
 
 int main()
 {
-    auto square_res_float = secant_solver(square_func_float, float{0.0}, float{4.0});
-    auto sin_res_float = secant_solver(sin_func_float, float{2.0}, float{4.0});
+    auto square_res_float = secant_solver(square_func_float, 0.0f, 4.0f);
+    auto sin_res_float = secant_solver(sin_func_float, 2.0f, 4.0f);
     auto square_res_double = secant_solver(square_func_double, 0.0, 4.0);
     auto sin_res_double = secant_solver(sin_func_double, 2.0, 4.0);
 
