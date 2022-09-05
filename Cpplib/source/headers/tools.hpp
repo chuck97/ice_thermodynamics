@@ -16,7 +16,7 @@ std::pair<NumType, int> secant_solver(FuncPtr<NumType> func,
 
 // SLAE Thomas solver
 template <typename NumType>
-std::vector<NumType> thomas_solver(const std::vector<NumType>& T_under,
-                                   const std::vector<NumType>& T_diag,
-                                   const std::vector<NumType>& T_over,
+std::vector<NumType> thomas_solver(const std::vector<NumType>& under,
+                                   const std::vector<NumType>& diag,
+                                   const std::vector<NumType>& over,
                                    const std::vector<NumType>& rhs);
