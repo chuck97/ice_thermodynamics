@@ -46,6 +46,44 @@ FourVecs<NumType> concat_matrices(const std::vector<NumType>& under_first,
     return {under_concat, diag_concat, over_concat, rhs_concat};
 }
 
+template <typename NumType>
+std::vector<NumType> operator+(const std::vector<NumType>& vec1,
+                               const std::vector<NumType>& vec2)
+{
+    std::vector<NumType> vec_sum(vec1);
+    for (int i = 0; i < vec2.size(); i++)
+    {
+        vec_sum[i] += vec2[i];
+    }
+
+    return vec_sum;
+}
+
+template <typename NumType>
+std::vector<NumType> operator-(const std::vector<NumType>& vec1,
+                               const std::vector<NumType>& vec2)
+{
+    std::vector<NumType> vec_sum(vec1);
+    for (int i = 0; i < vec2.size(); i++)
+    {
+        vec_sum[i] -= vec2[i];
+    }
+
+    return vec_sum;
+}
+
+template <typename NumType>
+NumType L2(const std::vector<NumType>& vec)
+{
+    NumType vec_norm(0.0);
+    for (NumType el: vec)
+    {
+        vec_norm += el*el;
+    }
+
+    return std::sqrt(vec_norm);
+}
+
 template
 FourVecs<float> concat_matrices(const std::vector<float>& under_first,
                                 const std::vector<float>& diag_first,
@@ -63,3 +101,25 @@ FourVecs<double> concat_matrices(const std::vector<double>& under_first,
                                  const std::vector<double>& diag_second,
                                  const std::vector<double>& over_second,
                                  std::vector<double>& linker);
+
+template
+std::vector<float> operator+(const std::vector<float>& vec1,
+                               const std::vector<float>& vec2);
+
+template
+std::vector<double> operator+(const std::vector<double>& vec1,
+                               const std::vector<double>& vec2);
+
+template
+std::vector<float> operator-(const std::vector<float>& vec1,
+                               const std::vector<float>& vec2);
+
+template
+std::vector<double> operator-(const std::vector<double>& vec1,
+                               const std::vector<double>& vec2);
+
+template
+float L2(const std::vector<float>& vec);
+
+template
+double L2(const std::vector<double>& vec);

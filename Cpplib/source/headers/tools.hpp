@@ -3,6 +3,7 @@
 #include <utility>
 #include <string>
 #include <tuple>
+#include <cmath>
 #include "defines.hpp"
 
 // https://stackoverflow.com/questions/14848924/how-to-define-typedef-of-function-pointer-which-has-template-arguments
@@ -34,3 +35,14 @@ FourVecs<NumType> concat_matrices(const std::vector<NumType>& under_first,
                                   const std::vector<NumType>& over_second,
                                   std::vector<NumType>& linker);
 
+
+template <typename NumType>
+std::vector<NumType> operator+(const std::vector<NumType>& vec1,
+                               const std::vector<NumType>& vec2);
+
+template <typename NumType>
+std::vector<NumType> operator-(const std::vector<NumType>& vec1,
+                               const std::vector<NumType>& vec2);
+
+template <typename NumType>
+NumType L2(const std::vector<NumType>& vec);
