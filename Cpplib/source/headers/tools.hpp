@@ -2,11 +2,15 @@
 #include <vector>
 #include <utility>
 #include <string>
+#include <tuple>
 #include "defines.hpp"
 
 // https://stackoverflow.com/questions/14848924/how-to-define-typedef-of-function-pointer-which-has-template-arguments
 template <typename NumType>
 using FuncPtr = NumType(*)(NumType);
+
+template <typename NumType>
+using FourVecs = std::tuple<std::vector<NumType>, std::vector<NumType>, std::vector<NumType>, std::vector<NumType>>;
 
 // 1-D secant solver
 template <typename NumType>
@@ -20,3 +24,13 @@ std::vector<NumType> thomas_solver(const std::vector<NumType>& under,
                                    const std::vector<NumType>& diag,
                                    const std::vector<NumType>& over,
                                    const std::vector<NumType>& rhs);
+
+template <typename NumType>
+FourVecs<NumType> concat_matrices(const std::vector<NumType>& under_first,
+                                  const std::vector<NumType>& diag_first,
+                                  const std::vector<NumType>& over_first,
+                                  const std::vector<NumType>& under_second,
+                                  const std::vector<NumType>& diag_second,
+                                  const std::vector<NumType>& over_second,
+                                  std::vector<NumType>& linker);
+

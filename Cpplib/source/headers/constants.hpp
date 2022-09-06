@@ -9,7 +9,7 @@ enum Kparam
 
 struct GenInfo
 {
-    inline static double TempFusion(double S) {return -mu*S;}; 
+    inline static double TempFusion(double S) { return -mu*S; };
 
     static constexpr double mu = 0.054;
     static constexpr double sigma = 5.67e-8;
