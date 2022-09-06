@@ -1,5 +1,7 @@
 #include "constants.hpp"
 
+using namespace icethermo;
+
 double IceInfo::IceDensity(double T, double S)
 {
     return rho_i;

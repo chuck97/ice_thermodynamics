@@ -32,9 +32,9 @@ add_subdirectory(source)
 add_library(icethermo STATIC ${SOURCE} ${HEADER})
 
 # compile tests
-if (COMPILE_TESTS)
+if(COMPILE_TESTS)
   add_subdirectory(tests)
-endif()
+endif(COMPILE_TESTS)
 
 # compile examples
 if (COMPILE_EXAMPLES)

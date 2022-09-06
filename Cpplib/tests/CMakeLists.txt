@@ -1,2 +1,4 @@
 add_subdirectory(constants_tests)
 add_subdirectory(secant_test)
+add_subdirectory(thomas_tests)
+add_subdirectory(concat_tests)
