@@ -1,26 +1,71 @@
 #pragma once
 
+#include <vector>
+
+#include "defines.hpp"
 #include "mesh.hpp"
 #include "constants.hpp"
+#include "matvec.hpp"
+#include "tools.hpp"
 
 namespace icethermo
 {
+    enum class ApproxOrder
+    {
+        first, 
+        second
+    };
+
     template <typename NumType>
     class ThermoSolver
     {
     public:
+        // class constructor using initial mesh
         ThermoSolver(Mesh<NumType>* mesh_ice_,
                      Mesh<NumType>* mesh_snow_ = NULL
                      );
 
+        // virtual Evaluation function
         virtual void Evaluate() = 0;
 
     
     protected:
-    // ice and snow mesh
+        // ice and snow mesh
         Mesh<NumType>* mesh_ice;
         Mesh<NumType>* mesh_snow;
-        
+
+        // mandatory prognostic variables
+        std::shared_ptr<std::vector<NumType>> Ti_cells;
+        std::shared_ptr<std::vector<NumType>> dzi_cells;
+        std::shared_ptr<std::vector<NumType>> Si_cells;
+        std::shared_ptr<NumType> Ti_s, Ti_b;
+
+    protected:
+
+        // ##### auxilary functions #####
+
+        // update 1D thickness
+        std::vector<NumType> Update_dz(const std::vector<NumType>& dz_cells_old,
+                                       NumType omega_down,
+                                       NumType omega_up,
+                                       NumType time_step);
+
+        // update 0D thickness
+        NumType Update_dz(NumType dz_old,
+                          NumType omega_down,
+                          NumType omega_up,
+                          NumType time_step);
+
+        // T from BC
+        NumType T_from_BC(const std::vector<NumType>& T_cells,
+                          const std::vector<NumType>& dz_cells,
+                          const std::vector<NumType> salinity_cells,
+                          NumType k_value,
+                          NumType omega_value,
+                          FuncPtr<NumType> F,
+                          bool is_surface,
+                          ApproxOrder grad_approx_order = ApproxOrder::first,
+                          NumType rho = IceInfo::rho_i);
     };
 
     template<typename NumType>
@@ -45,11 +90,7 @@ namespace icethermo
         Eparam ice_E_param;
         Lparam ice_L_param;
 
-        // mandatory prognostic mesh variables
-        std::shared_ptr<std::vector<NumType>> Ti_cells;
-        std::shared_ptr<std::vector<NumType>> dzi_cells;
-        std::shared_ptr<std::vector<NumType>> Si_cells;
-        std::shared_ptr<NumType> Ti_s, Ti_b;
+        
 
         // auxilary mesh variables
 

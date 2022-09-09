@@ -2,16 +2,6 @@
 
 namespace icethermo
 {
-    // virtual base class constructor
-    template <typename NumType>
-    ThermoSolver<NumType>::ThermoSolver(Mesh<NumType>* mesh_ice_,
-                                        Mesh<NumType>* mesh_snow_
-                                        )
-    {
-        this->mesh_ice = mesh_ice_;
-        this->mesh_snow = mesh_snow_;
-    }
-
     // 1D ice solver constructor
     template <typename NumType>
     Ice1D_Solver<NumType>::Ice1D_Solver(Mesh<NumType>* mesh_ice_,
@@ -28,11 +18,11 @@ namespace icethermo
         ice_L_param(ice_L_param_)
     {
         // get main prognostic variables
-        Ti_cells = this->mesh_ice->GetCellData("Ice cells temperature");
-        dzi_cells = this->mesh_ice->GetCellsThickness();
-        Si_cells = this->mesh_ice->GetCellData("Ice cells salinity");
-        Ti_s = this->mesh_ice->GetSingleData("Ice surface temperature");
-        Ti_b = this->mesh_ice->GetSingleData("Ice base temperature");
+        this->Ti_cells = this->mesh_ice->GetCellData("Ice cells temperature");
+        this->dzi_cells = this->mesh_ice->GetCellsThickness();
+        this->Si_cells = this->mesh_ice->GetCellData("Ice cells salinity");
+        this->Ti_s = this->mesh_ice->GetSingleData("Ice surface temperature");
+        this->Ti_b = this->mesh_ice->GetSingleData("Ice base temperature");
 
         // log
         std::cout << "1D ice solver class constructed!" << std::endl;

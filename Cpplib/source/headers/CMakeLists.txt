@@ -5,6 +5,7 @@ set(HEADER
     ${CMAKE_CURRENT_SOURCE_DIR}/tools.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/matvec.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mesh.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/solver.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/icethermo.hpp
     PARENT_SCOPE
 )

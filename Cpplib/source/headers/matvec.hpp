@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <numeric>
 #include "defines.hpp"
 
 namespace icethermo
@@ -23,4 +24,6 @@ namespace icethermo
     template <typename NumType> std::vector<NumType> concatinate(const std::vector<NumType>& vec1, const std::vector<NumType>& vec2);
 
     template <typename NumType> std::ostream& operator<<(std::ostream& os, const std::vector<NumType>& vec);
+
+    template <typename NumType> NumType sum_vec(const std::vector<NumType>& vec);
 }

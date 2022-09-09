@@ -161,6 +161,12 @@ namespace icethermo
         return os;
     }
 
+    template <typename NumType>
+    NumType sum_vec(const std::vector<NumType>& vec)
+    {
+        return std::accumulate(vec.begin(), vec.end(), NumType(0));
+    }
+
 
     // explicit instantaion
     template std::vector<int> concatenate(const std::vector<std::vector<int>>& vecs);
@@ -217,4 +223,7 @@ namespace icethermo
 
     template std::ostream& operator<<(std::ostream& os, const std::vector<float>& vec);
     template std::ostream& operator<<(std::ostream& os, const std::vector<double>& vec);
+
+    template float sum_vec(const std::vector<float>& vec);
+    template double sum_vec(const std::vector<double>& vec);
 }

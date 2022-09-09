@@ -15,7 +15,7 @@ int main()
     int n_cells = ice_mesh->GetCellsNum();
 
     // fill initial values
-    for (int i = 0; i < ice_mesh->GetCellsNum(); ++i)
+    for (int i = 0; i < n_cells; ++i)
     {
        (*initial_temp_cells)[i] = -10.0f;
        (*initial_sal_cells)[i] = 2.5f;

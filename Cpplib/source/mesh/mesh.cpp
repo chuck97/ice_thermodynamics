@@ -42,8 +42,7 @@ namespace icethermo
             THERMO_ERR("mesh thickness should be greater than 0.0!");
         }
         
-        NumType sum_decomp = std::accumulate(unit_segment_decomposition.begin(), unit_segment_decomposition.end(),
-                                             NumType(0));
+        NumType sum_decomp = sum_vec(unit_segment_decomposition);
         
         if (std::abs(sum_decomp - 1.0) > 1e-5)
         {
@@ -178,7 +177,7 @@ namespace icethermo
     template<typename NumType>
     NumType Mesh<NumType>::GetTotalThickness() const
     {
-        return std::accumulate(cells_thickness->begin(), cells_thickness->end(), NumType(0));
+        return sum_vec(*cells_thickness);
     }
 
     template<typename NumType>
