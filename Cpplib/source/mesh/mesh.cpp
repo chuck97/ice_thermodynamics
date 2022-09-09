@@ -3,6 +3,11 @@
 namespace icethermo
 {
     template<typename NumType>
+    Mesh<NumType>::Mesh()
+    {
+    };
+
+    template<typename NumType>
     Mesh<NumType>::Mesh(int n_uniform_layers, NumType thickness)
     {
         if (n_uniform_layers <= 0)
@@ -21,7 +26,7 @@ namespace icethermo
         {
             thicknesses[i] = thickness/n_uniform_layers;
         }
-        cells_thickness = std::move(thicknesses);
+        cells_thickness = std::make_shared<std::vector<NumType>>(std::move(thicknesses));
     }
 
     template<typename NumType>
@@ -46,23 +51,35 @@ namespace icethermo
         }
 
         std::vector<NumType> thicknesses = unit_segment_decomposition*thickness;
-        cells_thickness = std::move(thicknesses);
+        cells_thickness = std::make_shared<std::vector<NumType>>(thicknesses);
     }
 
     template<typename NumType>
     int Mesh<NumType>::GetCellsNum() const
     {
-        return cells_thickness.size();
+        return cells_thickness->size();
     }
 
     template<typename NumType>
     int Mesh<NumType>::GetNodesNum() const
     {
-        return cells_thickness.size() + 1;
+        return cells_thickness->size() + 1;
     }
 
     template<typename NumType>
-    std::vector<NumType>& Mesh<NumType>::CreateCellData(const std::string& varname, bool visible)
+    std::shared_ptr<NumType> Mesh<NumType>::CreateSingleData(const std::string& varname, bool visible)
+    {
+        if (single_data.count(varname) != 0)
+        {
+            THERMO_ERR("Variable \'" + varname + "\' already exists, could not create single variable!");
+        }
+        NumType zero_val = 0;
+        single_data[varname] = {std::make_shared<NumType>(std::move(zero_val)), visible};
+        return single_data[varname].first;
+    }
+
+    template<typename NumType>
+    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::CreateCellData(const std::string& varname, bool visible)
     {
         if (cells_data.count(varname) != 0)
         {
@@ -70,13 +87,13 @@ namespace icethermo
         }
 
         // make zero vector
-        std::vector<NumType> zero_vec(cells_thickness.size());
-        cells_data[varname] = {zero_vec, visible};
+        std::vector<NumType> zero_vec(cells_thickness->size());
+        cells_data[varname] = {std::make_shared<std::vector<NumType>>(std::move(zero_vec)), visible};
         return cells_data[varname].first;
     }
 
     template<typename NumType>
-    std::vector<NumType>& Mesh<NumType>::CreateNodeData(const std::string& varname, bool visible)
+    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::CreateNodeData(const std::string& varname, bool visible)
     {
         if (nodes_data.count(varname) != 0)
         {
@@ -84,9 +101,20 @@ namespace icethermo
         }
 
         // make zero vector
-        std::vector<NumType> zero_vec(cells_thickness.size() + 1);
-        nodes_data[varname] = {zero_vec, visible};
+        std::vector<NumType> zero_vec(cells_thickness->size() + 1);
+        nodes_data[varname] = {std::make_shared<std::vector<NumType>>(std::move(zero_vec)), visible};
         return nodes_data[varname].first;
+    }
+
+    template<typename NumType>
+    void Mesh<NumType>::DeleteSingleData(const std::string& varname)
+    {
+        if (single_data.count(varname) == 0)
+        {
+            return;
+        }
+        single_data[varname].first.reset();
+        single_data.erase(varname);
     }
 
     template<typename NumType>
@@ -96,6 +124,7 @@ namespace icethermo
         {
             return;
         }
+        cells_data[varname].first.reset();
         cells_data.erase(varname);
     }
 
@@ -106,11 +135,22 @@ namespace icethermo
         {
             return;
         }
+        nodes_data[varname].first.reset();
         nodes_data.erase(varname);
     }
 
     template<typename NumType>
-    std::vector<NumType>& Mesh<NumType>::GetCellData(const std::string& varname)
+    std::shared_ptr<NumType> Mesh<NumType>::GetSingleData(const std::string& varname)
+    {
+        if (single_data.count(varname) == 0)
+        {
+            THERMO_ERR("There is no single variable: \'" + varname + "\' - can't get!");
+        }
+        return single_data[varname].first;
+    }
+
+    template<typename NumType>
+    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::GetCellData(const std::string& varname)
     {
         if (cells_data.count(varname) == 0)
         {
@@ -120,7 +160,7 @@ namespace icethermo
     }
 
     template<typename NumType>
-    std::vector<NumType>& Mesh<NumType>::GetNodeData(const std::string& varname)
+    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::GetNodeData(const std::string& varname)
     {
         if (nodes_data.count(varname) == 0)
         {
@@ -130,7 +170,7 @@ namespace icethermo
     }
 
     template<typename NumType>
-    std::vector<NumType>& Mesh<NumType>::GetCellsThickness()
+    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::GetCellsThickness()
     {
         return cells_thickness;
     }
@@ -138,7 +178,17 @@ namespace icethermo
     template<typename NumType>
     NumType Mesh<NumType>::GetTotalThickness() const
     {
-        return std::accumulate(cells_thickness.begin(), cells_thickness.end(), NumType(0));
+        return std::accumulate(cells_thickness->begin(), cells_thickness->end(), NumType(0));
+    }
+
+    template<typename NumType>
+    void Mesh<NumType>::MuteSingleData(const std::string& varname)
+    {
+        if (single_data.count(varname) == 0)
+        {
+            return;
+        }
+        single_data[varname].second = false;
     }
 
     template<typename NumType>
@@ -159,6 +209,16 @@ namespace icethermo
             return;
         }
         nodes_data[varname].second = false;
+    }
+
+    template<typename NumType>
+    void Mesh<NumType>::UnmuteSingleData(const std::string& varname)
+    {
+        if (single_data.count(varname) == 0)
+        {
+            return;
+        }
+        single_data[varname].second = true;
     }
 
     template<typename NumType>
@@ -195,18 +255,30 @@ namespace icethermo
 
         // cell thickness info
         *ofs << "### Cells thickness ###\n";
-        for (int i = 0; i < cells_thickness.size(); i++)
+        for (int i = 0; i < cells_thickness->size(); i++)
         {
-            if (i != cells_thickness.size() - 1)
+            if (i != cells_thickness->size() - 1)
             {
-                *ofs << cells_thickness[i] << " "; 
+                *ofs << (*cells_thickness)[i] << " "; 
             }
             else
             {
-                *ofs << cells_thickness[i];
+                *ofs << (*cells_thickness)[i];
             }
         }
         *ofs << "\n";
+
+        // single data
+        *ofs << "#### Single data ###\n";
+        for (auto [key, val]: single_data)
+        {
+            if (val.second)
+            {
+                *ofs << key + "\n";
+                *ofs << *(val.first);
+                *ofs << "\n";
+            }
+        }
 
         // cells data
         *ofs << "#### Cells data ###\n";
@@ -215,15 +287,15 @@ namespace icethermo
             if (val.second)
             {
                 *ofs << key + "\n";
-                for (int i = 0; i < val.first.size(); i++)
+                for (int i = 0; i < val.first->size(); i++)
                 {
-                    if (i != val.first.size() - 1)
+                    if (i != val.first->size() - 1)
                     {
-                        *ofs << val.first[i] << " "; 
+                        *ofs << (*val.first)[i] << " "; 
                     }
                     else
                     {
-                        *ofs << val.first[i];
+                        *ofs << (*val.first)[i];
                     }
                 }
                 *ofs << "\n";
@@ -237,15 +309,15 @@ namespace icethermo
             if (val.second)
             {
                 *ofs << key + "\n";
-                for (int i = 0; i < val.first.size(); i++)
+                for (int i = 0; i < val.first->size(); i++)
                 {
-                    if (i != val.first.size() - 1)
+                    if (i != val.first->size() - 1)
                     {
-                        *ofs << val.first[i] << " "; 
+                        *ofs << (*val.first)[i] << " "; 
                     }
                     else
                     {
-                        *ofs << val.first[i];
+                        *ofs << (*val.first)[i];
                     }
                 }
                 *ofs << "\n";

@@ -5,3 +5,4 @@
 #include "tools.hpp"
 #include "matvec.hpp"
 #include "mesh.hpp"
+#include "solver.hpp"

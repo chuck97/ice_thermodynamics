@@ -1,12 +1,46 @@
 #pragma once
 #include "defines.hpp"
+#include <vector>
 
 namespace icethermo
 {
-    enum Kparam
+    using CustomFuncPtr = double (*)(double, double, std::vector<double>);
+    using CustomEffFuncPtr = double (*)(double, double, double, std::vector<double>);
+
+    enum class Kparam
     {
         Untersteiner,
-        BubblyBrine
+        BubblyBrine,
+        FreshSnow,
+        Custom
+    };
+
+    enum class Dparam
+    {
+        SeaIce,
+        FreshSnow,
+        Custom
+    };
+
+    enum class Cparam
+    {
+        SeaIce,
+        FreshSnow,
+        Custom
+    };
+
+    enum class Eparam
+    {
+        SeaIce,
+        FreshSnow,
+        Custom
+    };
+
+    enum class Lparam
+    {
+        SeaIce,
+        FreshSnow,
+        Custom
     };
 
     struct GenInfo
@@ -39,11 +73,11 @@ namespace icethermo
 
     struct IceInfo 
     {
-        static double IceDensity(double T, double S);
-        static double EffCapacity(double T, double T_old, double S);
-        static double Enthalpy(double T, double S);
-        static double FusionHeat(double T, double S);
-        static double Conductivity(Kparam param, double T, double S);
+        static double Density(Dparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
+        static double EffCapacity(Cparam param, double T, double T_old, double S, std::vector<double> params = {}, CustomEffFuncPtr fptr = NULL);
+        static double Enthalpy(Eparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
+        static double FusionHeat(Lparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
+        static double Conductivity(Kparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
 
         static constexpr double c0_i = 2.06e3;
         static constexpr double rho_i = 917.0;
@@ -57,10 +91,11 @@ namespace icethermo
 
     struct SnowInfo
     {
-        static double EffCapacity(double T, double T_old);
-        static double Enthalpy(double T);
-        static double FusionHeat(double T);
-        static double Conductivity(double T);
+        static double Density(Dparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
+        static double EffCapacity(Cparam param, double T, double T_old, double S, std::vector<double> params = {}, CustomEffFuncPtr fptr = NULL);
+        static double Enthalpy(Eparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
+        static double FusionHeat(Lparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
+        static double Conductivity(Kparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
 
         static constexpr double c0_s = 2.06e3;
         static constexpr double rho_s = 330.0;
