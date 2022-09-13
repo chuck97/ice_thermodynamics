@@ -2,78 +2,93 @@
 
 using namespace icethermo;
 
-double IceInfo::Density(Dparam param, double T, double S, std::vector<double> params, CustomFuncPtr fptr)
+double Params::Density(Dparam param, double T, double S)
 {
     if (param == Dparam::SeaIce)
     {
-        return rho_i;
+        return IceConsts::rho_i;
     }
-    else if (param == Dparam::Custom)
+    else if (param == Dparam::FreshIce)
     {
-        return fptr(T, S, params);
+        return IceConsts::rho_i;
+    }
+    else if (param == Dparam::FreshSnow)
+    {
+        return SnowConsts::rho_s;
     }
     else
     {
-        THERMO_ERR("Available Ice Density parametrizations: SeaIce, FreshSnow, Custom!");
+        THERMO_ERR("Available Density parametrizations: SeaIce, FreshIce, FreshSnow!");
     }
-    return rho_i;
 }
 
-double IceInfo::EffCapacity(Cparam param, double T, double T_old, double S, std::vector<double> params, CustomEffFuncPtr fptr)
+double Params::EffCapacity(Cparam param, double T, double T_old, double S)
 {
     if (param == Cparam::SeaIce)
     {
-        double Tf_i = GenInfo::TempFusion(S);
-        return c0_i - L0_i*Tf_i/(T*T_old);
+        double Tf_i = GenConsts::TempFusion(S);
+        return IceConsts::c0_i - IceConsts::L0_i*Tf_i/(T*T_old);
     }
-    else if (param == Cparam::Custom)
+    else if (param == Cparam::FreshIce)
     {
-        return fptr(T, T_old, S, params);
+        return IceConsts::c0_i;
+    }
+    else if (param == Cparam::FreshSnow)
+    {
+        return SnowConsts::c0_s;
     }
     else
     {
-        THERMO_ERR("Available Ice Effective Heat Capacity parametrizations: SeaIce, FreshSnow, Custom!");
+        THERMO_ERR("Available Effective Heat Capacity parametrizations: SeaIce, FreshIce, FreshSnow!");
     }
 }
 
-double IceInfo::Enthalpy(Eparam param, double T, double S, std::vector<double> params, CustomFuncPtr fptr)
+double Params::Enthalpy(Eparam param, double T, double S)
 {
     if (param == Eparam::SeaIce)
     {
-        double Tf_i = GenInfo::TempFusion(S);
-        double c_w = WaterInfo::c_w;
-        return c0_i*(T - Tf_i) - L0_i*(1.0 - Tf_i/T) + c_w*Tf_i;
+        double Tf_i = GenConsts::TempFusion(S);
+        double c_w = WaterConsts::c_w;
+        return IceConsts::c0_i*(T - Tf_i) - IceConsts::L0_i*(1.0 - Tf_i/T) + c_w*Tf_i;
     }
-    else if (param == Eparam::Custom)
+    else if (param == Eparam::FreshIce)
     {
-        return fptr(T, S, params);
+        return IceConsts::c0_i*T - IceConsts::L0_i;
+    }
+    else if (param == Eparam::FreshSnow)
+    {
+        return SnowConsts::c0_s*T - SnowConsts::L_f0;
     }
     else
     {
-        THERMO_ERR("Available Ice Enthalpy parametrizations: SeaIce, FreshSnow, Custom!");
+        THERMO_ERR("Available Enthalpy parametrizations: SeaIce, FreshIce, FreshSnow!");
     }
     
 }
 
-double IceInfo::FusionHeat(Lparam param, double T, double S, std::vector<double> params, CustomFuncPtr fptr)
+double Params::FusionHeat(Lparam param, double T, double S)
 {
     if (param == Lparam::SeaIce)
     {
-        double Tf_i = GenInfo::TempFusion(S);
-        double c_w = WaterInfo::c_w;
-        return c0_i*(Tf_i - T) + L0_i*(1.0 + Tf_i/T);
+        double Tf_i = GenConsts::TempFusion(S);
+        double c_w = WaterConsts::c_w;
+        return IceConsts::c0_i*(Tf_i - T) + IceConsts::L0_i*(1.0 + Tf_i/T);
     }
-    else if (param == Lparam::Custom)
+    else if (param == Lparam::FreshIce)
     {
-        return fptr(T, S, params);
+        return -IceConsts::c0_i*T + IceConsts::L0_i;
+    }
+    else if (param == Lparam::FreshSnow)
+    {
+        return -SnowConsts::c0_s*T + SnowConsts::L_f0;
     }
     else
     {
-        THERMO_ERR("Available Ice Fusion Heat parametrizations: SeaIce, FreshSnow, Custom!");
+        THERMO_ERR("Available Fusion Heat parametrizations: SeaIce, FreshIce, FreshSnow!");
     }
 }
 
-double IceInfo::Conductivity(Kparam param, double T, double S, std::vector<double> params, CustomFuncPtr fptr)
+double Params::Conductivity(Kparam param, double T, double S, double rho)
 {
     if (param == Kparam::Untersteiner)
     {
@@ -95,96 +110,19 @@ double IceInfo::Conductivity(Kparam param, double T, double S, std::vector<doubl
         }
         else
         {
-            double rho = Density(Dparam::SeaIce, T, S);
-            return rho/rho_i * (2.11 - 0.011*T + (0.09*S/T));
+            return rho/IceConsts::rho_i * (2.11 - 0.011*T + (0.09*S/T));
         }
     }
-    else if (param == Kparam::Custom)
+    else if (param == Kparam::FreshIce)
     {
-        return fptr(T, S, params);
+        return IceConsts::k0_i;
+    }
+    else if (param == Kparam::FreshSnow)
+    {
+        return SnowConsts::k0_s;
     }
     else
     {
-        THERMO_ERR("Available Ice Thermal Conductivity parametrizations: Untersteiner, BubblyBrine, Custom!");
-    }
-}
-
-double SnowInfo::Density(Dparam param, double T, double S, std::vector<double> params, CustomFuncPtr fptr)
-{
-    if (param == Dparam::FreshSnow)
-    {
-        return rho_s;
-    }
-    else if (param == Dparam::Custom)
-    {
-        return fptr(T, S, params);
-    }
-    else
-    {
-        THERMO_ERR("Available Snow Density parametrizations: FreshSnow, Custom!");
-    }
-}
-
-double SnowInfo::EffCapacity(Cparam param, double T, double T_old, double S, std::vector<double> params, CustomEffFuncPtr fptr)
-{
-    if (param == Cparam::FreshSnow)
-    {
-        return c0_s;
-    }
-    else if (param == Cparam::Custom)
-    {
-        return fptr(T, T_old, S, params);
-    }
-    else
-    {
-        THERMO_ERR("Available Snow Effective Capacity parametrizations: FreshSnow, Custom!");
-    }
-}
-
-double SnowInfo::Enthalpy(Eparam param, double T, double S, std::vector<double> params, CustomFuncPtr fptr)
-{
-    if (param == Eparam::FreshSnow)
-    {
-        return  c0_s*T - L_f0;
-    }
-    else if (param == Eparam::Custom)
-    {
-        return fptr(T, S, params);
-    }
-    else
-    {
-        THERMO_ERR("Available Snow Enthalpy parametrizations: FreshSnow, Custom!");
-    }
-}
-
-double SnowInfo::FusionHeat(Lparam param, double T, double S, std::vector<double> params, CustomFuncPtr fptr)
-{
-    if (param == Lparam::FreshSnow)
-    {
-        return -c0_s*T + L_f0;
-    }
-    else if (param == Lparam::Custom) 
-    {
-        return fptr(T, S, params);
-    }
-    else
-    {
-        THERMO_ERR("Available Snow Fusion Heat parametrizations: FreshSnow, Custom!");
-    }
-}
-
-double SnowInfo::Conductivity(Kparam param, double T, double S, std::vector<double> params, CustomFuncPtr fptr)
-{
-    if (param == Kparam::FreshSnow)
-    {
-        return k0_s;
-    }
-    else if (param == Kparam::Custom)
-    {
-        return fptr(T, S, params);
-    }
-    else
-    {
-        THERMO_ERR("Available Snow Thermal Conductivity parametrizations: FreshSnow, Custom!");
+        THERMO_ERR("Available Thermal Conductivity parametrizations: Untersteiner, BubblyBrine, FreshIce, FreshSnow!");
     }
 }

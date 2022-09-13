@@ -9,6 +9,9 @@
 #include <sstream>
 #include <iomanip>
 #include <memory>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 #include "defines.hpp"
 #include "matvec.hpp"
@@ -60,6 +63,9 @@ namespace icethermo
         // Write mesh to File
         void SaveTXT(const std::string& filename) const;
         void SaveTXT(const std::string& filename, int postscript) const;
+
+        void SaveJSON(const std::string& filename) const;
+        void SaveJSON(const std::string& filename, int postscript) const;
 
     private:
         // vector of cell thicknesses

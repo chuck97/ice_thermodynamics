@@ -64,6 +64,12 @@ int main()
     // one can save mesh to .txt file with postfix number (relevant for time series)
     mesh1.SaveTXT("./mesh", 1488);
 
+    // one can save file to json
+    mesh1.SaveJSON("./mesh");
+
+    // one can save mesh to .json file with postfix number (relevant for time series)
+    mesh1.SaveJSON("./mesh", 2007);
+
     // ### examples of another Mesh class constructor ###
 
     // construct uniform mesh with given cells num and total thickness

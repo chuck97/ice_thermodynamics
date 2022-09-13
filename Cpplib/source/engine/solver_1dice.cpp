@@ -10,12 +10,14 @@ namespace icethermo
                                         Cparam ice_c_eff_param_,
                                         Eparam ice_E_param_,
                                         Lparam ice_L_param_):
-        ThermoSolver<NumType>(mesh_ice_),
-        ice_rho_param(ice_rho_param_),
-        ice_k_param(ice_k_param_),
-        ice_c_eff_param(ice_c_eff_param_),
-        ice_E_param(ice_E_param_),
-        ice_L_param(ice_L_param_)
+        ThermoSolver<NumType>(mesh_ice_,
+                              NULL,
+                              ice_rho_param_,
+                              ice_k_param_,
+                              ice_c_eff_param_,
+                              ice_E_param_,
+                              ice_L_param_)
+        
     {
         // get main prognostic variables
         this->Ti_cells = this->mesh_ice->GetCellData("Ice cells temperature");

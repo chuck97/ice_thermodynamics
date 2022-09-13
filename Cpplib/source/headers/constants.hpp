@@ -4,46 +4,48 @@
 
 namespace icethermo
 {
-    using CustomFuncPtr = double (*)(double, double, std::vector<double>);
-    using CustomEffFuncPtr = double (*)(double, double, double, std::vector<double>);
-
+    // thermal conductivity parametrization enum
     enum class Kparam
     {
         Untersteiner,
         BubblyBrine,
-        FreshSnow,
-        Custom
+        FreshIce,
+        FreshSnow
     };
 
+    // density parametrization enum
     enum class Dparam
     {
         SeaIce,
-        FreshSnow,
-        Custom
+        FreshIce,
+        FreshSnow
     };
 
+    // Effective heat capacity parametrization enum
     enum class Cparam
     {
         SeaIce,
-        FreshSnow,
-        Custom
+        FreshIce,
+        FreshSnow
     };
 
+    // Enthalpy parametrization enum
     enum class Eparam
     {
         SeaIce,
-        FreshSnow,
-        Custom
+        FreshIce,
+        FreshSnow
     };
 
+    // Specific heat of fusion parametrization enum
     enum class Lparam
     {
         SeaIce,
-        FreshSnow,
-        Custom
+        FreshIce,
+        FreshSnow
     };
 
-    struct GenInfo
+    struct GenConsts
     {
         inline static double TempFusion(double S) {return -mu*S;}; 
 
@@ -55,14 +57,14 @@ namespace icethermo
         static constexpr double C_lh = 1e-3;
     };
 
-    struct AirInfo
+    struct AirConsts
     {
         static constexpr double rho_a = 1.28;
         static constexpr double cp_a = 1.01e3;
         static constexpr double P_surf = 1013.25;
     };
 
-    struct WaterInfo
+    struct WaterConsts
     {
         static constexpr double c_w =  3.99e3;
         static constexpr double c_pw =  4.17e3;
@@ -71,14 +73,8 @@ namespace icethermo
         static constexpr double c2_w =  35.86;
     };
 
-    struct IceInfo 
+    struct IceConsts
     {
-        static double Density(Dparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
-        static double EffCapacity(Cparam param, double T, double T_old, double S, std::vector<double> params = {}, CustomEffFuncPtr fptr = NULL);
-        static double Enthalpy(Eparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
-        static double FusionHeat(Lparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
-        static double Conductivity(Kparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
-
         static constexpr double c0_i = 2.06e3;
         static constexpr double rho_i = 917.0;
         static constexpr double L0_i = 3.34e5;
@@ -87,16 +83,11 @@ namespace icethermo
         static constexpr double i0_i = 0.15;
         static constexpr double c1_i = 21.87;
         static constexpr double c2_i = 7.66;
+        static constexpr double k0_i = 2.03;
     };
 
-    struct SnowInfo
+    struct SnowConsts
     {
-        static double Density(Dparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
-        static double EffCapacity(Cparam param, double T, double T_old, double S, std::vector<double> params = {}, CustomEffFuncPtr fptr = NULL);
-        static double Enthalpy(Eparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
-        static double FusionHeat(Lparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
-        static double Conductivity(Kparam param, double T, double S, std::vector<double> params = {}, CustomFuncPtr fptr = NULL);
-
         static constexpr double c0_s = 2.06e3;
         static constexpr double rho_s = 330.0;
         static constexpr double k0_s = 0.31;
@@ -105,5 +96,14 @@ namespace icethermo
         static constexpr double kappa_s = 10;
         static constexpr double albedo_s = 0.8;
         static constexpr double i0_s = 0.08;
+    };
+
+    struct Params
+    {
+        static double Density(Dparam param, double T, double S);
+        static double EffCapacity(Cparam param, double T, double T_old, double S);
+        static double Enthalpy(Eparam param, double T, double S);
+        static double FusionHeat(Lparam param, double T, double S);
+        static double Conductivity(Kparam param, double T, double S, double rho);
     };
 }

@@ -339,6 +339,71 @@ namespace icethermo
         SaveTXT(file);
     }
 
+    template<typename NumType>
+    void Mesh<NumType>::SaveJSON(const std::string& filename) const
+    {
+        // create empty json object
+        json j;
+
+        // cells thickness
+        j["cells thickness"] = *cells_thickness;
+
+        // single data
+        for (auto [key, val]: single_data)
+        {
+            if (val.second)
+            {
+                j["single data"][key] = *(val.first);
+            }
+        }
+
+        // cells data
+        for (auto [key, val]: cells_data)
+        {
+            if (val.second)
+            {
+                j["cells data"][key] = *(val.first);
+            }
+        }
+
+        // nodes data
+        for (auto [key, val]: nodes_data)
+        {
+            if (val.second)
+            {
+                j["nodes data"][key] = *(val.first);
+            }
+        }
+
+        // write json object to file
+        std::string filename_json = filename + ".json";
+        std::fstream* ofs = new std::fstream;
+        ofs->open(filename_json, std::ios::out);
+
+        if (!ofs->is_open())
+        {
+            THERMO_ERR("can't open file "+ filename_json + " for logging!");
+        }
+
+        *ofs << std::setw(4) << j;
+
+        ofs->close(); 
+        delete ofs;
+
+        std::cout << "Mesh saved to \'" + filename_json + "\'\n";
+    }
+
+    template<typename NumType>
+    void Mesh<NumType>::SaveJSON(const std::string& filename, int postscript) const
+    {
+        std::string file = filename;
+        std::stringstream ss;
+        ss << std::setfill('0') << std::setw(5) << postscript;
+        file += ss.str();
+        SaveJSON(file);
+    }
+
+
 
     // explicit instantiation of classes
     template class Mesh<float>;

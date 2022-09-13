@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <functional>
 
 #include "defines.hpp"
 #include "mesh.hpp"
@@ -10,6 +11,7 @@
 
 namespace icethermo
 {
+    // order of approximation enum
     enum class ApproxOrder
     {
         first, 
@@ -22,7 +24,17 @@ namespace icethermo
     public:
         // class constructor using initial mesh
         ThermoSolver(Mesh<NumType>* mesh_ice_,
-                     Mesh<NumType>* mesh_snow_ = NULL
+                     Mesh<NumType>* mesh_snow_,
+                     Dparam ice_rho_param_ = Dparam::FreshIce,
+                     Kparam ice_k_param_ = Kparam::FreshIce,
+                     Cparam ice_c_eff_param_ = Cparam::FreshIce,
+                     Eparam ice_E_param_ = Eparam::FreshIce,
+                     Lparam ice_L_param_ = Lparam::FreshIce,
+                     Dparam snow_rho_param_ = Dparam::FreshSnow,
+                     Kparam snow_k_param_ = Kparam::FreshSnow,
+                     Cparam snow_c_eff_param_ = Cparam::FreshSnow,
+                     Eparam snow_E_param_ = Eparam::FreshSnow,
+                     Lparam snow_L_param_ = Lparam::FreshSnow
                      );
 
         // virtual Evaluation function
@@ -40,6 +52,19 @@ namespace icethermo
         std::shared_ptr<std::vector<NumType>> Si_cells;
         std::shared_ptr<NumType> Ti_s, Ti_b;
 
+        // parametrizations
+        Dparam ice_rho_param;
+        Kparam ice_k_param;
+        Cparam ice_c_eff_param;
+        Eparam ice_E_param;
+        Lparam ice_L_param;
+
+        Dparam snow_rho_param;
+        Kparam snow_k_param;
+        Cparam snow_c_eff_param;
+        Eparam snow_E_param;
+        Lparam snow_L_param;
+
     protected:
 
         // ##### auxilary functions #####
@@ -56,16 +81,29 @@ namespace icethermo
                           NumType omega_up,
                           NumType time_step);
 
-        // T from BC
+        // find temperature consistent with boundary conditions
         NumType T_from_BC(const std::vector<NumType>& T_cells,
                           const std::vector<NumType>& dz_cells,
-                          const std::vector<NumType> salinity_cells,
-                          NumType k_value,
+                          const std::vector<NumType>& salinity_cells,
                           NumType omega_value,
-                          FuncPtr<NumType> F,
+                          std::function<NumType(NumType)> F,
                           bool is_surface,
-                          ApproxOrder grad_approx_order = ApproxOrder::first,
-                          NumType rho = IceInfo::rho_i);
+                          ApproxOrder grad_approx_order,
+                          Dparam dparam,
+                          Kparam kparam,
+                          Lparam Lparam);
+        
+        // find omega value consistent with boundary conditions
+        NumType W_from_BC(NumType T_bnd,
+                          const std::vector<NumType>& T_cells,
+                          const std::vector<NumType>& dz_cells,
+                          const std::vector<NumType>& salinity_cells,
+                          std::function<NumType(NumType)> F,
+                          bool is_surface,
+                          ApproxOrder grad_approx_order,
+                          Dparam dparam,
+                          Kparam kparam,
+                          Lparam Lparam);
     };
 
     template<typename NumType>
@@ -83,12 +121,6 @@ namespace icethermo
         void Evaluate() override;
 
     private:
-        // configuration variables
-        Dparam ice_rho_param;
-        Kparam ice_k_param;
-        Cparam ice_c_eff_param;
-        Eparam ice_E_param;
-        Lparam ice_L_param;
 
         
 

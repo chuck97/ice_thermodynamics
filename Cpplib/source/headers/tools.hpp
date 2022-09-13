@@ -4,12 +4,13 @@
 #include <utility>
 #include <string>
 #include <tuple>
+#include <functional>
 #include "defines.hpp"
 
 namespace icethermo
 {
     template <typename NumType>
-    using FuncPtr = NumType(*)(NumType);
+    using FuncPtr = std::function<NumType(NumType)>;
 
     template <typename NumType>
     using FourVecs = std::tuple<std::vector<NumType>, std::vector<NumType>, std::vector<NumType>, std::vector<NumType>>;
