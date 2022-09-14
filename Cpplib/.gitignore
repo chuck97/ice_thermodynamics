@@ -1,2 +1,4 @@
 build/
+json/
+.vscode/
 CMakeLists.txt.user

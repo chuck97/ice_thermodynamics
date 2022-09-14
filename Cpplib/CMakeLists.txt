@@ -31,10 +31,14 @@ add_subdirectory(source)
 # make library
 add_library(icethermo STATIC ${SOURCE} ${HEADER})
 
+# link library with nlohmann::json
+find_package(nlohmann_json 3.2.0 REQUIRED)
+target_link_libraries(icethermo PRIVATE nlohmann_json::nlohmann_json)
+
 # compile tests
-if (COMPILE_TESTS)
+if(COMPILE_TESTS)
   add_subdirectory(tests)
-endif()
+endif(COMPILE_TESTS)
 
 # compile examples
 if (COMPILE_EXAMPLES)
