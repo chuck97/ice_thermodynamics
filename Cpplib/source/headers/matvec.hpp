@@ -26,4 +26,5 @@ namespace icethermo
     template <typename NumType> std::ostream& operator<<(std::ostream& os, const std::vector<NumType>& vec);
 
     template <typename NumType> NumType sum_vec(const std::vector<NumType>& vec);
+    template <typename NumType> NumType sum_vec(const std::vector<NumType>& vec, int start, int end);
 }

@@ -167,6 +167,18 @@ namespace icethermo
         return std::accumulate(vec.begin(), vec.end(), NumType(0));
     }
 
+    template <typename NumType>
+    NumType sum_vec(const std::vector<NumType>& vec, int start, int end)
+    {
+        auto first = vec.begin();
+        std::advance(first, start);
+
+        auto last = vec.begin();
+        std::advance(last, end);
+
+        return std::accumulate(first, last, NumType(0));
+    }
+
 
     // explicit instantaion
     template std::vector<int> concatenate(const std::vector<std::vector<int>>& vecs);

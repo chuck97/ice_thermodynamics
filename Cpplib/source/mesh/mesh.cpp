@@ -253,7 +253,7 @@ namespace icethermo
         }
 
         // cell thickness info
-        *ofs << "### Cells thickness ###\n";
+        *ofs << "### cells_thickness_array ###\n";
         for (int i = 0; i < cells_thickness->size(); i++)
         {
             if (i != cells_thickness->size() - 1)
@@ -346,7 +346,7 @@ namespace icethermo
         json j;
 
         // cells thickness
-        j["cells thickness"] = *cells_thickness;
+        j["cells_thickness_array"] = *cells_thickness;
 
         // single data
         for (auto [key, val]: single_data)

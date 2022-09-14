@@ -79,6 +79,30 @@ int main()
     // construct arbitrary mesh with given unit segment partition and total thickness
     Mesh<double> mesh3({0.5, 0.5}, 5.0);
     mesh3.SaveTXT("./mesh3");
+
+    // test mesh for visualization
+    Mesh<double> mesh_vis(15, 4.0);
+
+    auto cells_thick = mesh_vis.CreateCellData("cells_temp_array");
+    int N = mesh_vis.GetCellsNum();
+
+    for (int i = 0; i < N; ++i)
+    {
+        (*cells_thick)[i] = -5.0 + i*1.0/N * (-5.0);
+    }
+
+    auto down_temp = mesh_vis.CreateSingleData("down_temp");
+    auto up_temp = mesh_vis.CreateSingleData("up_temp");
+
+    *(down_temp) = -5.0; *(up_temp) = -10.0;
+
+    auto cells_dens = mesh_vis.CreateCellData("cells_density_array");
+    for (auto& it: *(cells_dens))
+    {
+        it = Params::Density(Dparam::FreshIce, 0.0, 0.0);
+    }
+
+    mesh_vis.SaveJSON("./mesh_vis");
     
     // wrong constructor (it should be unit segment partition 0.5 + 0.4 != 1.0)
     Mesh<float> mesh4({0.5, 0.4}, 5.0);

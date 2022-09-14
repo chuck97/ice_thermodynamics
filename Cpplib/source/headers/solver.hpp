@@ -86,24 +86,40 @@ namespace icethermo
                           const std::vector<NumType>& dz_cells,
                           const std::vector<NumType>& salinity_cells,
                           NumType omega_value,
-                          std::function<NumType(NumType)> F,
+                          FuncPtr<NumType> F,
                           bool is_surface,
-                          ApproxOrder grad_approx_order,
-                          Dparam dparam,
-                          Kparam kparam,
-                          Lparam Lparam);
+                          ApproxOrder grad_approx_order = ApproxOrder::first,
+                          Dparam dparam = Dparam::FreshIce,
+                          Kparam kparam = Kparam::FreshIce,
+                          Lparam Lparam = Lparam::FreshIce);
         
         // find omega value consistent with boundary conditions
         NumType W_from_BC(NumType T_bnd,
                           const std::vector<NumType>& T_cells,
                           const std::vector<NumType>& dz_cells,
                           const std::vector<NumType>& salinity_cells,
-                          std::function<NumType(NumType)> F,
+                          FuncPtr<NumType> F,
                           bool is_surface,
                           ApproxOrder grad_approx_order,
-                          Dparam dparam,
-                          Kparam kparam,
-                          Lparam Lparam);
+                          Dparam dparam = Dparam::FreshIce,
+                          Kparam kparam = Kparam::FreshIce,
+                          Lparam Lparam = Lparam::FreshIce);
+        
+        // construct tridiagonal discrete advection-diffusion matrix and rhs
+        FourVecs<NumType> Assemble_advdiff_martix_rhs(const std::vector<NumType>& T_cells_prev, const std::vector<NumType>& T_cells_old,
+                                                      NumType T_up_new, NumType T_up_prev, NumType T_up_old,
+                                                      NumType T_down_new, NumType T_down_prev, NumType T_down_old, 
+                                                      NumType omega_down, NumType omega_up, 
+                                                      const std::vector<NumType>& dz_cells_new, const std::vector<NumType>& dz_cells_old,
+                                                      const std::vector<NumType>& salinity_cells,
+                                                      const std::vector<NumType>& radiation_nodes,
+                                                      NumType time_step,
+                                                      Dparam dparam = Dparam::FreshIce,
+                                                      Kparam kparam = Kparam::FreshIce,
+                                                      Lparam Lparam = Lparam::FreshIce,
+                                                      Eparam Eparam = Eparam::FreshIce,
+                                                      Cparam cparam = Cparam::FreshIce);
+
     };
 
     template<typename NumType>
