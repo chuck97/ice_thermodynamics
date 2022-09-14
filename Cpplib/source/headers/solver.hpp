@@ -116,7 +116,6 @@ namespace icethermo
                                                       NumType time_step,
                                                       Dparam dparam = Dparam::FreshIce,
                                                       Kparam kparam = Kparam::FreshIce,
-                                                      Lparam Lparam = Lparam::FreshIce,
                                                       Eparam Eparam = Eparam::FreshIce,
                                                       Cparam cparam = Cparam::FreshIce);
 
@@ -144,7 +143,7 @@ namespace icethermo
 
     };
 
-/*    
+  /*
     template <typename NumType>
     class Ice1D_Snow1D_Solver : public Solver<NumType>
     {

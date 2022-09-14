@@ -238,4 +238,7 @@ namespace icethermo
 
     template float sum_vec(const std::vector<float>& vec);
     template double sum_vec(const std::vector<double>& vec);
+
+    template float sum_vec(const std::vector<float>& vec, int start, int end);
+    template double sum_vec(const std::vector<double>& vec, int start, int end);
 }
