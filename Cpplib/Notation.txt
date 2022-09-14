@@ -1,0 +1,7 @@
+cells_thickness_array - толщины ячеек
+
+cells_temp_array - температуры ячеек
+
+down_temp, up_temp - температуры верхнего и нижнего интерфйса (single data)
+
+cells_density_array - плотности ячеек
