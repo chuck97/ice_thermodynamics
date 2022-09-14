@@ -84,14 +84,14 @@ namespace icethermo
             }
 
             // physical constants
-            FuncPtr<NumType> rho = [&](NumType T){return Params::Density(dparam, T, salinity_cells.back());};
-            FuncPtr<NumType> k = [&](NumType T){return Params::Conductivity(kparam, T, salinity_cells.back(), rho(T));};
-            FuncPtr<NumType> L = [&](NumType T){return Params::FusionHeat(Lparam, T, salinity_cells.back());};
+            FuncPtr<NumType> rho = [&](NumType T){return Params<NumType>::Density(dparam, T, salinity_cells.back());};
+            FuncPtr<NumType> k = [&](NumType T){return Params<NumType>::Conductivity(kparam, T, salinity_cells.back(), rho(T));};
+            FuncPtr<NumType> L = [&](NumType T){return Params<NumType>::FusionHeat(Lparam, T, salinity_cells.back());};
 
             FuncPtr<NumType> nonlin_func = [&](NumType T){return F(T) - k(T)*grad(T) - rho(T)*L(T)*omega_value;};
             
             // solve nonlinear 1D equation
-            return secant_solver<NumType>(nonlin_func, T_cells.back() - 10.0, GenConsts::TempFusion(salinity_cells.back()) + 10.0).first;
+            return secant_solver<NumType>(nonlin_func, T_cells.back() - 10.0, GenConsts<NumType>::TempFusion(salinity_cells.back()) + 10.0).first;
         }
         else
         {
@@ -114,15 +114,15 @@ namespace icethermo
             }
 
             // physical constants
-            FuncPtr<NumType> rho = [&](NumType T){return Params::Density(dparam, T, salinity_cells[0]);};
-            FuncPtr<NumType> k = [&](NumType T){return Params::Conductivity(kparam, T, salinity_cells[0], rho(T));};
-            FuncPtr<NumType> L = [&](NumType T){return Params::FusionHeat(Lparam, T, salinity_cells[0]);};
+            FuncPtr<NumType> rho = [&](NumType T){return Params<NumType>::Density(dparam, T, salinity_cells[0]);};
+            FuncPtr<NumType> k = [&](NumType T){return Params<NumType>::Conductivity(kparam, T, salinity_cells[0], rho(T));};
+            FuncPtr<NumType> L = [&](NumType T){return Params<NumType>::FusionHeat(Lparam, T, salinity_cells[0]);};
 
             // assemble nonlinear function for 1D solver
             FuncPtr<NumType> nonlin_func = [&](NumType T){return F(T) - k(T)*grad(T) - rho(T)*L(T)*omega_value;};
             
             // solve nonlinear 1D equation
-            return secant_solver<NumType>(nonlin_func, T_cells.back() - 10.0, GenConsts::TempFusion(salinity_cells.back()) + 10.0).first;
+            return secant_solver<NumType>(nonlin_func, T_cells.back() - 10.0, GenConsts<NumType>::TempFusion(salinity_cells.back()) + 10.0).first;
         }   
     }
 
@@ -160,9 +160,9 @@ namespace icethermo
             }
 
             // constants
-            FuncPtr<NumType> rho = [&](NumType T){return Params::Density(dparam, T, salinity_cells.back());};
-            FuncPtr<NumType> k = [&](NumType T){return Params::Conductivity(kparam, T, salinity_cells.back(), rho(T));};
-            FuncPtr<NumType> L = [&](NumType T){return Params::FusionHeat(Lparam, T, salinity_cells.back());};
+            FuncPtr<NumType> rho = [&](NumType T){return Params<NumType>::Density(dparam, T, salinity_cells.back());};
+            FuncPtr<NumType> k = [&](NumType T){return Params<NumType>::Conductivity(kparam, T, salinity_cells.back(), rho(T));};
+            FuncPtr<NumType> L = [&](NumType T){return Params<NumType>::FusionHeat(Lparam, T, salinity_cells.back());};
 
             // calculate omega from boundary conditions
             return (F(T_bnd) - k(T_cells.back())*grad(T_bnd))/(rho(T_cells.back())*L(T_cells.back()));
@@ -188,9 +188,9 @@ namespace icethermo
             }
 
             // physical constants
-            FuncPtr<NumType> rho = [&](NumType T){return Params::Density(dparam, T, salinity_cells[0]);};
-            FuncPtr<NumType> k = [&](NumType T){return Params::Conductivity(kparam, T, salinity_cells[0], rho(T));};
-            std::function<NumType(NumType, NumType)> L = [&](NumType T, NumType S){return Params::FusionHeat(Lparam, T, S);};
+            FuncPtr<NumType> rho = [&](NumType T){return Params<NumType>::Density(dparam, T, salinity_cells[0]);};
+            FuncPtr<NumType> k = [&](NumType T){return Params<NumType>::Conductivity(kparam, T, salinity_cells[0], rho(T));};
+            std::function<NumType(NumType, NumType)> L = [&](NumType T, NumType S){return Params<NumType>::FusionHeat(Lparam, T, S);};
 
             // calculate omegs from boundary conditions
             if (kparam == Kparam::BubblyBrine or kparam == Kparam::Untersteiner)
@@ -257,34 +257,34 @@ namespace icethermo
         std::vector<NumType> nodes_eff_k(N+1);
         
         
-        nodes_eff_k[0] = 2.0*Params::Conductivity(kparam, T_cells_prev[0], salinity_cells[0], Params::Density(dparam, T_cells_prev[0], salinity_cells[0]))/dz_cells_new[0];
+        nodes_eff_k[0] = 2.0*Params<NumType>::Conductivity(kparam, T_cells_prev[0], salinity_cells[0], Params<NumType>::Density(dparam, T_cells_prev[0], salinity_cells[0]))/dz_cells_new[0];
         
         for (int i = 1; i < N; ++i)
         {
-            NumType k_prev = Params::Conductivity(kparam, T_cells_prev[i-1], salinity_cells[i-1], Params::Density(dparam, T_cells_prev[i-1], salinity_cells[i-1]));
-            NumType k_forw = Params::Conductivity(kparam, T_cells_prev[i], salinity_cells[i], Params::Density(dparam, T_cells_prev[i], salinity_cells[i]));
+            NumType k_prev = Params<NumType>::Conductivity(kparam, T_cells_prev[i-1], salinity_cells[i-1], Params<NumType>::Density(dparam, T_cells_prev[i-1], salinity_cells[i-1]));
+            NumType k_forw = Params<NumType>::Conductivity(kparam, T_cells_prev[i], salinity_cells[i], Params<NumType>::Density(dparam, T_cells_prev[i], salinity_cells[i]));
             nodes_eff_k[i] = 2.0*k_prev*k_forw/(k_prev*dz_cells_new[i] + k_forw*dz_cells_new[i-1]);
         }
 
         
-        nodes_eff_k[N] = 2.0*Params::Conductivity(kparam, T_cells_prev[N-1], salinity_cells[N-1], Params::Density(dparam, T_cells_prev[N-1], salinity_cells[N-1]))/dz_cells_new[N-1];
+        nodes_eff_k[N] = 2.0*Params<NumType>::Conductivity(kparam, T_cells_prev[N-1], salinity_cells[N-1], Params<NumType>::Density(dparam, T_cells_prev[N-1], salinity_cells[N-1]))/dz_cells_new[N-1];
 
         // compute effective heat capacity and enthalpy at the cells and interface nodes
         std::vector<NumType> cells_eff_c(N);
         std::vector<NumType> cells_E(N);
 
 
-        NumType c_eff_down = Params::EffCapacity(cparam, T_down_new, T_down_old, salinity_cells[0]);
-        NumType E_down = Params::Enthalpy(Eparam, T_down_old, salinity_cells[0]); 
+        NumType c_eff_down = Params<NumType>::EffCapacity(cparam, T_down_new, T_down_old, salinity_cells[0]);
+        NumType E_down = Params<NumType>::Enthalpy(Eparam, T_down_old, salinity_cells[0]); 
         
         for (int i = 0; i < N; ++i)
         {
-            cells_eff_c[i] = Params::EffCapacity(cparam, T_cells_prev[i], T_cells_old[i], salinity_cells[i]);
-            cells_E[i] = Params::Enthalpy(Eparam, T_cells_old[i],  salinity_cells[i]);
+            cells_eff_c[i] = Params<NumType>::EffCapacity(cparam, T_cells_prev[i], T_cells_old[i], salinity_cells[i]);
+            cells_E[i] = Params<NumType>::Enthalpy(Eparam, T_cells_old[i],  salinity_cells[i]);
         }
 
-        NumType c_eff_up = Params::EffCapacity(cparam, T_up_new, T_up_old, salinity_cells[N-1]);
-        NumType E_up = Params::Enthalpy(Eparam, T_up_old, salinity_cells[N-1]);
+        NumType c_eff_up = Params<NumType>::EffCapacity(cparam, T_up_new, T_up_old, salinity_cells[N-1]);
+        NumType E_up = Params<NumType>::Enthalpy(Eparam, T_up_old, salinity_cells[N-1]);
 
         // compute nodal values of omega
         std::vector<NumType> nodes_omega(N+1);

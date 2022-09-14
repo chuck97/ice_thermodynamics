@@ -99,7 +99,7 @@ int main()
     auto cells_dens = mesh_vis.CreateCellData("cells_density_array");
     for (auto& it: *(cells_dens))
     {
-        it = Params::Density(Dparam::FreshIce, 0.0, 0.0);
+        it = Params<double>::Density(Dparam::FreshIce, 0.0, 0.0);
     }
 
     mesh_vis.SaveJSON("./mesh_vis");
