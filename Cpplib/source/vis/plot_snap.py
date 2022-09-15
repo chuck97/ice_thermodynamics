@@ -8,20 +8,24 @@ import matplotlib.ticker as mtk
 import matplotlib.colors as clr
 from matplotlib.collections import LineCollection
 
-def get_Z_pair(dzi, dzs, rho_i, rho_s, rho_w):
+def get_Z(dzi, rho_i, rho_w, dzs=None, rho_s=None):
     
-    bottomline = (-np.dot(dzi, rho_i) - np.dot(dzs, rho_s))/rho_w
+    with_snow = (dzs is not None) and (rho_s is not None)
+    
+    bottomline = (-np.dot(dzi, rho_i) - (np.dot(dzs, rho_s) if with_snow else 0))/rho_w
     
     Z_i = np.concatenate(([bottomline], dzi)).cumsum()
     Z_i = np.append(Z_i, Z_i[[-1]])
     Z_i[1:-1] -= [dz/2 for dz in dzi]
     
-    Z_s = np.concatenate((Z_i[[-1]], dzs)).cumsum()
-    Z_s = np.append(Z_s, Z_s[[-1]])
-    Z_s[1:-1] -= [dz/2 for dz in dzs]
+    if with_snow:
+        Z_s = np.concatenate((Z_i[[-1]], dzs)).cumsum()
+        Z_s = np.append(Z_s, Z_s[[-1]])
+        Z_s[1:-1] -= [dz/2 for dz in dzs]
+        return Z_i, Z_s
     
-    return Z_i, Z_s
-
+    else:
+        return Z_i
 
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     new_cmap = clr.LinearSegmentedColormap.from_list(
@@ -30,16 +34,16 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     return new_cmap
 
 
-def plot_snap(Z_i_list, Z_s_list, T_i_list, T_s_list, 
+def plot_snap(Z_i_list, Z_s_list, T_i_list, T_s_list,
               figsize=(15, 10),
               t_min=None, t_max=None,
               cmap=None, names=None,
               savepath=None, dpi=250):
     
     z_min = min([Z_i[0] for Z_i in Z_i_list])
-    z_max = max([Z_s[-1] for Z_s in Z_s_list])
-    t_min = min(map(min, T_i_list + T_s_list)) if t_min is None else t_min
-    t_max = max(map(max, T_i_list + T_s_list)) if t_max is None else t_max
+    z_max = max([Z_s[-1] if Z_s is not None else Z_i[-1] for Z_i, Z_s in zip(Z_i_list, Z_s_list)])
+    t_min = min(map(min, T_i_list + [T_s for T_s in T_s_list if T_s is not None])) if t_min is None else t_min
+    t_max = max(map(max, T_i_list + [T_s for T_s in T_s_list if T_s is not None])) if t_max is None else t_max
 #     temp_pairs = [min(T_i + T_s), max(T) for T in T_list]
 
     cmaps = ['Blues', 'Purples', 'Greens', 'cool', 'winter']
@@ -51,7 +55,8 @@ def plot_snap(Z_i_list, Z_s_list, T_i_list, T_s_list,
     ax.set_xlim(t_min - (t_max - t_min)*0.1, t_max + (t_max - t_min)*0.1)
     ax.set_ylim(z_min - (z_max - z_min)*0.1, z_max + (z_max - z_min)*0.1)
     for i, (Z_i, Z_s, T_i, T_s) in enumerate(zip(Z_i_list, Z_s_list, T_i_list, T_s_list)):
-        norm = plt.Normalize(max(min(T_i + T_s), t_min), min(max(T_i + T_s), t_max))
+        norm = plt.Normalize(max(min(T_i + (T_s if T_s is not None else [])), t_min),
+                             min(max(T_i + (T_s if T_s is not None else [])), t_max))
         cmap = truncate_colormap(plt.get_cmap(cmaps[i%len(cmaps)]), 0.3, 1)
         
         points_ice = [(T, Z) for T, Z in zip(T_i, Z_i)]
@@ -65,7 +70,8 @@ def plot_snap(Z_i_list, Z_s_list, T_i_list, T_s_list,
         markers.set_cmap(cmap)
         markers.set_array(T_i)
 
-        ax.plot(T_s, Z_s, color='grey', lw=3, marker='o')
+        ax.plot((T_s if T_s is not None else []), (Z_s if Z_s is not None else []),
+                color='grey', lw=3, marker='o')
         
     ax.axhline(ls='--', lw=3, color='navy')
     ax.set_xlabel(r'T, $^o C$', size=20)
@@ -89,19 +95,35 @@ def plot_snap(Z_i_list, Z_s_list, T_i_list, T_s_list,
         
 
 if __name__ == "__main__":
-    path_ice, path_snow, path_to_save = sys.argv[1:]
     
-    with open(path_ice) as file_ice, open(path_snow) as file_snow:
-        obj_ice = js.load(file_ice)
-        obj_snow = js.load(file_snow)
+    if len(sys.argv[1:]) == 2:
+        path_ice, path_to_save = sys.argv[1:]
+        with open(path_ice) as file_ice:
+            obj_ice = js.load(file_ice)
+            
+        Z_i = get_Z(obj_ice["cells_thickness_array"], obj_ice["cells data"]["cells_density_array"], 1023.0)
         
-    Z_i, Z_s = get_Z_pair(obj_ice["cells_thickness_array"], obj_snow["cells_thickness_array"],
-                          obj_ice["cells data"]["cells_density_array"], obj_snow["cells data"]["cells_density_array"],
-                          1023.0)
-    
-    T_i = [obj_ice["single data"]["down_temp"]] + obj_ice["cells data"]["cells_temp_array"] \
-        + [obj_ice["single data"]["up_temp"]]
-    T_s = [obj_snow["single data"]["down_temp"]] + obj_snow["cells data"]["cells_temp_array"] \
-        + [obj_snow["single data"]["up_temp"]]
-    
-    plot_snap([Z_i], [Z_s], [T_i], [T_s], savepath=path_to_save)
+        T_i = [obj_ice["single data"]["down_temp"]] + obj_ice["cells data"]["cells_temp_array"] \
+            + [obj_ice["single data"]["up_temp"]]
+        
+        plot_snap([Z_i], [None], [T_i], [None], savepath=path_to_save)
+        
+    elif len(sys.argv[1:]) == 3:
+        path_ice, path_snow, path_to_save = sys.argv[1:]
+        with open(path_ice) as file_ice, open(path_snow) as file_snow:
+            obj_ice = js.load(file_ice)
+            obj_snow = js.load(file_snow)
+            
+        Z_i, Z_s = get_Z(obj_ice["cells_thickness_array"], obj_ice["cells data"]["cells_density_array"], 1023.0,
+                         obj_snow["cells_thickness_array"], obj_snow["cells data"]["cells_density_array"])
+        
+        T_i = [obj_ice["single data"]["down_temp"]] + obj_ice["cells data"]["cells_temp_array"] \
+            + [obj_ice["single data"]["up_temp"]]
+        T_s = [obj_snow["single data"]["down_temp"]] + obj_snow["cells data"]["cells_temp_array"] \
+            + [obj_snow["single data"]["up_temp"]]
+        
+        plot_snap([Z_i], [Z_s], [T_i], [T_s], savepath=path_to_save)
+        
+    else:
+        raise Exception("Num of parameters shold be 2 or 3! Missing something?")
+             
