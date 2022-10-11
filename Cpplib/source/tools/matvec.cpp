@@ -20,6 +20,20 @@ namespace icethermo
         return res;
     }
 
+    template <typename NumType> std::vector<NumType> concatenate(const std::vector<NumType>& vec1, const std::vector<NumType>& vec2)
+    {
+        std::vector<NumType> res = vec1;
+
+        res.insert
+        (
+            res.end(),
+            vec2.begin(),
+            vec2.end()
+        );
+        
+        return res;
+    }
+
     template <typename NumType>
     FourVecs<NumType> concat_matrices(const std::vector<NumType>& under_first,
                                       const std::vector<NumType>& diag_first,
@@ -181,6 +195,10 @@ namespace icethermo
 
 
     // explicit instantaion
+    template std::vector<int> concatenate(const std::vector<int>& vec1, const std::vector<int>& vec2);
+    template std::vector<float> concatenate(const std::vector<float>& vec1, const std::vector<float>& vec2);
+    template std::vector<double> concatenate(const std::vector<double>& vec1, const std::vector<double>& vec2);
+
     template std::vector<int> concatenate(const std::vector<std::vector<int>>& vecs);
     template std::vector<float> concatenate(const std::vector<std::vector<float>>& vecs);
     template std::vector<double> concatenate(const std::vector<std::vector<double>>& vecs);

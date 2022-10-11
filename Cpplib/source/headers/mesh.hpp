@@ -34,18 +34,18 @@ namespace icethermo
 
         // Creators of single, cells and nodes data
         std::shared_ptr<NumType> CreateSingleData(const std::string& varname, bool visible = true);
-        std::shared_ptr<std::vector<NumType>> CreateCellData(const std::string& varname, bool visible = true);
-        std::shared_ptr<std::vector<NumType>> CreateNodeData(const std::string& varname, bool visible = true);
+        std::shared_ptr<std::vector<NumType>> CreateCellsData(const std::string& varname, bool visible = true);
+        std::shared_ptr<std::vector<NumType>> CreateNodesData(const std::string& varname, bool visible = true);
 
         // Deleters of single, cells and nodes data
         void DeleteSingleData(const std::string& varname);
-        void DeleteCellData(const std::string& varname);
-        void DeleteNodeData(const std::string& varname);
+        void DeleteCellsData(const std::string& varname);
+        void DeleteNodesData(const std::string& varname);
 
         // Getters of single, cells and nodes data
         std::shared_ptr<NumType> GetSingleData(const std::string& varname);
-        std::shared_ptr<std::vector<NumType>> GetCellData(const std::string& varname);
-        std::shared_ptr<std::vector<NumType>> GetNodeData(const std::string& varname);
+        std::shared_ptr<std::vector<NumType>> GetCellsData(const std::string& varname);
+        std::shared_ptr<std::vector<NumType>> GetNodesData(const std::string& varname);
 
         // Getter for cell thicknesses and total thickness
         std::shared_ptr<std::vector<NumType>> GetCellsThickness();
@@ -66,6 +66,11 @@ namespace icethermo
 
         void SaveJSON(const std::string& filename) const;
         void SaveJSON(const std::string& filename, int postscript) const;
+
+        // Check existency of data
+        bool CheckCellsDataExistency(const std::string& varname) const;
+        bool CheckNodesDataExistency(const std::string& varname) const;
+        bool CheckSingleDataExistency(const std::string& varname) const;
 
     private:
         // vector of cell thicknesses
