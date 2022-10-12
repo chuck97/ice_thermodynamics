@@ -1,5 +1,6 @@
-project(solver_test)
-
-# 1d ice solver 
-add_executable(ice1d ice1d.cpp)
-target_link_libraries(ice1d icethermo)
+add_subdirectory(1dice_freezing)
+add_subdirectory(1dice_melting)
+add_subdirectory(1dice_cycle)
+add_subdirectory(1dice_1dsnow_freezing)
+add_subdirectory(1dice_1dsnow_melting)
+add_subdirectory(1dice_1dsnow_cycle)
