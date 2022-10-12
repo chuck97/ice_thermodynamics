@@ -157,6 +157,19 @@ namespace icethermo
                                                bool is_radiation = true,
                                                int max_n_its = 50,
                                                NumType tol = 1e-6);
+        
+        /*
+        // ice melting mode (for 1d profile)
+        ThreeVecs<NumType> sea_ice_melting_1d(NumType T_ib,
+                                              const std::vector<NumType>& T_cells,
+                                              NumType T_is,
+                                              const std::vector<NumType>& dz_cells,
+                                              const std::vector<NumType>& salinity_cells,
+                                              const std::vector<NumType>& rho_cells,
+                                              bool is_radiation = true,
+                                              int max_n_its = 50,
+                                              NumType tol = 1e-6);
+        */
     };
 
     template<typename NumType>
