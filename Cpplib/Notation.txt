@@ -1,7 +1,10 @@
-cells_thickness_array - толщины ячеек
+лист "cells data": 
+	массив "cells_density_array"
+	массив "cells_salinity_array"
+	массив "cells_temperature_array"
 
-cells_temp_array - температуры ячеек
+массив "cells_thickness_array"
 
-down_temp, up_temp - температуры верхнего и нижнего интерфйса (single data)
-
-cells_density_array - плотности ячеек
+лист "single data":
+	значение "down_temperature"
+	значение "up_temperature"

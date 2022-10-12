@@ -10,7 +10,7 @@ NumType atm_flux(NumType temp)
     return AirConsts<NumType>::rho_a*
            AirConsts<NumType>::cp_a*
            GenConsts<NumType>::C_sh*
-           (NumType)15.0* 
+           (NumType)15.0*
            ((NumType)-30.0 - temp);
 }
 
@@ -34,7 +34,7 @@ int main()
     for (int i = 0; i < n_cells; ++i)
     {
        (*initial_temp_cells)[i] = fusion_temp + 1.0f*(i + 0.5f)/(n_cells)*(-10.0f - fusion_temp);
-       (*initial_sal_cells)[i] = 1.0f + 1.0f*(i + 0.5f)/(n_cells)*(4.0f - 1.0f);
+       (*initial_sal_cells)[i] = 4.0f + 1.0f*(i + 0.5f)/(n_cells)*(1.0f - 4.0f);
        (*initial_dens_cells)[i] = IceConsts<float>::rho_i;
     }
 
@@ -57,7 +57,7 @@ int main()
         // write mesh to file
         if (step_num % 10 == 0)
         {
-            ice_mesh->SaveJSON("./ice_freezing", step_num);
+            ice_mesh->SaveJSON("./ice/ice_freezing", step_num);
             std::cout << "ice thickness: " << ice_mesh->GetTotalThickness() << std::endl;
         }
     }
