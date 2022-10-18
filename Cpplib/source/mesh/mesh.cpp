@@ -78,7 +78,7 @@ namespace icethermo
     }
 
     template<typename NumType>
-    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::CreateCellData(const std::string& varname, bool visible)
+    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::CreateCellsData(const std::string& varname, bool visible)
     {
         if (cells_data.count(varname) != 0)
         {
@@ -92,7 +92,7 @@ namespace icethermo
     }
 
     template<typename NumType>
-    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::CreateNodeData(const std::string& varname, bool visible)
+    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::CreateNodesData(const std::string& varname, bool visible)
     {
         if (nodes_data.count(varname) != 0)
         {
@@ -117,7 +117,7 @@ namespace icethermo
     }
 
     template<typename NumType>
-    void Mesh<NumType>::DeleteCellData(const std::string& varname)
+    void Mesh<NumType>::DeleteCellsData(const std::string& varname)
     {
         if (cells_data.count(varname) == 0)
         {
@@ -128,7 +128,7 @@ namespace icethermo
     }
 
     template<typename NumType>
-    void Mesh<NumType>::DeleteNodeData(const std::string& varname)
+    void Mesh<NumType>::DeleteNodesData(const std::string& varname)
     {
         if (nodes_data.count(varname) == 0)
         {
@@ -149,7 +149,7 @@ namespace icethermo
     }
 
     template<typename NumType>
-    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::GetCellData(const std::string& varname)
+    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::GetCellsData(const std::string& varname)
     {
         if (cells_data.count(varname) == 0)
         {
@@ -159,7 +159,7 @@ namespace icethermo
     }
 
     template<typename NumType>
-    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::GetNodeData(const std::string& varname)
+    std::shared_ptr<std::vector<NumType>> Mesh<NumType>::GetNodesData(const std::string& varname)
     {
         if (nodes_data.count(varname) == 0)
         {
@@ -403,7 +403,44 @@ namespace icethermo
         SaveJSON(file);
     }
 
+    template<typename NumType>
+    bool Mesh<NumType>::CheckCellsDataExistency(const std::string& varname) const
+    {
+        if (cells_data.count(varname) == 0)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
 
+    template<typename NumType>
+    bool Mesh<NumType>::CheckNodesDataExistency(const std::string& varname) const
+    {
+        if (nodes_data.count(varname) == 0)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    template<typename NumType>
+    bool Mesh<NumType>::CheckSingleDataExistency(const std::string& varname) const
+    {
+        if (single_data.count(varname) == 0)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
 
     // explicit instantiation of classes
     template class Mesh<float>;

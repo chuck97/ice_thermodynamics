@@ -1,128 +1,153 @@
 #include "constants.hpp"
 
-using namespace icethermo;
-
-double Params::Density(Dparam param, double T, double S)
+namespace icethermo
 {
-    if (param == Dparam::SeaIce)
+    template<typename NumType>
+    NumType Params<NumType>::Density(Dparam param, NumType T, NumType S)
     {
-        return IceConsts::rho_i;
-    }
-    else if (param == Dparam::FreshIce)
-    {
-        return IceConsts::rho_i;
-    }
-    else if (param == Dparam::FreshSnow)
-    {
-        return SnowConsts::rho_s;
-    }
-    else
-    {
-        THERMO_ERR("Available Density parametrizations: SeaIce, FreshIce, FreshSnow!");
-    }
-}
-
-double Params::EffCapacity(Cparam param, double T, double T_old, double S)
-{
-    if (param == Cparam::SeaIce)
-    {
-        double Tf_i = GenConsts::TempFusion(S);
-        return IceConsts::c0_i - IceConsts::L0_i*Tf_i/(T*T_old);
-    }
-    else if (param == Cparam::FreshIce)
-    {
-        return IceConsts::c0_i;
-    }
-    else if (param == Cparam::FreshSnow)
-    {
-        return SnowConsts::c0_s;
-    }
-    else
-    {
-        THERMO_ERR("Available Effective Heat Capacity parametrizations: SeaIce, FreshIce, FreshSnow!");
-    }
-}
-
-double Params::Enthalpy(Eparam param, double T, double S)
-{
-    if (param == Eparam::SeaIce)
-    {
-        double Tf_i = GenConsts::TempFusion(S);
-        double c_w = WaterConsts::c_w;
-        return IceConsts::c0_i*(T - Tf_i) - IceConsts::L0_i*(1.0 - Tf_i/T) + c_w*Tf_i;
-    }
-    else if (param == Eparam::FreshIce)
-    {
-        return IceConsts::c0_i*T - IceConsts::L0_i;
-    }
-    else if (param == Eparam::FreshSnow)
-    {
-        return SnowConsts::c0_s*T - SnowConsts::L_f0;
-    }
-    else
-    {
-        THERMO_ERR("Available Enthalpy parametrizations: SeaIce, FreshIce, FreshSnow!");
-    }
-    
-}
-
-double Params::FusionHeat(Lparam param, double T, double S)
-{
-    if (param == Lparam::SeaIce)
-    {
-        double Tf_i = GenConsts::TempFusion(S);
-        double c_w = WaterConsts::c_w;
-        return IceConsts::c0_i*(Tf_i - T) + IceConsts::L0_i*(1.0 + Tf_i/T);
-    }
-    else if (param == Lparam::FreshIce)
-    {
-        return -IceConsts::c0_i*T + IceConsts::L0_i;
-    }
-    else if (param == Lparam::FreshSnow)
-    {
-        return -SnowConsts::c0_s*T + SnowConsts::L_f0;
-    }
-    else
-    {
-        THERMO_ERR("Available Fusion Heat parametrizations: SeaIce, FreshIce, FreshSnow!");
-    }
-}
-
-double Params::Conductivity(Kparam param, double T, double S, double rho)
-{
-    if (param == Kparam::Untersteiner)
-    {
-        if (std::abs(T) < REAL_MIN_VAL)
+        if (param == Dparam::SeaIce)
         {
-            return 0.0;
+            return IceConsts<NumType>::rho_i;
+        }
+        else if (param == Dparam::FreshIce)
+        {
+            return IceConsts<NumType>::rho_i;
+        }
+        else if (param == Dparam::FreshSnow)
+        {
+            return SnowConsts<NumType>::rho_s;
         }
         else
         {
-            return 2.03 + 0.1172 * (S/T);
+            THERMO_ERR("Available Density parametrizations: SeaIce, FreshIce, FreshSnow!");
         }
-        
     }
-    else if (param == Kparam::BubblyBrine)
+
+    template<typename NumType>
+    NumType Params<NumType>::EffCapacity(Cparam param, NumType T, NumType T_old, NumType S)
     {
-        if (std::abs(T) < REAL_MIN_VAL)
+        if (param == Cparam::SeaIce)
         {
-            return 0.0;
+            NumType Tf_i = GenConsts<NumType>::TempFusion(S);
+            return IceConsts<NumType>::c0_i - IceConsts<NumType>::L0_i*Tf_i/(T*T_old);
+        }
+        else if (param == Cparam::FreshIce)
+        {
+            return IceConsts<NumType>::c0_i;
+        }
+        else if (param == Cparam::FreshSnow)
+        {
+            return SnowConsts<NumType>::c0_s;
         }
         else
         {
-            return rho/IceConsts::rho_i * (2.11 - 0.011*T + (0.09*S/T));
+            THERMO_ERR("Available Effective Heat Capacity parametrizations: SeaIce, FreshIce, FreshSnow!");
         }
     }
-    else if (param == Kparam::FreshIce)
+
+    template<typename NumType>
+    NumType Params<NumType>::Enthalpy(Eparam param, NumType T, NumType S)
     {
-        return IceConsts::k0_i;
+        if (param == Eparam::SeaIce)
+        {
+            NumType Tf_i = GenConsts<NumType>::TempFusion(S);
+            NumType c_w = WaterConsts<NumType>::c_w;
+            return IceConsts<NumType>::c0_i*(T - Tf_i) - IceConsts<NumType>::L0_i*(1.0 - Tf_i/T) + c_w*Tf_i;
+        }
+        else if (param == Eparam::FreshIce)
+        {
+            return IceConsts<NumType>::c0_i*T - IceConsts<NumType>::L0_i;
+        }
+        else if (param == Eparam::FreshSnow)
+        {
+            return SnowConsts<NumType>::c0_s*T - SnowConsts<NumType>::L_f0;
+        }
+        else
+        {
+            THERMO_ERR("Available Enthalpy parametrizations: SeaIce, FreshIce, FreshSnow!");
+        }
+
     }
-    else if (param == Kparam::FreshSnow)
+
+    template<typename NumType>
+    NumType Params<NumType>::FusionHeat(Lparam param, NumType T, NumType S)
     {
-        return SnowConsts::k0_s;
+        if (param == Lparam::SeaIce)
+        {
+            NumType Tf_i = GenConsts<NumType>::TempFusion(S);
+            NumType c_w = WaterConsts<NumType>::c_w;
+            return IceConsts<NumType>::c0_i*(Tf_i - T) + IceConsts<NumType>::L0_i*(1.0 + Tf_i/T);
+        }
+        else if (param == Lparam::FreshIce)
+        {
+            return -IceConsts<NumType>::c0_i*T + IceConsts<NumType>::L0_i;
+        }
+        else if (param == Lparam::FreshSnow)
+        {
+            return -SnowConsts<NumType>::c0_s*T + SnowConsts<NumType>::L_f0;
+        }
+        else
+        {
+            THERMO_ERR("Available Fusion Heat parametrizations: SeaIce, FreshIce, FreshSnow!");
+        }
     }
-    else
+
+    template<typename NumType>
+    NumType Params<NumType>::Conductivity(Kparam param, NumType T, NumType S, NumType rho)
     {
-        THERMO_ERR("Available Thermal Conductivity parametrizations: Untersteiner, BubblyBrine, FreshIce, FreshSnow!");
+        if (param == Kparam::Untersteiner)
+        {
+            if (std::abs(T) < REAL_MIN_VAL)
+            {
+                return 0.0;
+            }
+            else
+            {
+                return 2.03 + 0.1172 * (S/T);
+            }
+
+        }
+        else if (param == Kparam::BubblyBrine)
+        {
+            if (std::abs(T) < REAL_MIN_VAL)
+            {
+                return 0.0;
+            }
+            else
+            {
+                return rho/IceConsts<NumType>::rho_i * (2.11 - 0.011*T + (0.09*S/T));
+            }
+        }
+        else if (param == Kparam::FreshIce)
+        {
+            return IceConsts<NumType>::k0_i;
+        }
+        else if (param == Kparam::FreshSnow)
+        {
+            return SnowConsts<NumType>::k0_s;
+        }
+        else
+        {
+            THERMO_ERR("Available Thermal Conductivity parametrizations: Untersteiner, BubblyBrine, FreshIce, FreshSnow!");
+        }
     }
+
+    // explicit instantiation
+    template struct GenConsts<float>;
+    template struct GenConsts<double>;
+
+    template struct AirConsts<float>;
+    template struct AirConsts<double>;
+
+    template struct WaterConsts<float>;
+    template struct WaterConsts<double>;
+
+    template struct IceConsts<float>;
+    template struct IceConsts<double>;
+
+    template struct SnowConsts<float>;
+    template struct SnowConsts<double>;
+
+    template struct Params<float>;
+    template struct Params<double>;
 }

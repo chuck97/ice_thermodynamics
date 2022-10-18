@@ -5,7 +5,7 @@ using namespace icethermo;
 
 int main()
 {
-    std::cout << Params::Conductivity(Kparam::Untersteiner, -5.0, 20.0, IceConsts::rho_i) << std::endl;
-    std::cout << GenConsts::mu << std::endl;
+    std::cout << Params<double>::Conductivity(Kparam::Untersteiner, -5.0, 20.0, IceConsts<double>::rho_i) << std::endl;
+    std::cout << GenConsts<float>::mu << std::endl;
     return 0;
 }

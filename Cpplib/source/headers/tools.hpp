@@ -13,6 +13,9 @@ namespace icethermo
     using FuncPtr = std::function<NumType(NumType)>;
 
     template <typename NumType>
+    using ThreeVecs = std::tuple<std::vector<NumType>, std::vector<NumType>, std::vector<NumType>>;
+
+    template <typename NumType>
     using FourVecs = std::tuple<std::vector<NumType>, std::vector<NumType>, std::vector<NumType>, std::vector<NumType>>;
 
     // 1-D secant solver
