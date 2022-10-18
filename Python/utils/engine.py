@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import json as js
 
 # == общие ==
 mu = 0.054
@@ -1023,7 +1024,10 @@ def main_process(time_step, time_end,
                  Toi, Ta, p,
                  F_atm_ice, F_atm_snow,
                  F_sw,
-                 F_ocn):
+                 F_ocn,
+                 json_output_folder=None,
+                 json_ice_prefix=None,
+                 json_snow_prefix=None):
     
     time = 0.0
     
@@ -1046,11 +1050,60 @@ def main_process(time_step, time_end,
 
     Ns = len(dzs_init)
     
+
     process = Process([dzi_init], [dzs_init],
                       [time],
                       [Toi(time)], [Ti_init], [Tis_init], [Ts_init], [Tsa_init],
                       [[rho_i]*len(dzi_init)],
                       [sum(dzs_init) >= snow_thickness_threshold])
+        
+    if json_output_folder is not None:
+        digits = len(str(int(time_end)))
+        json_ice = \
+        {
+            "cells_data" : 
+            {
+                "cells_density_array" : [rho_i]*len(dzi_init),
+                "cells_salinity_array" : salinity.tolist(),
+                "cells_temperature_array" : Ti_init.tolist()
+            },
+            "cells_thickness_array" : dzi_init.tolist(),
+            "single_data" :
+            {
+                "down_temperature" : Toi(time),
+                "up_temperature" : Tis_init
+            }
+        }
+#         print(json_ice)
+#         for obj in [json_ice["cells_data"]["cells_density_array"], json_ice["cells_data"]["cells_salinity_array"],
+#                     json_ice["cells_data"]["cells_temperature_array"], json_ice["cells_thickness_array"],
+#                     json_ice["single_data"]["down_temperature"], json_ice["single_data"]["up_temperature"]]:
+#             print(obj.__class__.__name__)
+        
+        with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_ice_prefix, int(time), digits), 'w') as file:
+            js.dump(json_ice, file)
+        
+        
+        if sum(dzs_init) >= snow_thickness_threshold:
+            json_snow = \
+            {
+                "cells_data" : 
+                {
+                    "cells_density_array" : [rho_s]*len(dzs_init),
+                    "cells_salinity_array" : salinity.tolist(),
+                    "cells_temperature_array" : Ts_init.tolist()
+                },
+                "cells_thickness_array" : dzs_init.tolist(),
+                "single_data" :
+                {
+                    "down_temperature" : Tis_init,
+                    "up_temperature" : Tsa_init
+                }
+            }
+            
+            with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_snow_prefix, int(time), digits), 'w') as file:
+                js.dump(json_snow, file)
+        
     
     while time < time_end:
         
@@ -1106,7 +1159,7 @@ def main_process(time_step, time_end,
                     # задаём профиль и и интерфейс пустыми
                     Tsa_new = np.nan
                     Ts_new = np.array([np.nan]*Ns)
-                    
+            
             process.snow_presence_history = np.append(process.snow_presence_history, False)
             
         else:
@@ -1135,11 +1188,12 @@ def main_process(time_step, time_end,
                              N_pseudoiter,
                              time_step,
                              p(time))
-                
+             
             process.snow_presence_history = np.append(process.snow_presence_history, True)
-
+            
         process.ice_dz_history = np.append(process.ice_dz_history, [dzi_new.copy()], axis=0)
-        process.snow_dz_history = np.append(process.snow_dz_history, [dzs_new.copy() if dzs_new.sum() > 0 else 0.0*dzs_new], axis=0)
+        process.snow_dz_history = np.append(process.snow_dz_history,
+                                            [dzs_new.copy() if dzs_new.sum() > 0 else 0.0*dzs_new], axis=0)
         process.timeline = np.append(process.timeline, time)
         process.oi_temp_history = np.append(process.oi_temp_history, Toi(time))
         process.ice_temp_history = np.append(process.ice_temp_history, [Ti_new.copy()], axis=0)
@@ -1148,5 +1202,45 @@ def main_process(time_step, time_end,
         process.sa_temp_history = np.append(process.sa_temp_history, Tsa_new)
         process.ice_density_history = np.append(process.ice_density_history, [[rho_i]*len(dzi_init)],
                                                 axis=0)
-    
+            
+        if json_output_folder is not None:
+            json_ice = \
+            {
+                "cells_data" : 
+                {
+                    "cells_density_array" : [rho_i]*len(dzi_init),
+                    "cells_salinity_array" : salinity.tolist(),
+                    "cells_temperature_array" : Ti_new.tolist()
+                },
+                "cells_thickness_array" : dzi_new.tolist(),
+                "single_data" :
+                {
+                    "down_temperature" : Toi(time),
+                    "up_temperature" : Tis_new
+                }
+            }
+        
+            with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_ice_prefix, int(time), digits), 'w') as file:
+                js.dump(json_ice, file)
+            
+            if sum(dzs_init) >= snow_thickness_threshold:
+                json_snow = \
+                {
+                    "cells_data" : 
+                    {
+                        "cells_density_array" : [rho_s]*len(dzs_init),
+                        "cells_salinity_array" : salinity.tolist(),
+                        "cells_temperature_array" : Ts_new.tolist()
+                    },
+                    "cells_thickness_array" : dzs_new.tolist(),
+                    "single_data" :
+                    {
+                        "down_temperature" : Tis_new,
+                        "up_temperature" : Tsa_new
+                    }
+                }
+
+                with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_snow_prefix, int(time), digits), 'w') as file:
+                    js.dump(json_snow, file)
+                    
     return process
