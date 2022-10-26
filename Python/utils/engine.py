@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import json as js
+from glob import glob
 
 # == общие ==
 mu = 0.054
@@ -229,6 +230,78 @@ def process_from_data(levels,
                    temp_sa_arr_init=[temp if snow else np.nan for temp, snow in zip(Tss, has_snow)],
                    rho_ice_arr_init=np.ones((len(timeline), len(dsigma_ice)))*rho_ice,
                    snow_filter_init=has_snow)
+
+
+def get_process_from_json_folder(path, ice_prefix=None, snow_prefix=None):
+    
+    json_pairs = {}
+    ice_cells_num = 0
+    snow_cells_num = 0
+
+    if ice_prefix is not None:
+        for ice_path in glob('{}/{}*.json'.format(path, ice_prefix)):
+            time = int(ice_path[ice_path.rfind('/') + len(ice_prefix) + 1:-5])
+            with open(ice_path) as json_ice:
+                json_pairs.setdefault(time, {})['ice'] = js.load(json_ice)
+        ice_cells_num = max(len(obj["ice"]["cells_thickness_array"]) for obj in json_pairs.values())
+
+    if snow_prefix is not None:
+        for snow_path in glob('{}/{}*.json'.format(path, snow_prefix)):
+            time = int(snow_path[snow_path.rfind('/') + len(snow_prefix) + 1:-5])
+            with open(snow_path) as json_snow:
+                json_pairs.setdefault(time, {})['snow'] = js.load(json_snow)
+        snow_cells_num = max(len(obj["snow"]["cells_thickness_array"]) for obj in json_pairs.values())
+
+    ice_dz_history = []
+    snow_dz_history = []
+    timeline = []
+    oi_temp_history = []
+    ice_temp_history = []
+    is_temp_history = []
+    snow_temp_history = []
+    sa_temp_history = []
+    ice_density_history = []
+    snow_presence_history = []
+    
+    for time, pair in sorted(json_pairs.items()):
+        timeline.append(time)
+        is_temp_history.append(pair['ice']["single data"]["up_temperature"] if 'ice' in pair \
+                               else pair['snow']["single data"]["down_temperature"])
+        
+        if 'ice' in pair:
+            dict_ice = pair['ice']
+            ice_dz_history.append(dict_ice["cells_thickness_array"])
+            oi_temp_history.append(dict_ice["single data"]["down_temperature"])
+            ice_temp_history.append(dict_ice["cells data"]["cells_temperature_array"])
+            ice_density_history.append(dict_ice["cells data"]["cells_density_array"]) 
+        else:
+            ice_dz_history.append([0.0]*ice_cells_num)
+            oi_temp_history.append(np.nan)
+            ice_temp_history.append([np.nan]*ice_cells_num)
+            ice_density_history.append([np.nan]*ice_cells_num)
+        
+        if 'snow' in pair:
+            snow_presence_history.append(True)
+            dict_snow = pair['snow']
+            snow_dz_history.append(dict_snow["cells_thickness_array"])
+            snow_temp_history.append(dict_snow["cells data"]["cells_temperature_array"])
+            sa_temp_history.append(dict_snow["single data"]["up_temperature"])
+        else:
+            snow_presence_history.append(False)
+            snow_dz_history.append([0.0]*ice_cells_num)
+            snow_temp_history.append([np.nan]*ice_cells_num)
+            sa_temp_history.append(np.nan)
+        
+    return Process(dzi_arr_init=np.array(ice_dz_history),
+                   dzs_arr_init=np.array(snow_dz_history),
+                   timeline_init=np.array(timeline),
+                   temp_oi_arr_init=np.array(oi_temp_history),
+                   temp_ice_arr_init=np.array(ice_temp_history),
+                   temp_is_arr_init=np.array(is_temp_history),
+                   temp_snow_arr_init=np.array(snow_temp_history),
+                   temp_sa_arr_init=np.array(sa_temp_history),
+                   rho_ice_arr_init=np.array(ice_density_history),
+                   snow_filter_init=np.array(snow_presence_history))
 
 def secant_solver(f, x0, x1, tol=1e-9, max_it=1000):
     x_new = x1
@@ -1056,56 +1129,54 @@ def main_process(time_step, time_end,
                       [Toi(time)], [Ti_init], [Tis_init], [Ts_init], [Tsa_init],
                       [[rho_i]*len(dzi_init)],
                       [sum(dzs_init) >= snow_thickness_threshold])
+    
+    it = 0
         
     if json_output_folder is not None:
-        digits = len(str(int(time_end)))
+        digits = len(str(time_end//time_step + 1))
         json_ice = \
         {
-            "cells_data" : 
+            "cells data" : 
             {
                 "cells_density_array" : [rho_i]*len(dzi_init),
                 "cells_salinity_array" : salinity.tolist(),
                 "cells_temperature_array" : Ti_init.tolist()
             },
             "cells_thickness_array" : dzi_init.tolist(),
-            "single_data" :
+            "single data" :
             {
                 "down_temperature" : Toi(time),
                 "up_temperature" : Tis_init
             }
         }
-#         print(json_ice)
-#         for obj in [json_ice["cells_data"]["cells_density_array"], json_ice["cells_data"]["cells_salinity_array"],
-#                     json_ice["cells_data"]["cells_temperature_array"], json_ice["cells_thickness_array"],
-#                     json_ice["single_data"]["down_temperature"], json_ice["single_data"]["up_temperature"]]:
-#             print(obj.__class__.__name__)
         
-        with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_ice_prefix, int(time), digits), 'w') as file:
+        with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_ice_prefix, it, digits), 'w') as file:
             js.dump(json_ice, file)
         
         
         if sum(dzs_init) >= snow_thickness_threshold:
             json_snow = \
             {
-                "cells_data" : 
+                "cells data" : 
                 {
                     "cells_density_array" : [rho_s]*len(dzs_init),
                     "cells_salinity_array" : salinity.tolist(),
                     "cells_temperature_array" : Ts_init.tolist()
                 },
                 "cells_thickness_array" : dzs_init.tolist(),
-                "single_data" :
+                "single data" :
                 {
                     "down_temperature" : Tis_init,
                     "up_temperature" : Tsa_init
                 }
             }
             
-            with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_snow_prefix, int(time), digits), 'w') as file:
+            with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_snow_prefix, it, digits), 'w') as file:
                 js.dump(json_snow, file)
-        
     
     while time < time_end:
+        
+        it += 1
         
         if time + time_step < time_end:
             time += time_step
@@ -1206,41 +1277,41 @@ def main_process(time_step, time_end,
         if json_output_folder is not None:
             json_ice = \
             {
-                "cells_data" : 
+                "cells data" : 
                 {
                     "cells_density_array" : [rho_i]*len(dzi_init),
                     "cells_salinity_array" : salinity.tolist(),
                     "cells_temperature_array" : Ti_new.tolist()
                 },
                 "cells_thickness_array" : dzi_new.tolist(),
-                "single_data" :
+                "single data" :
                 {
                     "down_temperature" : Toi(time),
                     "up_temperature" : Tis_new
                 }
             }
         
-            with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_ice_prefix, int(time), digits), 'w') as file:
+            with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_ice_prefix, it, digits), 'w') as file:
                 js.dump(json_ice, file)
             
-            if sum(dzs_init) >= snow_thickness_threshold:
+            if process.snow_presence_history[-1]:
                 json_snow = \
                 {
-                    "cells_data" : 
+                    "cells data" : 
                     {
                         "cells_density_array" : [rho_s]*len(dzs_init),
                         "cells_salinity_array" : salinity.tolist(),
                         "cells_temperature_array" : Ts_new.tolist()
                     },
                     "cells_thickness_array" : dzs_new.tolist(),
-                    "single_data" :
+                    "single data" :
                     {
                         "down_temperature" : Tis_new,
                         "up_temperature" : Tsa_new
                     }
                 }
 
-                with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_snow_prefix, int(time), digits), 'w') as file:
+                with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_snow_prefix, it, digits), 'w') as file:
                     js.dump(json_snow, file)
                     
     return process

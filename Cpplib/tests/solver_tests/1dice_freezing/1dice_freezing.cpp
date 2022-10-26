@@ -57,7 +57,7 @@ int main()
         // write mesh to file
         if (step_num % 10 == 0)
         {
-            ice_mesh->SaveJSON("./ice/ice_freezing", step_num);
+            ice_mesh->SaveJSON("./ice_freezing", step_num);
             std::cout << "ice thickness: " << ice_mesh->GetTotalThickness() << std::endl;
         }
     }
