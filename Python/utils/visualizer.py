@@ -513,3 +513,62 @@ def plot_errors(process_data, sim_process_list, labels, savepath=None):
     else:
         plt.show()
 
+        
+def plot_snap(Z_i_list, Z_s_list, T_i_list, T_s_list,
+              figsize=(15, 10),
+              t_min=None, t_max=None,
+              cmap=None, names=None,
+              savepath=None, dpi=250):
+    
+    z_min = min([Z_i[0] for Z_i in Z_i_list])
+    z_max = max([Z_s[-1] if Z_s is not None else Z_i[-1] for Z_i, Z_s in zip(Z_i_list, Z_s_list)])
+    t_min = min(map(min, T_i_list + [T_s for T_s in T_s_list if T_s is not None])) if t_min is None else t_min
+    t_max = max(map(max, T_i_list + [T_s for T_s in T_s_list if T_s is not None])) if t_max is None else t_max
+#     temp_pairs = [min(T_i + T_s), max(T) for T in T_list]
+
+    cmaps = ['Blues', 'Purples', 'Greens', 'cool', 'winter']
+    lines_ice = []
+
+    fig, axes = plt.subplots(nrows=len(T_i_list) + 1, figsize=figsize, \
+                             gridspec_kw={"height_ratios": [1] + [0.05]*len(T_i_list)})
+    ax = axes[0]
+    ax.set_xlim(t_min - (t_max - t_min)*0.1, t_max + (t_max - t_min)*0.1)
+    ax.set_ylim(z_min - (z_max - z_min)*0.1, z_max + (z_max - z_min)*0.1)
+    for i, (Z_i, Z_s, T_i, T_s) in enumerate(zip(Z_i_list, Z_s_list, T_i_list, T_s_list)):
+        norm = plt.Normalize(max(min(T_i + (T_s if T_s is not None else [])), t_min),
+                             min(max(T_i + (T_s if T_s is not None else [])), t_max))
+        cmap = truncate_colormap(plt.get_cmap(cmaps[i%len(cmaps)]), 0.3, 1)
+        
+        points_ice = [(T, Z) for T, Z in zip(T_i, Z_i)]
+        segments_ice = [segment for segment in zip(points_ice[:-1], points_ice[1:])]
+        lc = LineCollection(segments_ice, linewidths=3, cmap=cmap, norm=norm)
+        lc.set_array(T_i)
+        line_ice = ax.add_collection(lc)
+        lines_ice.append(line_ice)
+        
+        markers = ax.scatter(T_i, Z_i, s=60)
+        markers.set_cmap(cmap)
+        markers.set_array(T_i)
+
+        ax.plot((T_s if T_s is not None else []), (Z_s if Z_s is not None else []),
+                color='grey', lw=3, marker='o')
+        
+    ax.axhline(ls='--', lw=3, color='navy')
+    ax.set_xlabel(r'T, $^o C$', size=20)
+    ax.set_ylabel('Z, m', size=20)
+    ax.yaxis.set_major_formatter(mtk.FormatStrFormatter('%.2f'))
+    ax.tick_params(labelsize=15)
+    ax.grid()
+    
+    for i, (cax, line_ice) in enumerate(zip(axes[1:], lines_ice)):
+        cbar = fig.colorbar(line_ice, cax=cax, orientation='horizontal')
+        if names is None:
+            cbar.ax.set_xlabel('iteration %d'%i, size=20)
+        else:
+            cbar.ax.set_xlabel(names[i], size=20)
+        cbar.ax.tick_params(labelsize=15)
+    
+    if savepath is None:
+        plt.show()
+    else:
+        fig.savefig(savepath, dpi=dpi)
