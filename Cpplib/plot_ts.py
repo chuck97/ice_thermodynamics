@@ -17,7 +17,7 @@ if __name__ == "__main__":
     parser.add_argument('-sp', '--snowprefix',
                         help='prefix for names of snow jsons')
     parser.add_argument('-o', '--output', default='output.png',
-                        help='name for the output file')
+                        help='name for the output file (default format is .png)')
     
     args = parser.parse_args()
     process = ue.get_process_from_json_folder(path=args.input, ice_prefix=args.iceprefix, snow_prefix=args.snowprefix)

@@ -41,7 +41,7 @@ if __name__ == "__main__":
     parser.add_argument('-sp', '--snowprefix', default='',
                         help='prefix for names of snow jsons')
     parser.add_argument('-o', '--output', default='output.png',
-                        help='name for the output file')
+                        help='name for the output file (default format is .png)')
 
     args = parser.parse_args()
     
