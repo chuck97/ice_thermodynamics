@@ -36,18 +36,48 @@ namespace icethermo
         *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
 
         // recalculate temperatures in freezing mode
-        auto new_values = this->sea_ice_freezing_1d(*(this->Ti_b),
-                                                    *(this->Ti_cells),
-                                                    *(this->Ti_s),
-                                                    *(this->dzi_cells),
-                                                    *(this->Si_cells),
-                                                    *(this->rhoi_cells));
+        auto freezing_values = this->sea_ice_freezing_1d(*(this->Ti_b),
+                                                         *(this->Ti_cells),
+                                                         *(this->Ti_s),
+                                                         *(this->dzi_cells),
+                                                         *(this->Si_cells),
+                                                         *(this->rhoi_cells));
         
-        *(this->Ti_cells) = std::get<0>(new_values);
-        *(this->Ti_s) = (std::get<1>(new_values))[0];
-        *(this->dzi_cells) = std::get<2>(new_values);
+        // compute melting temperature for top layer
+        NumType surface_fusion_temp = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
 
-        std::cout << "Evaluation: Sea ice freezing!" << std::endl; 
+        std::cout << "### Surf temp: " << (std::get<1>(freezing_values))[0] << " ###" << std::endl;
+        
+        // check if surface temperature exeeds melting point and recalculate in melting mode
+        if ((std::get<1>(freezing_values))[0] >= surface_fusion_temp)
+        {   
+            // log mode
+            std::cout << "ICE MELTING MODE" << std::endl;
+
+            // recalculate mesh values
+            auto melting_values = this->sea_ice_melting_1d(*(this->Ti_b),
+                                                           surface_fusion_temp,
+                                                           *(this->Ti_cells),
+                                                           *(this->Ti_s),
+                                                           *(this->dzi_cells),
+                                                           *(this->Si_cells),
+                                                           *(this->rhoi_cells));
+            
+            // update mesh values
+            *(this->Ti_cells) = std::get<0>(melting_values);
+            *(this->dzi_cells) = std::get<1>(melting_values);
+            *(this->Ti_s) = surface_fusion_temp;   
+        }
+        else
+        {
+            // log mode
+            std::cout << "ICE FREEZING MODE" << std::endl;
+
+            // update mesh values
+            *(this->Ti_cells) = std::get<0>(freezing_values);
+            *(this->Ti_s) = (std::get<1>(freezing_values))[0];
+            *(this->dzi_cells) = std::get<2>(freezing_values);
+        }
     }
 
     template <typename NumType>

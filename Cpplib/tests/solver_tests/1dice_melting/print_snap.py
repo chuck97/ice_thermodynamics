@@ -44,7 +44,7 @@ def plot_snap(Z_i_list, Z_s_list, T_i_list, T_s_list,
     z_max = max([Z_s[-1] if Z_s is not None else Z_i[-1] for Z_i, Z_s in zip(Z_i_list, Z_s_list)])
     t_min = min(map(min, T_i_list + [T_s for T_s in T_s_list if T_s is not None])) if t_min is None else t_min
     t_max = max(map(max, T_i_list + [T_s for T_s in T_s_list if T_s is not None])) if t_max is None else t_max
-#     temperature_pairs = [min(T_i + T_s), max(T) for T in T_list]
+#     temp_pairs = [min(T_i + T_s), max(T) for T in T_list]
 
     cmaps = ['Blues', 'Purples', 'Greens', 'cool', 'winter']
     lines_ice = []
@@ -103,8 +103,8 @@ if __name__ == "__main__":
             
         Z_i = get_Z(obj_ice["cells_thickness_array"], obj_ice["cells data"]["cells_density_array"], 1023.0)
         
-        T_i = [obj_ice["single data"]["down_temperature"]] + obj_ice["cells data"]["cells_temperature_array"] \
-            + [obj_ice["single data"]["up_temperature"]]
+        T_i = [obj_ice["single data"]["down_temp"]] + obj_ice["cells data"]["cells_temp_array"] \
+            + [obj_ice["single data"]["up_temp"]]
         
         plot_snap([Z_i], [None], [T_i], [None], savepath=path_to_save)
         
@@ -117,10 +117,10 @@ if __name__ == "__main__":
         Z_i, Z_s = get_Z(obj_ice["cells_thickness_array"], obj_ice["cells data"]["cells_density_array"], 1023.0,
                          obj_snow["cells_thickness_array"], obj_snow["cells data"]["cells_density_array"])
         
-        T_i = [obj_ice["single data"]["down_temperature"]] + obj_ice["cells data"]["cells_temperature_array"] \
-            + [obj_ice["single data"]["up_temperature"]]
-        T_s = [obj_snow["single data"]["down_temperature"]] + obj_snow["cells data"]["cells_temperature_array"] \
-            + [obj_snow["single data"]["up_temperature"]]
+        T_i = [obj_ice["single data"]["down_temp"]] + obj_ice["cells data"]["cells_temp_array"] \
+            + [obj_ice["single data"]["up_temp"]]
+        T_s = [obj_snow["single data"]["down_temp"]] + obj_snow["cells data"]["cells_temp_array"] \
+            + [obj_snow["single data"]["up_temp"]]
         
         plot_snap([Z_i], [Z_s], [T_i], [T_s], savepath=path_to_save)
         

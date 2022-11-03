@@ -158,18 +158,18 @@ namespace icethermo
                                                int max_n_its = 50,
                                                NumType tol = 1e-6);
         
-        /*
+        
         // ice melting mode (for 1d profile)
-        ThreeVecs<NumType> sea_ice_melting_1d(NumType T_ib,
-                                              const std::vector<NumType>& T_cells,
-                                              NumType T_is,
-                                              const std::vector<NumType>& dz_cells,
-                                              const std::vector<NumType>& salinity_cells,
-                                              const std::vector<NumType>& rho_cells,
-                                              bool is_radiation = true,
-                                              int max_n_its = 50,
-                                              NumType tol = 1e-6);
-        */
+        TwoVecs<NumType> sea_ice_melting_1d(NumType T_ib,
+                                            NumType T_is,
+                                            const std::vector<NumType>& T_cells,
+                                            NumType T_is_old,
+                                            const std::vector<NumType>& dz_cells,
+                                            const std::vector<NumType>& salinity_cells,
+                                            const std::vector<NumType>& rho_cells,
+                                            bool is_radiation = true,
+                                            int max_n_its = 50,
+                                            NumType tol = 1e-6);
     };
 
     template<typename NumType>
@@ -179,7 +179,7 @@ namespace icethermo
         SeaIce1D_Solver(Mesh<NumType>* mesh_ice_,
                         NumType time_step,
                         ApproxOrder grad_approx_order_ = ApproxOrder::first,
-                        Kparam ice_k_param_ = Kparam::Untersteiner,
+                        Kparam ice_k_param_ = Kparam::FreshIce,
                         Cparam ice_c_eff_param_ = Cparam::FreshIce,
                         Eparam ice_E_param_ = Eparam::FreshIce,
                         Lparam ice_L_param_ = Lparam::FreshIce

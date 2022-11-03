@@ -29,7 +29,14 @@ namespace icethermo
         if (param == Cparam::SeaIce)
         {
             NumType Tf_i = GenConsts<NumType>::TempFusion(S);
-            return IceConsts<NumType>::c0_i - IceConsts<NumType>::L0_i*Tf_i/(T*T_old);
+            if ((std::abs(T) < REAL_MIN_VAL) or (std::abs(T_old) < REAL_MIN_VAL))
+            {
+                return IceConsts<NumType>::c0_i;
+            }
+            else
+            {
+                return IceConsts<NumType>::c0_i - IceConsts<NumType>::L0_i*Tf_i/(T*T_old);
+            }
         }
         else if (param == Cparam::FreshIce)
         {
@@ -52,7 +59,14 @@ namespace icethermo
         {
             NumType Tf_i = GenConsts<NumType>::TempFusion(S);
             NumType c_w = WaterConsts<NumType>::c_w;
-            return IceConsts<NumType>::c0_i*(T - Tf_i) - IceConsts<NumType>::L0_i*(1.0 - Tf_i/T) + c_w*Tf_i;
+            if (std::abs(T) < REAL_MIN_VAL)
+            {
+                return IceConsts<NumType>::c0_i*(T - Tf_i) + c_w*Tf_i;;
+            }
+            else
+            {
+                return IceConsts<NumType>::c0_i*(T - Tf_i) - IceConsts<NumType>::L0_i*(1.0 - Tf_i/T) + c_w*Tf_i;
+            }
         }
         else if (param == Eparam::FreshIce)
         {
@@ -66,7 +80,6 @@ namespace icethermo
         {
             THERMO_ERR("Available Enthalpy parametrizations: SeaIce, FreshIce, FreshSnow!");
         }
-
     }
 
     template<typename NumType>
@@ -76,15 +89,22 @@ namespace icethermo
         {
             NumType Tf_i = GenConsts<NumType>::TempFusion(S);
             NumType c_w = WaterConsts<NumType>::c_w;
-            return IceConsts<NumType>::c0_i*(Tf_i - T) + IceConsts<NumType>::L0_i*(1.0 + Tf_i/T);
+            if (std::abs(T) < REAL_MIN_VAL)
+            {
+                return IceConsts<NumType>::c0_i*T - IceConsts<NumType>::L0_i;
+            }
+            else
+            {
+                return IceConsts<NumType>::c0_i*(T - Tf_i) - IceConsts<NumType>::L0_i*(1.0 - Tf_i/T);
+            }
         }
         else if (param == Lparam::FreshIce)
         {
-            return -IceConsts<NumType>::c0_i*T + IceConsts<NumType>::L0_i;
+            return IceConsts<NumType>::c0_i*T - IceConsts<NumType>::L0_i;
         }
         else if (param == Lparam::FreshSnow)
         {
-            return -SnowConsts<NumType>::c0_s*T + SnowConsts<NumType>::L_f0;
+            return SnowConsts<NumType>::c0_s*T - SnowConsts<NumType>::L_f0;
         }
         else
         {
@@ -99,7 +119,7 @@ namespace icethermo
         {
             if (std::abs(T) < REAL_MIN_VAL)
             {
-                return 0.0;
+                return 2.03;
             }
             else
             {
@@ -111,11 +131,11 @@ namespace icethermo
         {
             if (std::abs(T) < REAL_MIN_VAL)
             {
-                return 0.0;
+                return rho/IceConsts<NumType>::rho_i*2.11;
             }
             else
             {
-                return rho/IceConsts<NumType>::rho_i * (2.11 - 0.011*T + (0.09*S/T));
+                return rho/IceConsts<NumType>::rho_i*(2.11 - 0.011*T + (0.09*S/T));
             }
         }
         else if (param == Kparam::FreshIce)

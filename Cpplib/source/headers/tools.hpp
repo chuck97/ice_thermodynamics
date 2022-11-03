@@ -13,6 +13,9 @@ namespace icethermo
     using FuncPtr = std::function<NumType(NumType)>;
 
     template <typename NumType>
+    using TwoVecs = std::tuple<std::vector<NumType>, std::vector<NumType>>;
+
+    template <typename NumType>
     using ThreeVecs = std::tuple<std::vector<NumType>, std::vector<NumType>, std::vector<NumType>>;
 
     template <typename NumType>

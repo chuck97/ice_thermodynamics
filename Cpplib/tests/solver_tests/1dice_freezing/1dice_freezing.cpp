@@ -43,7 +43,13 @@ int main()
     (*initial_ocn_salinity) = 30.0;
 
     // create test 1d ice solver class
-    SeaIce1D_Solver<float> thermo_solver(ice_mesh, 3600.0, ApproxOrder::second);
+    SeaIce1D_Solver<float> thermo_solver(ice_mesh,
+                                         3600.0,
+                                         ApproxOrder::second,
+                                         Kparam::FreshIce,
+                                         Cparam::FreshIce,
+                                         Eparam::FreshIce,
+                                         Lparam::FreshIce);
 
     // time stepping
     for (int step_num = 0; step_num < 251; ++step_num)
@@ -57,7 +63,7 @@ int main()
         // write mesh to file
         if (step_num % 10 == 0)
         {
-            ice_mesh->SaveJSON("./ice/ice_freezing", step_num);
+            ice_mesh->SaveJSON("./ice_freezing", step_num);
             std::cout << "ice thickness: " << ice_mesh->GetTotalThickness() << std::endl;
         }
     }

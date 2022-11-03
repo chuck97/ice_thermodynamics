@@ -2,23 +2,23 @@
 
 using namespace icethermo;
 
+// linearly warming atmosphere
+template<typename NumType>
+NumType T_atm(NumType time, NumType melt_time_end)
+{
+    return (time < melt_time_end) ? (NumType)-20.0 + (NumType)30.0*time/melt_time_end : (NumType)10.0;
+}
+
 // non-stationary atmospheric flux function
 template<typename NumType>
 NumType atm_flux(NumType temp, NumType time, NumType melt_time_end)
 {
-    // linearly warming atmosphere
-    FuncPtr<NumType> T_atm = 
-    [&melt_time_end] (NumType time)
-    {
-        return (time < melt_time_end) ? (NumType)-20.0 + (NumType)30.0*time/melt_time_end : 10.0;
-    };
-
     // simple sensible heat flux parameterization
     return AirConsts<NumType>::rho_a*
            AirConsts<NumType>::cp_a*
            GenConsts<NumType>::C_sh*
            (NumType)15.0* 
-           ((NumType)T_atm(time) - temp);
+           ((NumType)T_atm(time, melt_time_end) - temp);
 }
 
 int main()
@@ -53,7 +53,13 @@ int main()
     float melt_time_end = 200.0f*3600.0f;
 
     // create 1dice solver class
-    SeaIce1D_Solver<float> thermo_solver(ice_mesh, 3600.0, ApproxOrder::second);
+    SeaIce1D_Solver<float> thermo_solver(ice_mesh,
+                                         3600.0, 
+                                         ApproxOrder::second,
+                                         Kparam::Untersteiner,
+                                         Cparam::SeaIce,
+                                         Eparam::SeaIce,
+                                         Lparam::SeaIce);
 
     // time stepping
     for (int step_num = 0; step_num < 251; ++step_num)
@@ -73,7 +79,7 @@ int main()
         // write mesh to file
         if (step_num % 10 == 0)
         {
-            ice_mesh->SaveJSON("./ice_freezing", step_num);
+            ice_mesh->SaveJSON("./ice_melting", step_num);
             std::cout << "ice thickness: " << ice_mesh->GetTotalThickness() << std::endl;
         }
     }

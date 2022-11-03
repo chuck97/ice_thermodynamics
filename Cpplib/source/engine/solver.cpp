@@ -83,7 +83,7 @@ namespace icethermo
                 int dz_size =  dz_cells.size();
                 NumType h1 = (NumType)0.5*dz_cells.back();
                 NumType h2 = dz_cells.back() + (NumType)0.5*dz_cells[dz_size-2];
-                grad = [&T_cells, h1, h2, dz_size](NumType T) {return (T_cells.back()*h2*h2 - T_cells[dz_size-2]*h1*h1 - T*(h2*h2 - h1*h1))/(h1*h2*(h1-h2));};
+                grad = [&T_cells, h1, h2, dz_size](NumType T) {return (T*(h2*h2 - h1*h1) - T_cells.back()*h2*h2 + T_cells[dz_size-2]*h1*h1)/(h1*h2*(h2-h1));};
             }
             else
             {
@@ -94,7 +94,7 @@ namespace icethermo
             FuncPtr<NumType> k = [&salinity_cells, &rho_cells, kparam](NumType T){return Params<NumType>::Conductivity(kparam, T, salinity_cells.back(), rho_cells.back());};
             FuncPtr<NumType> L = [&salinity_cells, Lparam](NumType T){return Params<NumType>::FusionHeat(Lparam, T, salinity_cells.back());};
 
-            FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return this->F_up(T) - k(T)*grad(T) + rho_cells.back()*L(T)*omega_value;};
+            FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return rho_cells.back()*L(T)*omega_value + this->F_up(T) - k(T)*grad(T);};
             
             // solve nonlinear 1D equation
             return secant_solver<NumType>(nonlin_func, T_cells.back() - 10.0, GenConsts<NumType>::TempFusion(salinity_cells.back()) + 10.0).first;
@@ -124,7 +124,7 @@ namespace icethermo
             FuncPtr<NumType> L = [&salinity_cells, Lparam](NumType T){return Params<NumType>::FusionHeat(Lparam, T, salinity_cells[0]);};
 
             // assemble nonlinear function for 1D solver
-            FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return this->F_down(T) - k(T)*grad(T) + rho_cells[0]*L(T)*omega_value;};
+            FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return rho_cells[0]*L(T)*omega_value + this->F_down(T) - k(T)*grad(T);};
             
             // solve nonlinear 1D equation
             return secant_solver<NumType>(nonlin_func, T_cells.back() - 10.0, GenConsts<NumType>::TempFusion(salinity_cells.back()) + 10.0).first;
@@ -157,7 +157,7 @@ namespace icethermo
                 int dz_size =  dz_cells.size();
                 NumType h1 = 0.5*dz_cells.back();
                 NumType h2 = dz_cells.back() + 0.5*dz_cells[dz_size-2];
-                grad = [&T_cells, h1, h2, dz_size](NumType T) {return (T*(h2*h2 - h1*h1) - T_cells[dz_size-1]*h2*h2 + T_cells[dz_size-2]*h1*h1)/(h1*h2*(h2-h1));};
+                grad = [&T_cells, h1, h2, dz_size](NumType T) {return (T*(h2*h2 - h1*h1) - T_cells.back()*h2*h2 + T_cells[dz_size-2]*h1*h1)/(h1*h2*(h2-h1));};
             }
             else
             {
@@ -169,7 +169,7 @@ namespace icethermo
             FuncPtr<NumType> L = [&salinity_cells, Lparam](NumType T){return Params<NumType>::FusionHeat(Lparam, T, salinity_cells.back());};
 
             // calculate omega from boundary conditions
-            return (this->F_up(T_bnd) - k(T_cells.back())*grad(T_bnd))/(rho_cells.back()*L(T_cells.back()));
+            return (k(T_cells.back())*grad(T_bnd) - this->F_up(T_bnd))/(rho_cells.back()*L(T_cells.back()));
         }
         else
         {
@@ -198,20 +198,20 @@ namespace icethermo
             // calculate omega from boundary conditions
             if (kparam == Kparam::BubblyBrine or kparam == Kparam::Untersteiner)
             {
-                if ((this->F_down(T_bnd) - k(T_cells[0])*grad(T_bnd)) > 0)
+                if ((k(T_cells[0])*grad(T_bnd) + this->F_down(T_bnd)) > 0)
                 {
-                    // basal growth with 10 psu salinity
-                    return (this->F_down(T_bnd) - k(T_cells[0])*grad(T_bnd))/(rho_cells[0]*L(T_cells[0], 10.0));
+                    // basal melt with 4 psu salinity
+                    return (k(T_cells[0])*grad(T_bnd) + this->F_down(T_bnd))/(rho_cells[0]*L(T_cells[0], 4.0));
                 }
                 else
                 {
-                    // basal melt with 4 psu salinity
-                    return (this->F_down(T_bnd) - k(T_cells[0])*grad(T_bnd))/(rho_cells[0]*L(T_cells[0], 4.0));
+                    // basal growth with 10 psu salinity
+                    return (k(T_cells[0])*grad(T_bnd) + this->F_down(T_bnd))/(rho_cells[0]*L(T_cells[0], 10.0));
                 }
             }
             else
             {
-                return (this->F_down(T_bnd) - k(T_cells[0])*grad(T_bnd))/(rho_cells[0]*L(T_cells[0], salinity_cells[0]));
+                return (k(T_cells[0])*grad(T_bnd) + this->F_down(T_bnd))/(rho_cells[0]*L(T_cells[0], salinity_cells[0]));
             }
         }
     }
@@ -443,7 +443,7 @@ namespace icethermo
         NumType T_is_new = T_is;
         NumType T_is_prev = T_is;
 
-        NumType omega_ib = 0.0;
+        NumType omega_ib = (NumType)0.0;
 
         std::vector<NumType> dz_cells_new = dz_cells;
 
@@ -485,7 +485,7 @@ namespace icethermo
                                        0.0,
                                        true,
                                        true);
-            
+
             // force the convergence of surface temperature
             surface_err = std::abs(T_is_new - T_is_prev)/std::abs(T_is);
             
@@ -536,6 +536,96 @@ namespace icethermo
 
         std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
         return {T_cells_new, std::vector<NumType>{T_is_new}, dz_cells_new};
+    }
+
+    template<typename NumType>
+    TwoVecs<NumType> ThermoSolver<NumType>::sea_ice_melting_1d(NumType T_ib,
+                                                               NumType T_is,
+                                                               const std::vector<NumType>& T_cells,
+                                                               NumType T_is_old,
+                                                               const std::vector<NumType>& dz_cells,
+                                                               const std::vector<NumType>& salinity_cells,
+                                                               const std::vector<NumType>& rho_cells,
+                                                               bool is_radiation,
+                                                               int max_n_its,
+                                                               NumType tol)
+    {
+        std::vector<NumType> T_cells_new = T_cells;
+        std::vector<NumType> T_cells_prev = T_cells;
+
+        NumType omega_ib = 0.0;
+        NumType omega_is = 0.0;
+
+        std::vector<NumType> dz_cells_new = dz_cells;
+
+        std::vector<NumType> radiation_nodes(T_cells.size() + 1);
+
+        NumType current_err = std::numeric_limits<NumType>::max();
+
+        int npseudo = 0;
+
+        for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
+        {
+            ++npseudo;
+
+            T_cells_prev = T_cells_new;
+            
+            // compute new value of omega at the base
+            omega_ib = this->W_from_BC(T_ib,
+                                       T_cells_prev,
+                                       dz_cells_new,
+                                       salinity_cells,
+                                       rho_cells,
+                                       true,
+                                       false);
+
+            // compute new value of omega at the base
+            omega_is = this->W_from_BC(T_is,
+                                       T_cells_prev,
+                                       dz_cells_new,
+                                       salinity_cells,
+                                       rho_cells,
+                                       true,
+                                       true);
+
+            // recalculate ice thickness
+            dz_cells_new = this->Update_dz(dz_cells,
+                                           omega_ib,
+                                           omega_is);
+            
+            // recalculate radiation
+            if (is_radiation)
+            {
+                // to do
+                //radiation_nodes = compute_radiation_nodes(dzi_new, F_sw)
+            }
+
+            // assemble matrix and rhs for ice 
+            auto matrix_rhs = this->Assemble_advdiff_martix_rhs(T_cells_prev, T_cells,
+                                                                T_is, T_is, T_is_old,
+                                                                T_ib, T_ib, T_ib, 
+                                                                omega_ib, omega_is, 
+                                                                dz_cells_new, dz_cells,
+                                                                salinity_cells,
+                                                                rho_cells,
+                                                                radiation_nodes,
+                                                                true);
+            
+            // solve linear system and update temperatures
+            T_cells_new = thomas_solver<NumType>(std::get<0>(matrix_rhs),
+                                                 std::get<1>(matrix_rhs),
+                                                 std::get<2>(matrix_rhs),
+                                                 std::get<3>(matrix_rhs));
+
+            // evaluate the error
+            current_err = L2_norm(T_cells_new - T_cells_prev)/L2_norm(T_cells);
+
+            if (current_err < tol)
+                break;
+        }
+
+        std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        return {T_cells_new, dz_cells_new};
     }
 
     // explicit instantiation
