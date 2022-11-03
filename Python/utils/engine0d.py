@@ -24,7 +24,7 @@ def W_from_BC_0d(T_up,
         
         T_melt = T_up + (T_down - T_up)/thickness*0.1
         grad = (T_up - T_down)/thickness
-        omega = -(F - k*grad)/(rho*(L(T_melt, 1.0)))
+        omega = -(F - k*grad)/(rho*L(T_melt, 1.0))
         return omega
         
     else:
@@ -70,7 +70,7 @@ def ice_freezing_0d(Toi,
                     err_func=lambda T_old, T_prev, T_new: np.abs(T_new - T_prev)/(np.abs(T_old) + 5.0)
                     ):
     
-    # инициализация массивов
+    
     Tia_old = Tia_init
     Tia_new = Tia_init
     
@@ -141,7 +141,6 @@ def ice_melting_0d(Toi,
                    tol = 1e-12,
                    err_func=lambda h_old, h_prev, h_new: np.abs(h_new - h_prev)/(np.abs(h_old))):
     
-    # инициализация массивов
     thickness_new, thickness_prev = thickness_i_init, thickness_i_init
     
     for pseudoiter in range(N_pseudoiter):
@@ -503,6 +502,5 @@ def main_process_0d(time_step,
         process.snow_temp_history = np.append(process.snow_temp_history, [T_snow_cells_out.copy()], axis=0)
         process.sa_temp_history = np.append(process.sa_temp_history, T_sa_out)
         process.ice_density_history = np.append(process.ice_density_history, [[ue.rho_i]*N_cells_ice], axis=0)
-        
+    
     return process
-

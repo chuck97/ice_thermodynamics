@@ -1,7 +1,1 @@
-Python/Validation/*
-Python/.ipynb_checkpoints/*
-Python/utils/__pycache__/*
-Cpplib/.vscode
-Cpplib/json/*
-
-!Python/Validation/full_data.csv
+build-Cpplib-Desktop*

@@ -126,3 +126,4 @@ if __name__ == "__main__":
         
     else:
         raise Exception("Num of parameters shold be 2 or 3! Missing something?")
+             

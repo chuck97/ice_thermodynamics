@@ -1,2 +1,4 @@
-# not push build
 build/
+json/
+.vscode/
+CMakeLists.txt.user
