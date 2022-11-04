@@ -29,7 +29,7 @@ namespace icethermo
         if (param == Cparam::SeaIce)
         {
             NumType Tf_i = GenConsts<NumType>::TempFusion(S);
-            if ((std::abs(T) < REAL_MIN_VAL) or (std::abs(T_old) < REAL_MIN_VAL))
+            if ((std::abs(T) < REAL_MIN_VAL(NumType)) or (std::abs(T_old) < REAL_MIN_VAL(NumType)))
             {
                 return IceConsts<NumType>::c0_i;
             }
@@ -59,7 +59,7 @@ namespace icethermo
         {
             NumType Tf_i = GenConsts<NumType>::TempFusion(S);
             NumType c_w = WaterConsts<NumType>::c_w;
-            if (std::abs(T) < REAL_MIN_VAL)
+            if (std::abs(T) < REAL_MIN_VAL(NumType))
             {
                 return IceConsts<NumType>::c0_i*(T - Tf_i) + c_w*Tf_i;;
             }
@@ -89,9 +89,13 @@ namespace icethermo
         {
             NumType Tf_i = GenConsts<NumType>::TempFusion(S);
             NumType c_w = WaterConsts<NumType>::c_w;
-            if (std::abs(T) < REAL_MIN_VAL)
+            if (std::abs(T) < REAL_MIN_VAL(NumType))
             {
                 return IceConsts<NumType>::c0_i*T - IceConsts<NumType>::L0_i;
+            }
+            else if (std::abs(T - Tf_i) < REAL_MIN_VAL(NumType))
+            {
+                return -IceConsts<NumType>::L0_i;
             }
             else
             {
@@ -117,7 +121,7 @@ namespace icethermo
     {
         if (param == Kparam::Untersteiner)
         {
-            if (std::abs(T) < REAL_MIN_VAL)
+            if (std::abs(T) < REAL_MIN_VAL(NumType))
             {
                 return 2.03;
             }
@@ -129,7 +133,7 @@ namespace icethermo
         }
         else if (param == Kparam::BubblyBrine)
         {
-            if (std::abs(T) < REAL_MIN_VAL)
+            if (std::abs(T) < REAL_MIN_VAL(NumType))
             {
                 return rho/IceConsts<NumType>::rho_i*2.11;
             }

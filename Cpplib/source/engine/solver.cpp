@@ -82,12 +82,12 @@ namespace icethermo
             {
                 int dz_size =  dz_cells.size();
                 NumType h1 = (NumType)0.5*dz_cells.back();
-                NumType h2 = dz_cells.back() + (NumType)0.5*dz_cells[dz_size-2];
+                NumType h2 = (NumType)dz_cells.back() + (NumType)0.5*dz_cells[dz_size-2];
                 grad = [&T_cells, h1, h2, dz_size](NumType T) {return (T*(h2*h2 - h1*h1) - T_cells.back()*h2*h2 + T_cells[dz_size-2]*h1*h1)/(h1*h2*(h2-h1));};
             }
             else
             {
-                THERMO_ERR("Available gradient approximation orrder: first, second!");
+                THERMO_ERR("Available gradient approximation order: first, second!");
             }
 
             // physical constants
@@ -97,7 +97,32 @@ namespace icethermo
             FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return rho_cells.back()*L(T)*omega_value + this->F_up(T) - k(T)*grad(T);};
             
             // solve nonlinear 1D equation
-            return secant_solver<NumType>(nonlin_func, T_cells.back() - 10.0, GenConsts<NumType>::TempFusion(salinity_cells.back()) + 10.0).first;
+            auto secant_res = secant_solver<NumType>(nonlin_func, T_cells.back() - (NumType)10.0, GenConsts<NumType>::TempFusion(salinity_cells.back() + (NumType)10.0));
+
+            // handle possible errors in secant solver
+            /*
+            if (std::get<3>(secant_res))
+            {
+                return std::get<0>(secant_res);
+            }
+            else
+            {
+                if ((std::abs(std::get<1>(secant_res)/nonlin_func(T_cells.back() - 10.0)) < (NumType)ALLOWABLE_RELATIVE_1D_ERROR) or 
+                    (std::get<0>(secant_res) > GenConsts<NumType>::TempFusion(salinity_cells.back())))
+                {
+                    return std::get<0>(secant_res);
+                }
+                else
+                {
+                    std::cout << std::get<0>(secant_res) << " " << std::get<1>(secant_res) << " " << std::get<2>(secant_res) << " " << std::get<3>(secant_res) << std::endl;
+                    std::cout << std::get<1>(secant_res) << std::endl;
+                    std::cout << std::abs(std::get<1>(secant_res)/nonlin_func(T_cells.back() - 10.0)) << std::endl;
+                    std::cout << (NumType)ALLOWABLE_RELATIVE_1D_ERROR << std::endl;
+                    THERMO_ERR("Impossible to solve boundary conditions on top interface!");
+                }
+            }
+            */
+           return std::get<0>(secant_res);
         }
         else
         {
@@ -110,13 +135,13 @@ namespace icethermo
             }
             else if (this->grad_approx_order == ApproxOrder::second)
             {
-                NumType h1 = 0.5*dz_cells[0];
-                NumType h2 = dz_cells[0] + 0.5*dz_cells[1];
+                NumType h1 = (NumType)0.5*dz_cells[0];
+                NumType h2 = dz_cells[0] + (NumType)0.5*dz_cells[1];
                 grad = [&T_cells, h1, h2](NumType T) {return (-T*(h2*h2 - h1*h1) + T_cells[0]*h2*h2 - T_cells[1]*h1*h1)/(h1*h2*(h2-h1));};
             }
             else
             {
-                THERMO_ERR("Available gradient approximation orrder: first, second!");
+                THERMO_ERR("Available gradient approximation order: first, second!");
             }
 
             // physical constants
@@ -127,7 +152,27 @@ namespace icethermo
             FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return rho_cells[0]*L(T)*omega_value + this->F_down(T) - k(T)*grad(T);};
             
             // solve nonlinear 1D equation
-            return secant_solver<NumType>(nonlin_func, T_cells.back() - 10.0, GenConsts<NumType>::TempFusion(salinity_cells.back()) + 10.0).first;
+            auto secant_res = secant_solver<NumType>(nonlin_func, T_cells[0] - (NumType)10.0, GenConsts<NumType>::TempFusion(salinity_cells[0]) + (NumType)10.0);
+            
+            // handle possible errors in secant solver
+            /*
+            if (std::get<3>(secant_res))
+            {
+                return std::get<0>(secant_res);
+            }
+            else
+            {
+                if (std::abs(std::get<1>(secant_res)/nonlin_func(T_cells[0] - 10.0)) < (NumType)ALLOWABLE_RELATIVE_1D_ERROR)
+                {
+                    return std::get<0>(secant_res);
+                }
+                else
+                {
+                    THERMO_ERR("Impossible to solve boundary conditions on bottom interface!");
+                }
+            }
+            */
+            return std::get<0>(secant_res);
         }   
     }
 
@@ -161,7 +206,7 @@ namespace icethermo
             }
             else
             {
-                THERMO_ERR("Available gradient approximation orrder: first, second!");
+                THERMO_ERR("Available gradient approximation order: first, second!");
             }
 
             // constants
@@ -188,7 +233,7 @@ namespace icethermo
             }
             else
             {
-                THERMO_ERR("Available gradient approximation orrder: first, second!");
+                THERMO_ERR("Available gradient approximation order: first, second!");
             }
 
             // physical constants
@@ -315,11 +360,11 @@ namespace icethermo
         std::vector<NumType> RHS(N);
 
         // first row
-        B[0] += rho_cells[0]*eff_c_cells[0]*dz_cells_new[0]/this->time_step + eff_k_nodes[1] + eff_k_nodes[0];
+        B[0] = rho_cells[0]*eff_c_cells[0]*dz_cells_new[0]/this->time_step + eff_k_nodes[1] + eff_k_nodes[0];
 
-        C[0] += -eff_k_nodes[1];
+        C[0] = -eff_k_nodes[1];
 
-        RHS[0] += rho_cells[0]*eff_c_cells[0]*dz_cells_new[0]*T_cells_old[0]/this->time_step - 
+        RHS[0] = rho_cells[0]*eff_c_cells[0]*dz_cells_new[0]*T_cells_old[0]/this->time_step - 
                   rho_cells[0]*E_cells[0]*(dz_cells_new[0] - dz_cells_old[0])/this->time_step +
                   (radiation_nodes[1] - radiation_nodes[0]) + 
                   eff_k_nodes[0]*T_down_new;
@@ -350,15 +395,15 @@ namespace icethermo
         }
 
         // middle rows
-        for (int i = 0; i < N-1; ++i)
+        for (int i = 1; i < N-1; ++i)
         {
-            A[i] += -eff_k_nodes[i];
+            A[i] = -eff_k_nodes[i];
 
-            B[i] += rho_cells[i]*eff_c_cells[i]*dz_cells_new[i]/this->time_step + eff_k_nodes[i+1] + eff_k_nodes[i];
+            B[i] = rho_cells[i]*eff_c_cells[i]*dz_cells_new[i]/this->time_step + eff_k_nodes[i+1] + eff_k_nodes[i];
             
-            C[i] +=  -eff_k_nodes[i+1];
+            C[i] =  -eff_k_nodes[i+1];
             
-            RHS[i] += rho_cells[i]*eff_c_cells[i]*dz_cells_new[i]*T_cells_old[i]/this->time_step -
+            RHS[i] = rho_cells[i]*eff_c_cells[i]*dz_cells_new[i]*T_cells_old[i]/this->time_step -
                       rho_cells[i]*E_cells[i]*(dz_cells_new[i] - dz_cells_old[i])/this->time_step +
                       (radiation_nodes[i+1] - radiation_nodes[i]);
 
@@ -390,11 +435,11 @@ namespace icethermo
         }
 
         // last row
-        A[N-1] += -eff_k_nodes[N-1];
+        A[N-1] = -eff_k_nodes[N-1];
 
-        B[N-1] += rho_cells[N-1]*eff_c_cells[N-1]*dz_cells_new[N-1]/this->time_step + eff_k_nodes[N] + eff_k_nodes[N-1];
+        B[N-1] = rho_cells[N-1]*eff_c_cells[N-1]*dz_cells_new[N-1]/this->time_step + eff_k_nodes[N] + eff_k_nodes[N-1];
 
-        RHS[N-1] += rho_cells[N-1]*eff_c_cells[N-1]*T_cells_old[N-1]*dz_cells_new[N-1]/this->time_step - 
+        RHS[N-1] = rho_cells[N-1]*eff_c_cells[N-1]*T_cells_old[N-1]*dz_cells_new[N-1]/this->time_step - 
                     rho_cells[N-1]*E_cells[N-1]*(dz_cells_new[N-1] - dz_cells_old[N-1])/this->time_step -
                     (radiation_nodes[N] - radiation_nodes[N-1]) +
                     eff_k_nodes[N]*T_up_new; 
@@ -490,9 +535,13 @@ namespace icethermo
             surface_err = std::abs(T_is_new - T_is_prev)/std::abs(T_is);
             
             if (surface_err < prev_surface_err)
+            {
                 T_is_history.push_back(T_is_new);
+            }
             else
+            {
                 T_is_new = sum_vec<NumType>(T_is_history)/T_is_history.size();
+            }
 
             // recalculate ice thickness
             dz_cells_new = this->Update_dz(dz_cells,

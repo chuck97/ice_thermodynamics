@@ -45,14 +45,15 @@ namespace icethermo
         
         // compute melting temperature for top layer
         NumType surface_fusion_temp = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
-
-        std::cout << "### Surf temp: " << (std::get<1>(freezing_values))[0] << " ###" << std::endl;
         
         // check if surface temperature exeeds melting point and recalculate in melting mode
         if ((std::get<1>(freezing_values))[0] >= surface_fusion_temp)
         {   
             // log mode
             std::cout << "ICE MELTING MODE" << std::endl;
+
+            // force surface temperature to melting point
+            *(this->Ti_s) = surface_fusion_temp; 
 
             // recalculate mesh values
             auto melting_values = this->sea_ice_melting_1d(*(this->Ti_b),
@@ -66,7 +67,7 @@ namespace icethermo
             // update mesh values
             *(this->Ti_cells) = std::get<0>(melting_values);
             *(this->dzi_cells) = std::get<1>(melting_values);
-            *(this->Ti_s) = surface_fusion_temp;   
+              
         }
         else
         {

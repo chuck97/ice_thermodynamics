@@ -3,11 +3,10 @@
 namespace icethermo
 {
     template <typename NumType>
-    std::pair<NumType, int> secant_solver(FuncPtr<NumType> func,
-                                          NumType x_left, NumType x_right,
-                                          NumType tol, int max_it)
+    std::tuple<NumType, NumType, int, bool> secant_solver(FuncPtr<NumType> func,
+                                                          NumType x_left, NumType x_right,
+                                                          NumType tol, int max_it)
     {
-        
         NumType x_new = x_right;
         NumType x_old = x_left;
         int it = 0;
@@ -16,22 +15,25 @@ namespace icethermo
         {
             it++;
             NumType temp = x_new;
-            x_new -= func(x_new)*(x_new - x_old) / (func(x_new) - func(x_old));
+
+            // handle zero denominator
+            if (std::abs(func(x_new) - func(x_old)) < REAL_MIN_VAL(NumType))
+            {
+                return {x_new, func(x_new), it, false};
+            }
+            else
+            {
+                x_new -= func(x_new)*(x_new - x_old) / (func(x_new) - func(x_old));
+            }
+
             x_old = temp;
         }
-    
-        if (it == max_it)
-        {
-            THERMO_ERR("Secant solver doesn't converge! Exceed " 
-                       + std::to_string(max_it)
-                       + " iterations.");
-        }
-    
-        return {x_new, it};
+        
+        return {x_new, func(x_new), it, (it != max_it) ? true : false};
     }
     
     // explicit instantation for storing template functions declaration into .hpp file
-    template std::pair<float, int> secant_solver(FuncPtr<float>, float, float, float, int);
+    template std::tuple<float, float, int, bool> secant_solver(FuncPtr<float>, float, float, float, int);
     
-    template std::pair<double, int> secant_solver(FuncPtr<double>, double, double, double, int);
+    template std::tuple<double, double, int, bool> secant_solver(FuncPtr<double>, double, double, double, int);
 }

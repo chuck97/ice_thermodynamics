@@ -1,4 +1,5 @@
 #include "icethermo.hpp"
+#include <string>
 
 using namespace icethermo;
 
@@ -14,17 +15,28 @@ template<typename NumType>
 NumType atm_flux(NumType temp, NumType time, NumType melt_time_end)
 {
     // simple sensible heat flux parameterization
-    return AirConsts<NumType>::rho_a*
-           AirConsts<NumType>::cp_a*
-           GenConsts<NumType>::C_sh*
-           (NumType)15.0* 
+    return AirConsts<NumType>::rho_a *
+           AirConsts<NumType>::cp_a *
+           GenConsts<NumType>::C_sh *
+           (NumType)15.0 * 
            ((NumType)T_atm(time, melt_time_end) - temp);
 }
 
-int main()
+template<typename NumType>
+void run_model(NumType time_step,
+               int num_steps,
+               int output_frequency,
+               int num_cells,
+               NumType initial_thickness,
+               const std::string& output_prefix,
+               ApproxOrder grad_approx_order,
+               Kparam conductivity_parameterization,
+               Cparam eff_capacity_parameterization,
+               Eparam enthalpy_parameterization,
+               Lparam fusion_heat_parameterization)
 {
-    // create test ice mesh with 10 uniform cells with total size of 2 meters
-    Mesh<float>* ice_mesh = new(Mesh<float>)(10, 2.0);
+    // create uniform sigma-mesh
+    Mesh<NumType>* ice_mesh = new(Mesh<NumType>)(num_cells, initial_thickness);
 
     // create mandatory initial values on mesh
     auto initial_temp_cells = ice_mesh->CreateCellsData("cells_temperature_array");
@@ -35,41 +47,41 @@ int main()
     auto initial_ocn_salinity = ice_mesh->CreateSingleData("ocean_salinity", false);
     int n_cells = ice_mesh->GetCellsNum();
 
-    float fusion_temp = GenConsts<float>::TempFusion(30.0);
+    NumType fusion_temp = GenConsts<NumType>::TempFusion(30.0);
 
     // initialize mandatory values
     for (int i = 0; i < n_cells; ++i)
     {
-       (*initial_temp_cells)[i] = fusion_temp + 1.0f*(i + 0.5f)/(n_cells)*(-10.0f - fusion_temp);
-       (*initial_sal_cells)[i] = 1.0f + 1.0f*(i + 0.5f)/(n_cells)*(4.0f - 1.0f);
-       (*initial_dens_cells)[i] = IceConsts<float>::rho_i;
+       (*initial_temp_cells)[i] = fusion_temp + (NumType)1.0*(i + 0.5)/(n_cells)*((NumType)-10.0 - fusion_temp);
+       (*initial_sal_cells)[i] = 1.0 + 1.0*(i + 0.5)/(n_cells)*((NumType)4.0 - (NumType)1.0);
+       (*initial_dens_cells)[i] = IceConsts<NumType>::rho_i;
     }
 
-    (*initial_ice_surf_temp) = -10.0f;
+    (*initial_ice_surf_temp) = (NumType)-10.0;
     (*initial_ice_base_temp) = fusion_temp;
-    (*initial_ocn_salinity) = 30.0;
+    (*initial_ocn_salinity) = (NumType)30.0;
 
     // assign melt time end in hours
-    float melt_time_end = 200.0f*3600.0f;
+    NumType melt_time_end = (NumType)200.0*(NumType)3600.0;
 
     // create 1dice solver class
-    SeaIce1D_Solver<float> thermo_solver(ice_mesh,
-                                         3600.0, 
-                                         ApproxOrder::second,
-                                         Kparam::Untersteiner,
-                                         Cparam::SeaIce,
-                                         Eparam::SeaIce,
-                                         Lparam::SeaIce);
+    SeaIce1D_Solver<NumType> thermo_solver(ice_mesh,
+                                           time_step, 
+                                           grad_approx_order,
+                                           conductivity_parameterization,
+                                           eff_capacity_parameterization,
+                                           enthalpy_parameterization,
+                                           fusion_heat_parameterization);
 
     // time stepping
-    for (int step_num = 0; step_num < 251; ++step_num)
+    for (int step_num = 0; step_num < num_steps + 1; ++step_num)
     {
         // update atmospheric flux
         thermo_solver.UpdateForcing
         (
-            [&melt_time_end, &step_num](float temp)
+            [&melt_time_end, &step_num](NumType temp)
             {
-                return atm_flux<float>(temp, step_num*3600.0f, melt_time_end);
+                return atm_flux<NumType>(temp, step_num*(NumType)3600.0, melt_time_end);
             }
         );
 
@@ -77,13 +89,28 @@ int main()
         thermo_solver.Evaluate();
         
         // write mesh to file
-        if (step_num % 10 == 0)
+        if (step_num % output_frequency == 0)
         {
-            ice_mesh->SaveJSON("./ice_melting", step_num);
-            std::cout << "ice thickness: " << ice_mesh->GetTotalThickness() << std::endl;
+            ice_mesh->SaveJSON(std::string("./") + output_prefix, step_num);
         }
     }
 
     // delete mesh
     delete ice_mesh; 
+}
+
+int main()
+{
+    // model launcher (you can choose float or double)
+    run_model<float>(3600.0,                    // time step (seconds)
+                     500,                       // number of time steps
+                     1,                         // output frequency N (every N-th step would be written to file)
+                     10,                        // number of uniform sigma-cells
+                     2.0,                       // initial ice thickness (meters)
+                     "ice_melting",             // output ice prefix
+                     ApproxOrder::second,       // gradient approximation order
+                     Kparam::BubblyBrine,       // conductivity parameterization
+                     Cparam::SeaIce,            // effective capacity parameterization
+                     Eparam::SeaIce,            // enthalpy parameterization
+                     Lparam::SeaIce);           // heat of fusion parameterization
 }
