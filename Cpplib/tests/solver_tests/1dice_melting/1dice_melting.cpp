@@ -62,7 +62,7 @@ void run_model(NumType time_step,
     (*initial_ocn_salinity) = (NumType)30.0;
 
     // assign melt time end in hours
-    NumType melt_time_end = (NumType)200.0*(NumType)3600.0;
+    NumType melt_time_end = (NumType)200.0*time_step;
 
     // create 1dice solver class
     SeaIce1D_Solver<NumType> thermo_solver(ice_mesh,
@@ -79,9 +79,9 @@ void run_model(NumType time_step,
         // update atmospheric flux
         thermo_solver.UpdateForcing
         (
-            [&melt_time_end, &step_num](NumType temp)
+            [&melt_time_end, &step_num, &time_step](NumType temp)
             {
-                return atm_flux<NumType>(temp, step_num*(NumType)3600.0, melt_time_end);
+                return atm_flux<NumType>(temp, step_num*time_step, melt_time_end);
             }
         );
 
@@ -102,7 +102,7 @@ void run_model(NumType time_step,
 int main()
 {
     // model launcher (you can choose float or double)
-    run_model<float>(3600.0,                    // time step (seconds)
+    run_model<double>(3600.0,                    // time step (seconds)
                      500,                       // number of time steps
                      1,                         // output frequency N (every N-th step would be written to file)
                      10,                        // number of uniform sigma-cells
