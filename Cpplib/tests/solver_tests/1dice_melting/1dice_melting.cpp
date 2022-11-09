@@ -103,14 +103,14 @@ int main()
 {
     // model launcher (you can choose float or double)
     run_model<double>(3600.0,                    // time step (seconds)
-                     500,                       // number of time steps
-                     1,                         // output frequency N (every N-th step would be written to file)
-                     10,                        // number of uniform sigma-cells
-                     2.0,                       // initial ice thickness (meters)
-                     "ice_melting",             // output ice prefix
-                     ApproxOrder::second,       // gradient approximation order
-                     Kparam::BubblyBrine,       // conductivity parameterization
-                     Cparam::SeaIce,            // effective capacity parameterization
-                     Eparam::SeaIce,            // enthalpy parameterization
-                     Lparam::SeaIce);           // heat of fusion parameterization
+                      500,                       // number of time steps
+                      1,                         // output frequency N (every N-th step would be written to file)
+                      10,                        // number of uniform sigma-cells
+                      2.0,                       // initial ice thickness (meters)
+                      "ice_melting",             // output ice prefix
+                      ApproxOrder::second,       // gradient approximation order
+                      Kparam::BubblyBrine,       // conductivity parameterization
+                      Cparam::SeaIce,            // effective capacity parameterization
+                      Eparam::SeaIce,            // enthalpy parameterization
+                      Lparam::SeaIce);           // heat of fusion parameterization
 }

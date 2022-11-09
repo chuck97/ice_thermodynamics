@@ -33,11 +33,13 @@ namespace icethermo
     template<typename NumType>
     void ThermoSolver<NumType>::UpdateForcing(FuncPtr<NumType> F_up_,
                                               FuncPtr<NumType> F_down_,
-                                              FuncPtr<NumType> F_sw_)
+                                              FuncPtr<NumType> F_sw_,
+                                              FuncPtr<NumType> prec_rate_)
     {
         this->F_up = F_up_;
         this->F_down = F_down_;
         this->F_sw = F_sw_;
+        this->prec_rate = prec_rate_;
     }
 
     template<typename NumType>
@@ -472,6 +474,39 @@ namespace icethermo
     }
 
     template<typename NumType>
+    std::pair<std::vector<NumType>, std::vector<NumType>> ThermoSolver<NumType>::Compute_radiation_nodes(NumType F_sw_value,
+                                                                                                         NumType albedo_ice,
+                                                                                                         NumType i0_ice,
+                                                                                                         NumType kappa_ice,
+                                                                                                         const std::vector<NumType>& dz_cells_ice,
+                                                                                                         NumType albedo_snow,
+                                                                                                         NumType i0_snow,
+                                                                                                         NumType kappa_snow,
+                                                                                                         const std::vector<NumType>& dz_cells_snow)
+    {
+        std::vector<NumType> dzi_extended = concatenate(std::vector<NumType>{0.0}, reverse_vec(dz_cells_ice));
+        if (dz_cells_snow.size() == 0)
+        {
+            std::vector<NumType> radiation_nodes_ice = F_sw_value*((NumType)1.0 - albedo_ice)*i0_ice*exp_vec(-kappa_ice*cumsum(dzi_extended));
+            return {reverse_vec(radiation_nodes_ice), std::vector<NumType>{0.0}};
+        }
+        else
+        {
+            std::vector<NumType> ones_array(dz_cells_ice.size() + 1);
+            for (int i = 0; i < dz_cells_ice.size() + 1; ++i)
+            {
+                ones_array[i] = 1.0;
+            }
+
+            std::vector<NumType> dzs_extended = concatenate(std::vector<NumType>{0.0}, reverse_vec(dz_cells_snow));
+            std::vector<NumType> radiation_nodes_snow = F_sw_value*((NumType)1.0 - albedo_snow)*i0_snow*exp_vec(-kappa_snow*cumsum(dzs_extended));
+            std::vector<NumType> radiation_nodes_ice = F_sw_value*((NumType)1.0 - albedo_snow)*i0_snow*
+                                                       exp_vec(-kappa_ice*cumsum(dzi_extended) - ones_array*sum_vec(kappa_snow*dz_cells_snow));
+            return {reverse_vec(radiation_nodes_ice), reverse_vec(radiation_nodes_snow)};
+        }
+    }
+
+    template<typename NumType>
     ThreeVecs<NumType> ThermoSolver<NumType>::sea_ice_freezing_1d(NumType T_ib,
                                                                   const std::vector<NumType>& T_cells,
                                                                   NumType T_is,
@@ -551,8 +586,11 @@ namespace icethermo
             // recalculate radiation
             if (is_radiation)
             {
-                // to do
-                //radiation_nodes = compute_radiation_nodes(dzi_new, F_sw)
+                radiation_nodes = Compute_radiation_nodes(F_sw(T_is_new),
+                                                          IceConsts<NumType>::albedo_i,
+                                                          IceConsts<NumType>::i0_i,
+                                                          IceConsts<NumType>::kappa_i,
+                                                          dz_cells_new).first;
             }
 
             // assemble matrix and rhs for ice 
@@ -645,8 +683,11 @@ namespace icethermo
             // recalculate radiation
             if (is_radiation)
             {
-                // to do
-                //radiation_nodes = compute_radiation_nodes(dzi_new, F_sw)
+                radiation_nodes = Compute_radiation_nodes(F_sw(T_is),
+                                                          IceConsts<NumType>::albedo_i,
+                                                          IceConsts<NumType>::i0_i,
+                                                          IceConsts<NumType>::kappa_i,
+                                                          dz_cells_new).first;
             }
 
             // assemble matrix and rhs for ice 

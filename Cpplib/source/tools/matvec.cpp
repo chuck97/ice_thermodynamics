@@ -34,6 +34,39 @@ namespace icethermo
         return res;
     }
 
+    template <typename NumType> std::vector<NumType> cumsum(const std::vector<NumType>& vec)
+    {
+        std::vector<NumType> res = vec;
+
+        for (int  i = 1; i < vec.size(); ++i)
+        {
+            res[i] = res[i-1] + vec[i];
+        }
+        return res;
+    }
+
+    template <typename NumType> std::vector<NumType> exp_vec(const std::vector<NumType>& vec)
+    {
+        std::vector<NumType> res = vec;
+
+        for (int i = 0; i < vec.size(); ++i)
+        {
+            res[i] = std::exp(vec[i]);
+        }
+        return res;
+    }
+
+    template <typename NumType> std::vector<NumType> reverse_vec(const std::vector<NumType>& vec)
+    {
+        std::vector<NumType> res = vec;
+
+        for (int i = 0; i < vec.size(); ++i)
+        {
+            res[i] = vec[vec.size() - 1 - i];
+        }
+        return res;
+    }
+
     template <typename NumType>
     FourVecs<NumType> concat_matrices(const std::vector<NumType>& under_first,
                                       const std::vector<NumType>& diag_first,
@@ -203,6 +236,16 @@ namespace icethermo
     template std::vector<float> concatenate(const std::vector<std::vector<float>>& vecs);
     template std::vector<double> concatenate(const std::vector<std::vector<double>>& vecs);
 
+    template std::vector<int> cumsum(const std::vector<int>& vec);
+    template std::vector<float> cumsum(const std::vector<float>& vec);
+    template std::vector<double> cumsum(const std::vector<double>& vec);
+
+    template std::vector<float> exp_vec(const std::vector<float>& vec);
+    template std::vector<double> exp_vec(const std::vector<double>& vec);
+
+    template std::vector<int> reverse_vec(const std::vector<int>& vec);
+    template std::vector<float> reverse_vec(const std::vector<float>& vec);
+    template std::vector<double> reverse_vec(const std::vector<double>& vec);
 
     template FourVecs<float> concat_matrices(const std::vector<float>& under_first,
                                              const std::vector<float>& diag_first,

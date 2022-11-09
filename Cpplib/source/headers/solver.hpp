@@ -50,10 +50,11 @@ namespace icethermo
         Mesh<NumType>* mesh_ice;
         Mesh<NumType>* mesh_snow;
 
-        // upwards, downwards and short-wave radiation forcing
+        // upwards, downwards and short-wave radiation forcing, precipitation rate
         FuncPtr<NumType> F_up;
         FuncPtr<NumType> F_down;
         FuncPtr<NumType> F_sw;
+        FuncPtr<NumType> prec_rate;
 
         // mandatory ice prognostic variables
         std::shared_ptr<std::vector<NumType>> Ti_cells;
@@ -91,7 +92,8 @@ namespace icethermo
         // update forcing
         void UpdateForcing(FuncPtr<NumType> F_up_ = [](NumType a){return (NumType)0.0;},
                            FuncPtr<NumType> F_down_ = [](NumType a){return (NumType)0.0;},
-                           FuncPtr<NumType> F_sw_ = [](NumType a){return (NumType)0.0;});
+                           FuncPtr<NumType> F_sw_ = [](NumType a){return (NumType)0.0;},
+                           FuncPtr<NumType> prec_rate_ = [](NumType a){return (NumType)0.0;});
 
         // update mesh
         virtual void UpdateMesh(Mesh<NumType>* mesh_ice_,
@@ -146,6 +148,17 @@ namespace icethermo
                                                       const std::vector<NumType>& rho_cells,
                                                       const std::vector<NumType>& radiation_nodes,
                                                       bool is_ice);
+        
+        // compute nodal radiation values (output - pair {radiation nodes ice, radiation nodes snow (optional)})
+        std::pair<std::vector<NumType>, std::vector<NumType>> Compute_radiation_nodes(NumType F_sw_value,
+                                                                                      NumType albedo_ice,
+                                                                                      NumType i0_ice,
+                                                                                      NumType kappa_ice,
+                                                                                      const std::vector<NumType>& dz_cells_ice,
+                                                                                      NumType albedo_snow = 0.0,
+                                                                                      NumType i0_snow = 0.0,
+                                                                                      NumType kappa_snow = 0.0,
+                                                                                      const std::vector<NumType>& dz_cells_snow = std::vector<NumType>{0.0});
         
         // ice freezing mode (for 1d profile)
         ThreeVecs<NumType> sea_ice_freezing_1d(NumType T_ib,

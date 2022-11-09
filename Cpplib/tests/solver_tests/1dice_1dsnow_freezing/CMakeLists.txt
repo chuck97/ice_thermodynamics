@@ -1,1 +1,0 @@
-MESSAGE(STATUS "TO DO: 1dice_1dsnow_freezing test")

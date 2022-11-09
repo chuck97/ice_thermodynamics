@@ -1,0 +1,1 @@
+MESSAGE(STATUS "TO DO: 1dice_0dsnow_freezing test")
