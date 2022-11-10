@@ -36,8 +36,7 @@ namespace icethermo
                      Kparam snow_k_param_ = Kparam::FreshSnow,
                      Cparam snow_c_eff_param_ = Cparam::FreshSnow,
                      Eparam snow_E_param_ = Eparam::FreshSnow,
-                     Lparam snow_L_param_ = Lparam::FreshSnow
-                     );
+                     Lparam snow_L_param_ = Lparam::FreshSnow);
 
         // virtual Evaluation function
         virtual void Evaluate() = 0; 
@@ -95,6 +94,9 @@ namespace icethermo
                            FuncPtr<NumType> F_sw_ = [](NumType a){return (NumType)0.0;},
                            FuncPtr<NumType> prec_rate_ = [](NumType a){return (NumType)0.0;});
 
+        // update ocean salinity
+        void UpdateOceanSalinity(NumType ocn_sal_);
+        
         // update mesh
         virtual void UpdateMesh(Mesh<NumType>* mesh_ice_,
                                 Mesh<NumType>* mesh_snow_) = 0;
@@ -185,19 +187,21 @@ namespace icethermo
                                             NumType tol = 1e-6);
     };
 
+    //   ############# 1D SEA ICE #############
     template<typename NumType>
     class SeaIce1D_Solver : public ThermoSolver<NumType>
     {
     public:
+        // constructor
         SeaIce1D_Solver(Mesh<NumType>* mesh_ice_,
-                        NumType time_step,
+                        NumType time_step_,
                         ApproxOrder grad_approx_order_ = ApproxOrder::first,
                         Kparam ice_k_param_ = Kparam::FreshIce,
                         Cparam ice_c_eff_param_ = Cparam::FreshIce,
                         Eparam ice_E_param_ = Eparam::FreshIce,
-                        Lparam ice_L_param_ = Lparam::FreshIce
-                        );
+                        Lparam ice_L_param_ = Lparam::FreshIce);
 
+        // one evaluation step
         void Evaluate() override;
 
     private:
@@ -208,6 +212,35 @@ namespace icethermo
         void UpdateMesh(Mesh<NumType>* mesh_ice_,
                         Mesh<NumType>* mesh_snow_ = 0) override;
     };
+
+/*
+    //   ############# 1D SEA ICE + 0D SNOW #############
+    template<typename NumType>
+    class SeaIce1D_Snow0D_Solver : public ThermoSolver<NumType>
+    {
+    public:
+        SeaIce1D_Snow0D_Solver(Mesh<NumType>* mesh_ice_,
+                               Mesh<NumType>* mesh_snow_,
+                               NumType time_step,
+                               Kparam ice_k_param_ = Kparam::FreshIce,
+                               Cparam ice_c_eff_param_ = Cparam::FreshIce,
+                               Eparam ice_E_param_ = Eparam::FreshIce,
+                               Lparam ice_L_param_ = Lparam::FreshIce,
+                               Kparam snow_k_param_ = Kparam::FreshSnow,
+                               Lparam snow_L_param_ = Lparam::FreshSnow);
+        
+        void Evaluate() override;
+
+    private:
+        void CheckMeshConsistency(Mesh<NumType>* ice_mesh,
+                                  Mesh<NumType>* snow_mesh) override;
+    
+    public:
+        void UpdateMesh(Mesh<NumType>* mesh_ice_,
+                        Mesh<NumType>* mesh_snow_) override;
+    };
+
+*/
 
   /*
     template <typename NumType>

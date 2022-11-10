@@ -43,6 +43,12 @@ namespace icethermo
     }
 
     template<typename NumType>
+    void ThermoSolver<NumType>::UpdateOceanSalinity(NumType ocn_sal_)
+    {
+        *(this->So) = ocn_sal_;
+    }
+
+    template<typename NumType>
     std::vector<NumType> ThermoSolver<NumType>::Update_dz(const std::vector<NumType>& dz_cells_old,
                                                           NumType omega_down,
                                                           NumType omega_up)

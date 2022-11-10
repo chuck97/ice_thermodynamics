@@ -37,10 +37,9 @@ void run_model(NumType time_step,
     auto initial_sal_cells = ice_mesh->CreateCellsData("cells_salinity_array");
     auto initial_dens_cells = ice_mesh->CreateCellsData("cells_density_array");
     auto initial_ice_surf_temp = ice_mesh->CreateSingleData("up_temperature");
-    auto initial_ice_base_temp = ice_mesh->CreateSingleData("down_temperature");
-    auto initial_ocn_salinity = ice_mesh->CreateSingleData("ocean_salinity", false);
     int n_cells = ice_mesh->GetCellsNum();
 
+    // freezing point of salty water with 30 psu
     NumType fusion_temp = GenConsts<NumType>::TempFusion(30.0);
 
     // initialize mandatory values
@@ -52,8 +51,6 @@ void run_model(NumType time_step,
     }
 
     (*initial_ice_surf_temp) = (NumType)-10.0;
-    (*initial_ice_base_temp) = fusion_temp;
-    (*initial_ocn_salinity) = (NumType)30.0;
 
     // create test 1d ice solver class
     SeaIce1D_Solver<NumType> thermo_solver(ice_mesh,
@@ -63,6 +60,9 @@ void run_model(NumType time_step,
                                            eff_capacity_parameterization,
                                            enthalpy_parameterization,
                                            fusion_heat_parameterization);
+
+    // update ocean salinity to 30 psu
+    thermo_solver.UpdateOceanSalinity((NumType)30.0);
 
     // time stepping
     for (int step_num = 0; step_num < num_steps + 1; ++step_num)
