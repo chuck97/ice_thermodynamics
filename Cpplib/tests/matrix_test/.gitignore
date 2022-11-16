@@ -1,0 +1,6 @@
+Validation/
+.ipynb_checkpoints/
+utils/__pycache__/
+media/
+
+!Validation/full_data.csv

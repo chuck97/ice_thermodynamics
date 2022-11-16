@@ -3,6 +3,6 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/constants.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/solver.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/seaice1d.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/seaice1d_snow0d.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/seaice1d_snow0d.cpp
     PARENT_SCOPE
 )
