@@ -19,13 +19,12 @@ namespace icethermo
                               ice_c_eff_param_,
                               ice_E_param_,
                               ice_L_param_)
-        
     {
         // store input mesh
         this->UpdateMesh(mesh_ice_);
 
         // log
-        std::cout << "1D ice solver class constructed!" << std::endl;
+        std::cout << "1D sea-ice solver class constructed!" << std::endl;
     } 
 
     // 1D ice solver evaluation
@@ -36,17 +35,15 @@ namespace icethermo
         *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
 
         // recalculate temperatures in freezing mode
-        auto freezing_values = this->sea_ice_freezing_1d(*(this->Ti_b),
-                                                         *(this->Ti_cells),
-                                                         *(this->Ti_s),
-                                                         *(this->dzi_cells),
-                                                         *(this->Si_cells),
-                                                         *(this->rhoi_cells));
+        auto freezing_values = this->seaice1d_freezing(*(this->Ti_b),
+                                                       *(this->Ti_cells),
+                                                       *(this->Ti_s),
+                                                       *(this->dzi_cells),
+                                                       *(this->Si_cells),
+                                                       *(this->rhoi_cells));
         
         // compute melting temperature for top layer
         NumType surface_fusion_temp = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
-
-        std::cout << "### Surf temp: " << (std::get<1>(freezing_values))[0] << " ###" << std::endl;
         
         // check if surface temperature exeeds melting point and recalculate in melting mode
         if ((std::get<1>(freezing_values))[0] >= surface_fusion_temp)
@@ -54,19 +51,22 @@ namespace icethermo
             // log mode
             std::cout << "ICE MELTING MODE" << std::endl;
 
+            // force surface temperature to melting point
+            *(this->Ti_s) = surface_fusion_temp; 
+
             // recalculate mesh values
-            auto melting_values = this->sea_ice_melting_1d(*(this->Ti_b),
-                                                           surface_fusion_temp,
-                                                           *(this->Ti_cells),
-                                                           *(this->Ti_s),
-                                                           *(this->dzi_cells),
-                                                           *(this->Si_cells),
-                                                           *(this->rhoi_cells));
+            auto melting_values = this->seaice1d_melting(*(this->Ti_b),
+                                                         surface_fusion_temp,
+                                                         *(this->Ti_cells),
+                                                         *(this->Ti_s),
+                                                         *(this->dzi_cells),
+                                                         *(this->Si_cells),
+                                                         *(this->rhoi_cells));
             
             // update mesh values
             *(this->Ti_cells) = std::get<0>(melting_values);
             *(this->dzi_cells) = std::get<1>(melting_values);
-            *(this->Ti_s) = surface_fusion_temp;   
+              
         }
         else
         {
@@ -87,17 +87,13 @@ namespace icethermo
         if (!(ice_mesh->CheckCellsDataExistency("cells_temperature_array") &&
               ice_mesh->CheckCellsDataExistency("cells_salinity_array") &&
               ice_mesh->CheckCellsDataExistency("cells_density_array") &&
-              ice_mesh->CheckSingleDataExistency("down_temperature") &&
-              ice_mesh->CheckSingleDataExistency("up_temperature") &&
-              ice_mesh->CheckSingleDataExistency("ocean_salinity")))
+              ice_mesh->CheckSingleDataExistency("up_temperature")))
         {
             THERMO_ERR((std::string)"Wrong ice mesh content, the following mesh variables should be created:\n"+
                        (std::string)"cells_temperature_array\n" +
                        (std::string)"cells_salinity_array\n" +
                        (std::string)"cells_density_array\n" +
-                       (std::string)"down_temperature\n" +
-                       (std::string)"up_temperature \n" +
-                       (std::string)"ocean_salinity");
+                       (std::string)"up_temperature");
         }
 
         if (snow_mesh != NULL)
@@ -122,9 +118,20 @@ namespace icethermo
             this->dzi_cells = this->mesh_ice->GetCellsThickness();
             this->Si_cells = this->mesh_ice->GetCellsData("cells_salinity_array");
             this->rhoi_cells = this->mesh_ice->GetCellsData("cells_density_array");
-            this->Ti_b = this->mesh_ice->GetSingleData("down_temperature");
-            this->Ti_s = this->mesh_ice->GetSingleData("up_temperature");
-            this->So = this->mesh_ice->GetSingleData("ocean_salinity");
+            this->Ti_s = this->mesh_ice->GetSingleData("up_temperature"); 
+
+            if (!this->mesh_ice->CheckSingleDataExistency("ocean_salinity"))
+            {
+                this->So = this->mesh_ice->CreateSingleData("ocean_salinity", false);
+                *(this->So) = (NumType)30.0;
+            }
+
+            if (!this->mesh_ice->CheckSingleDataExistency("down_temperature"))
+            {
+                this->Ti_b = this->mesh_ice->CreateSingleData("down_temperature");
+                *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
+            }
+
         }
 
         // check consistency of snow mesh

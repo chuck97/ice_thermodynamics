@@ -23,9 +23,9 @@ namespace icethermo
 
     // 1-D secant solver
     template <typename NumType>
-    std::pair<NumType, int> secant_solver(FuncPtr<NumType> func,
-                                          NumType x_left, NumType x_right,
-                                          NumType tol = 1e-9, int max_it = 1000);
+    std::tuple<NumType, NumType, int, bool> secant_solver(FuncPtr<NumType> func,
+                                                          NumType x_left, NumType x_right,
+                                                          NumType tol = 1e-9, int max_it = 1000);
 
     // SLAE Thomas solver
     template <typename NumType>
