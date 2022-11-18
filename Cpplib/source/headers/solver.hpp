@@ -283,7 +283,11 @@ namespace icethermo
 
     };
 
-    //   ############# 1D SEA ICE #############
+
+    //   #############################################
+    //   ############# 1D SEA ICE  CLASS #############
+    //   #############################################
+
     template<typename NumType>
     class SeaIce1D_Solver : public ThermoSolver<NumType>
     {
@@ -309,7 +313,11 @@ namespace icethermo
                         Mesh<NumType>* mesh_snow_ = NULL) override;
     };
 
-    //   ############# 1D SEA ICE + 0D SNOW #############
+
+    //   ######################################################
+    //   ############# 1D SEA ICE + 0D SNOW CLASS #############
+    //   ######################################################
+
     template<typename NumType>
     class SeaIce1D_Snow0D_Solver : public ThermoSolver<NumType>
     {
