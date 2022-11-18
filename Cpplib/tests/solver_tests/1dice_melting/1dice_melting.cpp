@@ -28,6 +28,7 @@ void run_model(NumType time_step,
                int output_frequency,
                int num_cells,
                NumType initial_thickness,
+               NumType ice_surface_temperature,
                const std::string& output_prefix,
                ApproxOrder grad_approx_order,
                Kparam conductivity_parameterization,
@@ -51,12 +52,12 @@ void run_model(NumType time_step,
     // initialize mandatory values
     for (int i = 0; i < n_cells; ++i)
     {
-       (*initial_temp_cells)[i] = fusion_temp + (NumType)1.0*(i + 0.5)/(n_cells)*((NumType)-10.0 - fusion_temp);
+       (*initial_temp_cells)[i] = fusion_temp + (NumType)1.0*(i + 0.5)/(n_cells)*(ice_surface_temperature - fusion_temp);
        (*initial_sal_cells)[i] = 1.0 + 1.0*(i + 0.5)/(n_cells)*((NumType)4.0 - (NumType)1.0);
        (*initial_dens_cells)[i] = IceConsts<NumType>::rho_i;
     }
 
-    (*initial_ice_surf_temp) = (NumType)-10.0;
+    (*initial_ice_surf_temp) = ice_surface_temperature;
 
     // assign melt time end in hours
     NumType melt_time_end = (NumType)200.0*time_step;
@@ -107,6 +108,7 @@ int main()
                       1,                         // output frequency N (every N-th step would be written to file)
                       10,                        // number of uniform sigma-cells
                       2.0,                       // initial ice thickness (meters)
+                      -10.0,                     // initial ice surface temperature (deg Cel)
                       "ice_melting",             // output ice prefix
                       ApproxOrder::second,       // gradient approximation order
                       Kparam::BubblyBrine,       // conductivity parameterization

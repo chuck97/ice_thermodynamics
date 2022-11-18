@@ -126,7 +126,7 @@ int main()
                       500,                 // number of time steps
                       1,                   // output frequency N (every N-th step would be written to file)
                       20,                  // number of uniform sigma-cells in ice
-                      0.0,                 // precipitation rate (mm s-1)
+                      0.0,                 // precipitation rate (m s-1)
                       2.0,                 // initial ice thickness (meters)
                       0.1,                 // initial snow thickness (meters)
                       -15.0,               // initial ice-snow interface temperature (deg Cel)
@@ -139,5 +139,5 @@ int main()
                       Eparam::SeaIce,      // ice enthalpy parameterization
                       Lparam::SeaIce,      // ice heat of fusion parameterization
                       Kparam::FreshSnow,   // snow conductivity parameterization
-                      Lparam::FreshSnow);     // snow heat of fusion parameterization
+                      Lparam::FreshSnow);  // snow heat of fusion parameterization
 }

@@ -42,25 +42,85 @@ namespace icethermo
         // force base temperature to freezing point
         *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
 
-        /*
-        TODO
-        TODO
-        TODO
-        TODO
-        TODO
-        TODO
-        TODO
-        TODO
-        TODO
-        TODO
-        TODO
-        TODO
-        TODO
-        TODO
-        */
-       
-        // recalculate temperatures in freezing mode
-        auto seaice1d_snow0d_res = this->seaice1d_snow0d_freezing(*(this->Ti_b),
+        // check if snow exists
+        if (sum_vec(*(this->dzs_cells)) < (NumType)SNOW_THICKNESS_THRESHOLD)
+        {
+            // force snow temperatures to be the same as ice surface temp
+            *(this->Ts_b) = *(this->Ti_s);
+            *(this->Ts_s) = *(this->Ti_s);
+            (*(this->Ts_cells))[0] = *(this->Ti_s);
+
+            // computations without snow
+
+            // recalculate temperatures in ice freezing mode
+            auto freezing_values = this->seaice1d_freezing(*(this->Ti_b),
+                                                           *(this->Ti_cells),
+                                                           *(this->Ti_s),
+                                                           *(this->dzi_cells),
+                                                           *(this->Si_cells),
+                                                           *(this->rhoi_cells));
+            
+            // compute melting temperature for top layer
+            NumType surface_fusion_temp = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+
+            // check if ice surface temperature exeeds melting point and recalculate in melting mode
+            if ((std::get<1>(freezing_values))[0] >= surface_fusion_temp)
+            {   
+                // log mode
+                std::cout << "1D-ICE MELTING MODE" << std::endl;
+
+                // force ice surface temperature to melting point
+                *(this->Ti_s) = surface_fusion_temp; 
+
+                // recompute temperatures in ice melting mode
+                auto melting_values = this->seaice1d_melting(*(this->Ti_b),
+                                                             surface_fusion_temp,
+                                                             *(this->Ti_cells),
+                                                             *(this->Ti_s),
+                                                             *(this->dzi_cells),
+                                                             *(this->Si_cells),
+                                                             *(this->rhoi_cells));
+
+                // update mesh values
+                *(this->Ti_cells) = std::get<0>(melting_values);
+                *(this->dzi_cells) = std::get<1>(melting_values);
+            }
+            else
+            {
+                // log mode
+                std::cout << "1D-ICE FREEZING MODE" << std::endl;
+
+                // update mesh values
+                *(this->Ti_cells) = std::get<0>(freezing_values);
+                *(this->Ti_s) = (std::get<1>(freezing_values))[0];
+                *(this->dzi_cells) = std::get<2>(freezing_values);
+            }
+
+            // if there are precipitations with less than zero atm temp add snow
+            if (this->atm_temp < (NumType)0.0)
+            {
+                // update snow thickness according to precipitation rate
+                (*(this->dzs_cells))[0] = this->Update_dz_0D((*(this->dzs_cells))[0],
+                                                              (NumType)0.0, 
+                                                              -(this->prec_rate)*
+                                                              WaterConsts<NumType>::rho_w/
+                                                              SnowConsts<NumType>::rho_s);
+                
+                // if snow appeared initialize snow temperatures
+                if (sum_vec(*(this->dzs_cells)) > (NumType)SNOW_THICKNESS_THRESHOLD)
+                {
+                    *(this->Ts_s) = this->atm_temp;
+                    *(this->Ts_b) = *(this->Ti_s);
+                    (*(this->Ts_cells))[0] = (NumType)0.5*(*(this->Ts_s) + *(this->Ts_b));
+                }
+            }
+        }
+        else
+        {
+            // computations with snow
+
+            // recalculate temperatures in ice freezing with snow mode
+            auto freezing_values = this->seaice1d_snow0d_freezing(*(this->Ti_b),
                                                                   *(this->Ti_cells),
                                                                   *(this->Ti_s),
                                                                   *(this->dzi_cells),
@@ -72,22 +132,57 @@ namespace icethermo
                                                                   this->prec_rate,
                                                                   this->atm_temp);
 
-        auto freezing_ice = seaice1d_snow0d_res.first;
-        auto freezing_snow = seaice1d_snow0d_res.second;
+            auto freezing_ice = freezing_values.first;
+            auto freezing_snow = freezing_values.second;
 
-        // log mode
-        std::cout << "ICE FREEZING WITH SNOW MODE" << std::endl;
+            // check if snow surface temperature exeeds melting point and recalculate in melting mode
+            if ((std::get<0>(freezing_snow))[0] > (NumType)0.0)
+            {
+                // log mode
+                std::cout << "1D-ICE WITH 0D-SNOW MELTING MODE" << std::endl;
 
-        // update mesh values
-        *(this->Ti_cells) = std::get<0>(freezing_ice);
-        *(this->Ti_s) = std::get<1>(freezing_ice)[0];
-        *(this->dzi_cells) = std::get<2>(freezing_ice);
+                // force snow surface temperature to melting point
+                *(this->Ts_s) = (NumType)0.0; 
 
-        *(this->Ts_s) = std::get<0>(freezing_snow)[0];
-        *(this->dzs_cells) = std::get<1>(freezing_snow);
-        *(this->Ts_b) = *(this->Ti_s);
-        (*(this->Ts_cells))[0] = (NumType)0.5*(*(this->Ts_s) + *(this->Ts_b));
-        
+                auto melting_values = this->seaice1d_snow0d_melting(*(this->Ti_b),
+                                                                    *(this->Ti_cells),
+                                                                    *(this->Ti_s),
+                                                                    *(this->dzi_cells),
+                                                                    *(this->Si_cells),
+                                                                    *(this->rhoi_cells),
+                                                                    *(this->Ts_s),
+                                                                    (*(this->dzs_cells))[0],
+                                                                    (*(this->rhos_cells))[0],
+                                                                    this->prec_rate,
+                                                                    this->atm_temp);
+                auto melting_ice = melting_values.first;
+                auto melting_snow = melting_values.second;
+
+                // update mesh values
+                *(this->Ti_cells) = std::get<0>(melting_ice);
+                *(this->Ti_s) = (std::get<1>(melting_ice))[0];
+                *(this->dzi_cells) = std::get<2>(melting_ice);
+
+                (*(this->dzs_cells))[0] = melting_snow;
+                *(this->Ts_b) = *(this->Ti_s);
+                (*(this->Ts_cells))[0] = (NumType)0.5*(*(this->Ts_b) + *(this->Ts_s));
+            }
+            else
+            {
+                // log mode
+                std::cout << "1D-ICE WITH 0D-SNOW FREEZING MODE" << std::endl;
+
+                // update mesh values
+                *(this->Ti_cells) = std::get<0>(freezing_ice);
+                *(this->Ti_s) = std::get<1>(freezing_ice)[0];
+                *(this->dzi_cells) = std::get<2>(freezing_ice);
+
+                *(this->Ts_s) = std::get<0>(freezing_snow)[0];
+                (*(this->dzs_cells))[0] = std::get<1>(freezing_snow)[0];
+                *(this->Ts_b) = *(this->Ti_s);
+                (*(this->Ts_cells))[0] = (NumType)0.5*(*(this->Ts_b) + *(this->Ts_s));
+            }
+        }
     }
 
     template <typename NumType>

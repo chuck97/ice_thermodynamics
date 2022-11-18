@@ -606,7 +606,7 @@ namespace icethermo
                                        true);
 
             // force the convergence of surface temperature
-            surface_err = std::abs(T_is_new - T_is_prev)/std::abs(T_is);
+            surface_err = std::abs(T_is_new - T_is_prev)/(std::abs(T_is) + (NumType)0.1);
             
             if (surface_err < prev_surface_err)
             {
@@ -833,7 +833,7 @@ namespace icethermo
                                           true);
 
             // force the convergence of surface temperature
-            surface_err = std::abs(T_ss_new - T_ss_prev)/std::abs(T_ss);
+            surface_err = std::abs(T_ss_new - T_ss_prev)/std::abs(T_ss + (NumType)0.1);
             
             if (surface_err < prev_surface_err)
             {
