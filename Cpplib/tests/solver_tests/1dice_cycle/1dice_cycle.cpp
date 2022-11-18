@@ -67,7 +67,8 @@ void run_model(NumType time_step,
                NumType summer_duration, 
                NumType autumn_duration, 
                NumType lowest_temp,     
-               NumType highest_temp,    
+               NumType highest_temp,
+               NumType ice_surf_temp,
                const std::string& output_prefix,
                ApproxOrder grad_approx_order,
                Kparam conductivity_parameterization,
@@ -91,12 +92,12 @@ void run_model(NumType time_step,
     // initialize mandatory values
     for (int i = 0; i < n_cells; ++i)
     {
-       (*initial_temp_cells)[i] = fusion_temp + (NumType)1.0*(i + 0.5)/(n_cells)*((NumType)-10.0 - fusion_temp);
+       (*initial_temp_cells)[i] = fusion_temp + (NumType)1.0*(i + 0.5)/(n_cells)*(ice_surf_temp - fusion_temp);
        (*initial_sal_cells)[i] = 1.0 + 1.0*(i + 0.5)/(n_cells)*((NumType)4.0 - (NumType)1.0);
        (*initial_dens_cells)[i] = IceConsts<NumType>::rho_i;
     }
 
-    (*initial_ice_surf_temp) = (NumType)-10.0;
+    (*initial_ice_surf_temp) = ice_surf_temp;
 
     // create 1dice solver class
     SeaIce1D_Solver<NumType> thermo_solver(ice_mesh,
@@ -155,17 +156,18 @@ int main()
 {
     // model launcher (you can choose float or double)
     run_model<double>(3600.0,                       // time step (seconds)
-                      2000,                         // number of time steps
+                      2700,                         // number of time steps
                       1,                            // output frequency N (every N-th step would be written to file)
-                      10,                           // number of uniform sigma-cells
-                      2.0,                          // initial ice thickness (meters)
+                      30,                           // number of uniform sigma-cells
+                      4.0,                          // initial ice thickness (meters)
                       350.0*3600.0,                 // winter duration (seconds)
                       200.0*3600.0,                 // spring duration (seconds) 
                       150.0*3600.0,                 // summer duration (seconds) 
                       200.0*3600.0,                 // autumn duration (seconds) 
                       -30.0,                        // lowest atm temperature (deg C)     
-                      10.0,                         // highest atm temperature (deg C)    
-                      "ice_cycle",                  // output ice prefix
+                      10.0,                         // highest atm temperature (deg C)
+                      -15.0,                        // ice surface temperature (deg C)
+                      "cpp_ice_cycle",              // output ice prefix
                       ApproxOrder::second,          // gradient approximation order
                       Kparam::BubblyBrine,          // conductivity parameterization
                       Cparam::SeaIce,               // effective capacity parameterization
