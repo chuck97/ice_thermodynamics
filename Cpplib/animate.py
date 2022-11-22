@@ -18,6 +18,8 @@ if __name__ == "__main__":
 #                         help='prefix for names of ice jsons')
 #     parser.add_argument('-sp', '--snowprefix',
 #                         help='prefix for names of snow jsons')
+    parser.add_argument('-flt', '--floating', action='store_true',
+                        help='Enable floating (ground level will be sea level)')
     parser.add_argument('-o', '--output', default='output.mp4',
                         help='Name for the output file (default format is .mp4).')
     
@@ -30,4 +32,4 @@ if __name__ == "__main__":
             processes.append(ue.get_process_from_json_folder(path=proc_args[0], ice_prefix=proc_args[1],
                                                              snow_prefix=proc_args[2]))
 #     process = ue.get_process_from_json_folder(path=args.input, ice_prefix=args.iceprefix, snow_prefix=args.snowprefix)
-    uv.animate(processes, savepath=(args.output if '.' in args.output else args.output + '.mp4'))
+    uv.animate(processes, floating=args.floating, savepath=(args.output if '.' in args.output else args.output + '.mp4'))

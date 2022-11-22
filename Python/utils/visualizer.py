@@ -17,12 +17,15 @@ plt.rcParams["animation.html"] = "jshtml"
 from utils.engine import rho_w as water_density, rho_s as snow_density
 
 
-def get_Z(process, rho_s, rho_w):
+def get_Z(process, rho_s, rho_w, floating=True):
     
     dzi, dzs, rho_i = process.ice_dz_history, process.snow_dz_history, process.ice_density_history
     
-    bottomlines = np.array([(-np.dot(dzi_t, rho_i_t) - rho_s*sum(dzs_t))/rho_w \
-                            for dzi_t, dzs_t, rho_i_t in zip(dzi, dzs, rho_i)])
+    if floating:
+        bottomlines = np.array([(-np.dot(dzi_t, rho_i_t) - rho_s*sum(dzs_t))/rho_w \
+                                for dzi_t, dzs_t, rho_i_t in zip(dzi, dzs, rho_i)])
+    else:
+        bottomlines = np.zeros(dzi.shape[0])
     
     Z_i = np.concatenate((bottomlines.reshape(-1, 1), dzi), axis=1).cumsum(axis=1)
     Z_i = np.append(Z_i, Z_i[:, [-1]], axis=1)
@@ -91,6 +94,7 @@ def gauss_filter_with_nans(arr, sigma):
 
 def animate(processes,
             rho_snow=snow_density, rho_water=water_density,
+            floating=True,
             figsize=(25, 20),
             t_min=None, t_max=None,
             cmap=None, names=None,
@@ -139,7 +143,7 @@ def animate(processes,
     all_Z_i = []
     all_Z_s = []
     for process in processes:
-        Z_i, Z_s = get_Z(process, rho_snow, rho_water)
+        Z_i, Z_s = get_Z(process, rho_snow, rho_water, floating=floating)
         all_Z_i.append(Z_i)
         all_Z_s.append(Z_s)
     z_min = min([Z_i[:, 0].min() for Z_i in all_Z_i])
