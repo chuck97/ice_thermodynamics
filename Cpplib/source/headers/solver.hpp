@@ -252,6 +252,7 @@ namespace icethermo
                                                                                  NumType rho_s,
                                                                                  NumType precipitation_rate,
                                                                                  NumType atm_temperature,
+                                                                                 bool is_ice_radiation = true,
                                                                                  int max_n_its = 50,
                                                                                  NumType tol = 1e-6);
         
@@ -278,6 +279,7 @@ namespace icethermo
                                                                        NumType rho_s,
                                                                        NumType precipitation_rate,
                                                                        NumType atm_temperature,
+                                                                       bool is_ice_radiation = true,
                                                                        int max_n_its = 50,
                                                                        NumType tol = 1e-6);
 

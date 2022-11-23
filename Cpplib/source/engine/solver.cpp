@@ -625,11 +625,11 @@ namespace icethermo
             // recalculate radiation
             if (is_radiation)
             {
-                radiation_nodes = Compute_radiation_nodes(F_sw(T_is_new),
-                                                          IceConsts<NumType>::albedo_i,
-                                                          IceConsts<NumType>::i0_i,
-                                                          IceConsts<NumType>::kappa_i,
-                                                          dz_cells_new).first;
+                radiation_nodes = this->Compute_radiation_nodes(F_sw(T_is_new),
+                                                                IceConsts<NumType>::albedo_i,
+                                                                IceConsts<NumType>::i0_i,
+                                                                IceConsts<NumType>::kappa_i,
+                                                                dz_cells_new).first;
             }
 
             // assemble matrix and rhs for ice 
@@ -723,11 +723,11 @@ namespace icethermo
             // recalculate radiation
             if (is_radiation)
             {
-                radiation_nodes = Compute_radiation_nodes(F_sw(T_is),
-                                                          IceConsts<NumType>::albedo_i,
-                                                          IceConsts<NumType>::i0_i,
-                                                          IceConsts<NumType>::kappa_i,
-                                                          dz_cells_new).first;
+                radiation_nodes = this->Compute_radiation_nodes(this->F_sw(T_is),
+                                                                IceConsts<NumType>::albedo_i,
+                                                                IceConsts<NumType>::i0_i,
+                                                                IceConsts<NumType>::kappa_i,
+                                                                dz_cells_new).first;
             }
 
             // assemble matrix and rhs for ice 
@@ -771,6 +771,7 @@ namespace icethermo
                                                                                                     NumType rho_s,
                                                                                                     NumType precipitation_rate,
                                                                                                     NumType atm_temperature,
+                                                                                                    bool is_ice_radiation,
                                                                                                     int max_n_its,
                                                                                                     NumType tol)
     {
@@ -798,6 +799,8 @@ namespace icethermo
         std::vector<NumType> old_temp_vec = concatenate<NumType>({T_i_cells, std::vector<NumType>{T_is}, std::vector<NumType>{T_ss}});
 
         NumType omega_ss =  (atm_temperature < (NumType)0.0) ? -precipitation_rate*WaterConsts<NumType>::rho_w/SnowConsts<NumType>::rho_s : (NumType)0.0;
+
+        std::vector<NumType> radiation_nodes_ice(T_i_cells.size() + 1);
 
         int npseudo = 0;
 
@@ -853,6 +856,20 @@ namespace icethermo
             h_s_new = this->Update_dz_0D(thickness_s,
                                          (NumType)0.0,
                                          omega_ss);
+
+            // recalculate ice radiation
+            if (is_ice_radiation)
+            {
+                radiation_nodes_ice = this->Compute_radiation_nodes(this->F_sw(T_ss_new),
+                                                                    IceConsts<NumType>::albedo_i,
+                                                                    IceConsts<NumType>::i0_i,
+                                                                    IceConsts<NumType>::kappa_i,
+                                                                    dz_i_cells_new,
+                                                                    SnowConsts<NumType>::albedo_s,
+                                                                    SnowConsts<NumType>::i0_s,
+                                                                    SnowConsts<NumType>::kappa_s,
+                                                                    std::vector<NumType>{h_s_new}).first;
+            }
             
             // recalculate ice temperature profile
             auto matrix_rhs = this->Assemble_advdiff_martix_rhs(T_i_cells_prev, T_i_cells,
@@ -862,7 +879,7 @@ namespace icethermo
                                                                 dz_i_cells_new, dz_i_cells,
                                                                 salinity_i_cells,
                                                                 rho_i_cells,
-                                                                std::vector<NumType>(T_i_cells_prev.size() + 1),
+                                                                radiation_nodes_ice,
                                                                 true);
 
             // solve linear system and update temperatures
@@ -906,6 +923,7 @@ namespace icethermo
                                                                                           NumType rho_s,
                                                                                           NumType precipitation_rate,
                                                                                           NumType atm_temperature,
+                                                                                          bool is_ice_radiation,
                                                                                           int max_n_its,
                                                                                           NumType tol)
     {
@@ -929,6 +947,8 @@ namespace icethermo
         std::vector<NumType> prev_temp_vec(T_i_cells.size() + 2);
 
         std::vector<NumType> old_temp_vec = concatenate<NumType>({T_i_cells, std::vector<NumType>{T_is}, std::vector<NumType>{T_ss_old}});
+
+        std::vector<NumType> radiation_nodes_ice(T_i_cells.size() + 1);
 
         int npseudo = 0;
 
@@ -972,6 +992,20 @@ namespace icethermo
             h_s_new = this->Update_dz_0D(thickness_s,
                                          (NumType)0.0,
                                          omega_ss);
+
+            // recalculate ice radiation
+            if (is_ice_radiation)
+            {
+                radiation_nodes_ice = this->Compute_radiation_nodes(this->F_sw((NumType)0.0),
+                                                                    IceConsts<NumType>::albedo_i,
+                                                                    IceConsts<NumType>::i0_i,
+                                                                    IceConsts<NumType>::kappa_i,
+                                                                    dz_i_cells_new,
+                                                                    SnowConsts<NumType>::albedo_s,
+                                                                    SnowConsts<NumType>::i0_s,
+                                                                    SnowConsts<NumType>::kappa_s,
+                                                                    std::vector<NumType>{h_s_new}).first;
+            }
             
             // recalculate ice temperature profile
             auto matrix_rhs = this->Assemble_advdiff_martix_rhs(T_i_cells_prev, T_i_cells,
@@ -981,7 +1015,7 @@ namespace icethermo
                                                                 dz_i_cells_new, dz_i_cells,
                                                                 salinity_i_cells,
                                                                 rho_i_cells,
-                                                                std::vector<NumType>(T_i_cells_prev.size() + 1),
+                                                                radiation_nodes_ice,
                                                                 true);
 
             // solve linear system and update temperatures
