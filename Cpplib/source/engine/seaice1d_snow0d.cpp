@@ -67,7 +67,7 @@ namespace icethermo
             if ((std::get<1>(freezing_values))[0] >= surface_fusion_temp)
             {   
                 // log mode
-                std::cout << "1D-ICE MELTING MODE" << std::endl;
+                std::cout << "1D-SEA-ICE MELTING MODE" << std::endl;
 
                 // force ice surface temperature to melting point
                 *(this->Ti_s) = surface_fusion_temp; 
@@ -88,7 +88,7 @@ namespace icethermo
             else
             {
                 // log mode
-                std::cout << "1D-ICE FREEZING MODE" << std::endl;
+                std::cout << "1D-SEA-ICE FREEZING MODE" << std::endl;
 
                 // update mesh values
                 *(this->Ti_cells) = std::get<0>(freezing_values);
@@ -139,7 +139,7 @@ namespace icethermo
             if ((std::get<0>(freezing_snow))[0] > (NumType)0.0)
             {
                 // log mode
-                std::cout << "1D-ICE WITH 0D-SNOW MELTING MODE" << std::endl;
+                std::cout << "1D-SEA-ICE WITH 0D-SNOW MELTING MODE" << std::endl;
 
                 // force snow surface temperature to melting point
                 *(this->Ts_s) = (NumType)0.0; 
@@ -170,7 +170,7 @@ namespace icethermo
             else
             {
                 // log mode
-                std::cout << "1D-ICE WITH 0D-SNOW FREEZING MODE" << std::endl;
+                std::cout << "1D-SEA-ICE WITH 0D-SNOW FREEZING MODE" << std::endl;
 
                 // update mesh values
                 *(this->Ti_cells) = std::get<0>(freezing_ice);

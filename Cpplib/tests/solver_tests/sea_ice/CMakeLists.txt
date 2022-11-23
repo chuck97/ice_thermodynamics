@@ -1,0 +1,6 @@
+add_subdirectory(1dice_freezing)
+add_subdirectory(1dice_melting)
+add_subdirectory(1dice_cycle)
+add_subdirectory(1dice_0dsnow_freezing)
+add_subdirectory(1dice_0dsnow_melting)
+add_subdirectory(1dice_0dsnow_cycle)

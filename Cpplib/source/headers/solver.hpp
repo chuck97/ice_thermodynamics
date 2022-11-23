@@ -189,7 +189,7 @@ namespace icethermo
                                                                                       NumType kappa_snow = 0.0,
                                                                                       const std::vector<NumType>& dz_cells_snow = std::vector<NumType>{0.0});
         
-        // !! ice freezing mode (for 1d profile) !!
+        // !! sea-ice freezing mode (for 1d profile) !!
         /* 
             output - 1d-ice values
             
@@ -209,7 +209,7 @@ namespace icethermo
                                              NumType tol = 1e-6);
         
         
-        // !! ice melting mode (for 1d profile) !!
+        // !! sea-ice melting mode (for 1d profile) !!
         /* 
             output - 1d-ice values
             
@@ -228,7 +228,7 @@ namespace icethermo
                                           int max_n_its = 50,
                                           NumType tol = 1e-6);
 
-        // !! ice freezing mode with snow (for 1d-ice and 0d-snow profile) !!
+        // !! sea-ice freezing mode with snow (for 1d-ice and 0d-snow profile) !!
         /* 
             output - pair of 1d-ice and 0d-snow values
             
@@ -256,7 +256,7 @@ namespace icethermo
                                                                                  int max_n_its = 50,
                                                                                  NumType tol = 1e-6);
         
-        // !! snow melting mode with ice (for 1d-ice and 0d-snow profile) !!
+        // !! snow melting mode with sea-ice (for 1d-ice and 0d-snow profile) !!
         /* 
             output - pair of 1d-ice and 0d-snow values
             
@@ -282,6 +282,46 @@ namespace icethermo
                                                                        bool is_ice_radiation = true,
                                                                        int max_n_its = 50,
                                                                        NumType tol = 1e-6);
+        
+        // !! glacier freezing mode (for 1d profile) !!
+        /* 
+            output - 1d-ice values
+            
+            1d-ice values:
+                new ice base temperature
+                vector of new ice cells temperatures
+                new ice surface temperature
+                vector of new ice cells thicknesses
+        */
+        FourVecs<NumType> glacier1d_freezing(NumType T_ib,
+                                             const std::vector<NumType>& T_cells,
+                                             NumType T_is,
+                                             const std::vector<NumType>& dz_cells,
+                                             const std::vector<NumType>& salinity_cells,
+                                             const std::vector<NumType>& rho_cells,
+                                             bool is_radiation = true,
+                                             int max_n_its = 50,
+                                             NumType tol = 1e-6);
+
+        // !! galcier melting mode (for 1d profile) !!
+        /* 
+            output - 1d-ice values
+            
+            1d-ice values:
+                the ice base temperature
+                vector of new ice cells temperatures
+                vector of new ice cells thicknesses
+        */
+        ThreeVecs<NumType> glacier1d_melting(NumType T_ib,
+                                             NumType T_is,
+                                             const std::vector<NumType>& T_cells,
+                                             NumType T_is_old,
+                                             const std::vector<NumType>& dz_cells,
+                                             const std::vector<NumType>& salinity_cells,
+                                             const std::vector<NumType>& rho_cells,
+                                             bool is_radiation = true,
+                                             int max_n_its = 50,
+                                             NumType tol = 1e-6);
 
     };
 
@@ -345,49 +385,32 @@ namespace icethermo
                         Mesh<NumType>* mesh_snow_) override;
     };
 
-  /*
-    template <typename NumType>
-    class Ice1D_Snow1D_Solver : public Solver<NumType>
+    //   ######################################################
+    //   ################## 1D GLACIER CLASS ##################
+    //   ######################################################
+    template<typename NumType>
+    class Glacier1D_Solver : public ThermoSolver<NumType>
     {
     public:
-        Ice1D_Snow1D_Solver(Mesh<NumType>* mesh_ice_,
-                            Mesh<NumType>* mesh_snow_,
-                            Dparam ice_rho_param = Dparam::SeaIce,
-                            Kparam ice_k_param = Kparam::Untersteiner,
-                            Cparam ice_effc_param = Cparam::SeaIce,
-                            Eparam ice_E_param = Eparam::SeaIce,
-                            Lparam ice_L_param = Lparam::SeaIce,
-                            Kparam snow_rho_param = Dparam::FreshSnow,
-                            Kparam snow_k_param = Kparam::FreshSnow,
-                            Cparam snow_effc_param = Cparam::FreshSnow,
-                            Eparam snow_E_param = Eparam::FreshSnow,
-                            Lparam snow_L_param = Lparam::FreshSnow
-                            );
+        // constructor
+        Glacier1D_Solver(Mesh<NumType>* mesh_ice_,
+                         NumType time_step_,
+                         ApproxOrder grad_approx_order_ = ApproxOrder::first,
+                         Kparam ice_k_param_ = Kparam::FreshIce,
+                         Cparam ice_c_eff_param_ = Cparam::FreshIce,
+                         Eparam ice_E_param_ = Eparam::FreshIce,
+                         Lparam ice_L_param_ = Lparam::FreshIce);
+
+        // one evaluation step
+        void Evaluate() override;
 
     private:
-
-        // mandatory prognostic mesh variables
-        bool is_snow;
-        std::vector<NumType>& Ti_cells, Ts_cells;
-        std::vector<NumType>& dzi_cells, dzs_cells;
-        std::vector<NumType>& Si_cells, Ss_cells;
-        NumType& Tis_interface, T_surface, Ti_bottom;
-
-        // auxilary mesh variables
-
-
+        void CheckMeshConsistency(Mesh<NumType>* ice_mesh,
+                                  Mesh<NumType>* snow_mesh = NULL) override;
+    
+    public:
+        void UpdateMesh(Mesh<NumType>* mesh_ice_,
+                        Mesh<NumType>* mesh_snow_ = NULL) override;
     };
-
-    template <typename NumType>
-    class Ice1D_Snow0D_Solver : public Solver<NumType>
-    {
-
-    };
-
-    template <typename NumType>
-    class Ice0D_Snow0D_Solver : public Solver<NumType>
-    {
-
-    };
-*/
+ 
 }

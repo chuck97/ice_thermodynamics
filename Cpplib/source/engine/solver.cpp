@@ -654,7 +654,7 @@ namespace icethermo
             
             full_temp_vec = concatenate<NumType>(T_cells_new, std::vector<NumType>{T_is_new}); 
 
-            current_err = L2_norm(full_temp_vec - prev_temp_vec)/L2_norm(old_temp_vec);
+            current_err = L2_norm(full_temp_vec - prev_temp_vec)/(L2_norm(old_temp_vec) + (NumType)0.1);
 
             if (current_err < tol)
                 break;
@@ -748,7 +748,7 @@ namespace icethermo
                                                  std::get<3>(matrix_rhs));
 
             // evaluate the error
-            current_err = L2_norm(T_cells_new - T_cells_prev)/L2_norm(T_cells);
+            current_err = L2_norm(T_cells_new - T_cells_prev)/(L2_norm(T_cells) + (NumType)0.1);
 
             if (current_err < tol)
                 break;
@@ -900,7 +900,7 @@ namespace icethermo
             
             full_temp_vec = concatenate<NumType>({T_i_cells_new, std::vector<NumType>{T_is_new}, std::vector<NumType>{T_ss_new}});
 
-            current_err = L2_norm(full_temp_vec - prev_temp_vec)/L2_norm(old_temp_vec);
+            current_err = L2_norm(full_temp_vec - prev_temp_vec)/(L2_norm(old_temp_vec) + (NumType)0.1);
 
             if (current_err < tol)
                 break;
@@ -1036,7 +1036,7 @@ namespace icethermo
             
             full_temp_vec = concatenate<NumType>({T_i_cells_new, std::vector<NumType>{T_is_new}, std::vector<NumType>{0.0}});
 
-            current_err = L2_norm(full_temp_vec - prev_temp_vec)/L2_norm(old_temp_vec);
+            current_err = L2_norm(full_temp_vec - prev_temp_vec)/(L2_norm(old_temp_vec) + (NumType)0.1);
 
             if (current_err < tol)
                 break;
@@ -1044,6 +1044,272 @@ namespace icethermo
         std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
 
         return {{T_i_cells_new, std::vector<NumType>{T_is_new}, dz_i_cells_new}, h_s_new};
+    }
+
+    // 1d sea-ice freezing mode
+    template<typename NumType>
+    FourVecs<NumType> ThermoSolver<NumType>::glacier1d_freezing(NumType T_ib,
+                                                                const std::vector<NumType>& T_cells,
+                                                                NumType T_is,
+                                                                const std::vector<NumType>& dz_cells,
+                                                                const std::vector<NumType>& salinity_cells,
+                                                                const std::vector<NumType>& rho_cells,
+                                                                bool is_radiation,
+                                                                int max_n_its,
+                                                                NumType tol)
+    {
+        NumType T_ib_new = T_ib;
+        NumType T_ib_prev = T_ib;
+
+        std::vector<NumType> T_cells_new = T_cells;
+        std::vector<NumType> T_cells_prev = T_cells;
+
+        NumType T_is_new = T_is;
+        NumType T_is_prev = T_is;
+
+        NumType omega_ib = (NumType)0.0;
+
+        std::vector<NumType> dz_cells_new = dz_cells;
+
+        std::vector<NumType> radiation_nodes(T_cells.size() + 1);
+
+        std::vector<NumType> T_is_history = {T_is};
+        std::vector<NumType> T_ib_history = {T_ib};
+
+        NumType current_err = std::numeric_limits<NumType>::max();
+
+        NumType surface_err = std::numeric_limits<NumType>::max();
+        NumType base_err = std::numeric_limits<NumType>::max();
+
+        NumType prev_surface_err = surface_err;
+        NumType prev_base_err = base_err;
+
+        std::vector<NumType> full_temp_vec(T_cells.size() + 2);
+        std::vector<NumType> prev_temp_vec(T_cells.size() + 2);
+        std::vector<NumType> old_temp_vec = concatenate<NumType>({std::vector<NumType>{T_ib}, T_cells, std::vector<NumType>{T_is}});
+
+        int npseudo = 0;
+
+        for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
+        {
+            ++npseudo;
+
+            T_ib_prev = T_ib_new;
+            T_cells_prev = T_cells_new;
+            T_is_prev = T_is_new;
+            prev_surface_err = surface_err;
+            prev_base_err = base_err;
+
+            // compute new value of ice base temperature
+            T_ib_new = this->T_from_BC(T_cells_prev,
+                                       dz_cells_new,
+                                       salinity_cells,
+                                       rho_cells,
+                                       0.0,
+                                       true,
+                                       false);
+            
+            
+            // compute new value of ice surface temperature
+            T_is_new = this->T_from_BC(T_cells_prev,
+                                       dz_cells_new,
+                                       salinity_cells,
+                                       rho_cells,
+                                       0.0,
+                                       true,
+                                       true);
+            
+            // force the convergence of base temperature
+            base_err = std::abs(T_ib_new - T_ib_prev)/(std::abs(T_ib) + (NumType)0.1);
+            
+            if (base_err < prev_base_err)
+            {
+                T_ib_history.push_back(T_ib_new);
+            }
+            else
+            {
+                T_ib_new = sum_vec<NumType>(T_ib_history)/T_ib_history.size();
+            }
+
+            // force the convergence of surface temperature
+            surface_err = std::abs(T_is_new - T_is_prev)/(std::abs(T_is) + (NumType)0.1);
+            
+            if (surface_err < prev_surface_err)
+            {
+                T_is_history.push_back(T_is_new);
+            }
+            else
+            {
+                T_is_new = sum_vec<NumType>(T_is_history)/T_is_history.size();
+            }
+
+            // recalculate ice thickness
+            dz_cells_new = this->Update_dz(dz_cells,
+                                           0.0,
+                                           0.0);
+            
+            // recalculate radiation
+            if (is_radiation)
+            {
+                radiation_nodes = this->Compute_radiation_nodes(F_sw(T_is_new),
+                                                                IceConsts<NumType>::albedo_i,
+                                                                IceConsts<NumType>::i0_i,
+                                                                IceConsts<NumType>::kappa_i,
+                                                                dz_cells_new).first;
+            }
+
+            // assemble matrix and rhs for ice 
+            auto matrix_rhs = this->Assemble_advdiff_martix_rhs(T_cells_prev, T_cells,
+                                                                T_is_new, T_is_prev, T_is,
+                                                                T_ib_new, T_ib_prev, T_ib, 
+                                                                0.0, 0.0, 
+                                                                dz_cells_new, dz_cells,
+                                                                salinity_cells,
+                                                                rho_cells,
+                                                                radiation_nodes,
+                                                                true);
+
+            // solve linear system and update temperatures
+            T_cells_new = thomas_solver<NumType>(std::get<0>(matrix_rhs),
+                                                 std::get<1>(matrix_rhs),
+                                                 std::get<2>(matrix_rhs),
+                                                 std::get<3>(matrix_rhs));
+            
+            // evaluate the error
+            prev_temp_vec = concatenate<NumType>({std::vector<NumType>{T_ib_prev}, T_cells_prev, std::vector<NumType>{T_is_prev}});
+            
+            full_temp_vec = concatenate<NumType>({std::vector<NumType>{T_ib_new}, T_cells_new, std::vector<NumType>{T_is_new}}); 
+
+            current_err = L2_norm(full_temp_vec - prev_temp_vec)/(L2_norm(old_temp_vec) + (NumType)0.1);
+
+            if (current_err < tol)
+                break;
+        }
+
+        std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        return {std::vector<NumType>{T_ib_new}, T_cells_new, std::vector<NumType>{T_is_new}, dz_cells_new};
+    }
+
+    // 1d glacier melting mode
+    template<typename NumType>
+    ThreeVecs<NumType> ThermoSolver<NumType>::glacier1d_melting(NumType T_ib,
+                                                                NumType T_is,
+                                                                const std::vector<NumType>& T_cells,
+                                                                NumType T_is_old,
+                                                                const std::vector<NumType>& dz_cells,
+                                                                const std::vector<NumType>& salinity_cells,
+                                                                const std::vector<NumType>& rho_cells,
+                                                                bool is_radiation,
+                                                                int max_n_its,
+                                                                NumType tol)
+    {
+        NumType T_ib_prev = T_ib;
+        NumType T_ib_new = T_ib;
+        std::vector<NumType> T_cells_new = T_cells;
+        std::vector<NumType> T_cells_prev = T_cells;
+
+        NumType omega_ib = 0.0;
+        NumType omega_is = 0.0;
+
+        std::vector<NumType> dz_cells_new = dz_cells;
+
+        std::vector<NumType> T_ib_history = {T_ib};
+
+        NumType base_err = std::numeric_limits<NumType>::max();
+
+        NumType prev_base_err = base_err;
+
+        std::vector<NumType> radiation_nodes(T_cells.size() + 1);
+
+        NumType current_err = std::numeric_limits<NumType>::max();
+
+        std::vector<NumType> full_temp_vec(T_cells.size() + 1);
+        std::vector<NumType> prev_temp_vec(T_cells.size() + 1);
+        std::vector<NumType> old_temp_vec = concatenate<NumType>(std::vector<NumType>{T_ib}, T_cells);
+
+        int npseudo = 0;
+
+        for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
+        {
+            ++npseudo;
+
+            T_cells_prev = T_cells_new;
+            T_ib_prev = T_ib_new;
+            
+            // compute new value of ice base temperature
+            T_ib_new = this->T_from_BC(T_cells_prev,
+                                       dz_cells_new,
+                                       salinity_cells,
+                                       rho_cells,
+                                       0.0,
+                                       true,
+                                       false);
+            
+            // force the convergence of base temperature
+            base_err = std::abs(T_ib_new - T_ib_prev)/(std::abs(T_ib) + (NumType)0.1);
+            
+            if (base_err < prev_base_err)
+            {
+                T_ib_history.push_back(T_ib_new);
+            }
+            else
+            {
+                T_ib_new = sum_vec<NumType>(T_ib_history)/T_ib_history.size();
+            }
+
+            // compute new value of omega at the base
+            omega_is = this->W_from_BC(T_is,
+                                       T_cells_prev,
+                                       dz_cells_new,
+                                       salinity_cells,
+                                       rho_cells,
+                                       true,
+                                       true);
+            
+
+            // recalculate ice thickness
+            dz_cells_new = this->Update_dz(dz_cells,
+                                           (NumType)0.0,
+                                           omega_is);
+            
+            // recalculate radiation
+            if (is_radiation)
+            {
+                radiation_nodes = this->Compute_radiation_nodes(this->F_sw(T_is),
+                                                                IceConsts<NumType>::albedo_i,
+                                                                IceConsts<NumType>::i0_i,
+                                                                IceConsts<NumType>::kappa_i,
+                                                                dz_cells_new).first;
+            }
+
+            // assemble matrix and rhs for ice 
+            auto matrix_rhs = this->Assemble_advdiff_martix_rhs(T_cells_prev, T_cells,
+                                                                T_is, T_is, T_is_old,
+                                                                T_ib_new, T_ib_prev, T_ib, 
+                                                                omega_ib, omega_is, 
+                                                                dz_cells_new, dz_cells,
+                                                                salinity_cells,
+                                                                rho_cells,
+                                                                radiation_nodes,
+                                                                true);
+            
+            // solve linear system and update temperatures
+            T_cells_new = thomas_solver<NumType>(std::get<0>(matrix_rhs),
+                                                 std::get<1>(matrix_rhs),
+                                                 std::get<2>(matrix_rhs),
+                                                 std::get<3>(matrix_rhs));
+
+            // evaluate the error
+            prev_temp_vec = concatenate<NumType>(std::vector<NumType>{T_ib_prev}, T_cells_prev);
+            full_temp_vec = concatenate<NumType>(std::vector<NumType>{T_ib_prev}, T_cells_prev);
+            current_err = L2_norm(full_temp_vec - prev_temp_vec)/(L2_norm(old_temp_vec) + (NumType)0.1);
+
+            if (current_err < tol)
+                break;
+        }
+
+        std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        return {std::vector<NumType>{T_ib_new}, T_cells_new, dz_cells_new};
     }
 
     // explicit instantiation
