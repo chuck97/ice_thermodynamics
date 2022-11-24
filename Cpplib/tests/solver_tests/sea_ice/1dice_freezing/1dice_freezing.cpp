@@ -55,6 +55,8 @@ void run_model(NumType time_step,
     // create test 1d ice solver class
     SeaIce1D_Solver<NumType> thermo_solver(ice_mesh,
                                            time_step,
+                                           true,
+                                           true,
                                            grad_approx_order,
                                            conductivity_parameterization,
                                            eff_capacity_parameterization,

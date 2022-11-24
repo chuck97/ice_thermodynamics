@@ -7,16 +7,21 @@ namespace icethermo
     SeaIce1D_Snow0D_Solver<NumType>::SeaIce1D_Snow0D_Solver(Mesh<NumType>* mesh_ice_,
                                                             Mesh<NumType>* mesh_snow_,
                                                             NumType time_step_,
+                                                            bool is_radiation_,
+                                                            bool is_sublimation_,
                                                             Kparam ice_k_param_,
                                                             Cparam ice_c_eff_param_,
                                                             Eparam ice_E_param_,
                                                             Lparam ice_L_param_,
                                                             Kparam snow_k_param_,
-                                                            Lparam snow_L_param_):
+                                                            Lparam snow_L_param_,
+                                                            SnowIceTransition si_transition_mode_):
         ThermoSolver<NumType>(mesh_ice_,
                               mesh_snow_,
                               time_step_,
                               ApproxOrder::first,
+                              is_radiation_,
+                              is_sublimation_,
                               ice_k_param_,
                               ice_c_eff_param_,
                               ice_E_param_,
@@ -26,6 +31,9 @@ namespace icethermo
                               Eparam::FreshSnow,
                               snow_L_param_)
     {
+        // store snow->ice transition mode
+        this->si_transition_mode = si_transition_mode_;
+        
         // store input mesh
         this->UpdateMesh(mesh_ice_,
                          mesh_snow_);

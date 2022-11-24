@@ -7,6 +7,8 @@ namespace icethermo
                                         Mesh<NumType>* mesh_snow_,
                                         NumType time_step_,
                                         ApproxOrder grad_approx_order_,
+                                        bool is_radiation_,
+                                        bool is_sublimation_,
                                         Kparam ice_k_param_,
                                         Cparam ice_c_eff_param_,
                                         Eparam ice_E_param_,
@@ -34,6 +36,9 @@ namespace icethermo
         this->F_lh = [](NumType T){return (NumType)0.0;};
         this->prec_rate = (NumType)0.0;
         this->atm_temp = (NumType)0.0;
+        this->is_radiation = is_radiation_;
+        this->is_sublimation = is_sublimation_;
+
     }
 
     template<typename NumType>
@@ -567,7 +572,6 @@ namespace icethermo
                                                                 const std::vector<NumType>& dz_cells,
                                                                 const std::vector<NumType>& salinity_cells,
                                                                 const std::vector<NumType>& rho_cells,
-                                                                bool is_radiation,
                                                                 int max_n_its,
                                                                 NumType tol)
     {
@@ -592,6 +596,8 @@ namespace icethermo
         std::vector<NumType> prev_temp_vec(T_cells.size() + 1);
         std::vector<NumType> old_temp_vec = concatenate<NumType>(T_cells, std::vector<NumType>{T_is});
 
+        NumType omega_is = (NumType)0.0; 
+
         int npseudo = 0;
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
@@ -610,13 +616,18 @@ namespace icethermo
                                        rho_cells,
                                        true,
                                        false);
+
+            // add sublimation
+            omega_is = (this->is_sublimation) ?
+                -this->F_lh(T_is_new)/(rho_cells.back()*GenConsts<NumType>::L_s) :
+                (NumType)0.0;
             
             // compute new value of ice surface temperature
             T_is_new = this->T_from_BC(T_cells_prev,
                                        dz_cells_new,
                                        salinity_cells,
                                        rho_cells,
-                                       0.0,
+                                       omega_is,
                                        true,
                                        true);
 
@@ -635,10 +646,10 @@ namespace icethermo
             // recalculate ice thickness
             dz_cells_new = this->Update_dz(dz_cells,
                                            omega_ib,
-                                           0.0);
+                                           omega_is);
             
             // recalculate radiation
-            if (is_radiation)
+            if (this->is_radiation)
             {
                 radiation_nodes = this->Compute_radiation_nodes(F_sw(T_is_new),
                                                                 IceConsts<NumType>::albedo_i,
@@ -651,7 +662,7 @@ namespace icethermo
             auto matrix_rhs = this->Assemble_advdiff_martix_rhs(T_cells_prev, T_cells,
                                                                 T_is_new, T_is_prev, T_is,
                                                                 T_ib, T_ib, T_ib, 
-                                                                omega_ib, 0.0, 
+                                                                omega_ib, omega_is, 
                                                                 dz_cells_new, dz_cells,
                                                                 salinity_cells,
                                                                 rho_cells,
@@ -688,7 +699,6 @@ namespace icethermo
                                                              const std::vector<NumType>& dz_cells,
                                                              const std::vector<NumType>& salinity_cells,
                                                              const std::vector<NumType>& rho_cells,
-                                                             bool is_radiation,
                                                              int max_n_its,
                                                              NumType tol)
     {
@@ -703,6 +713,8 @@ namespace icethermo
         std::vector<NumType> radiation_nodes(T_cells.size() + 1);
 
         NumType current_err = std::numeric_limits<NumType>::max();
+
+        NumType omega_is_sublim;
 
         int npseudo = 0;
 
@@ -729,14 +741,19 @@ namespace icethermo
                                        rho_cells,
                                        true,
                                        true);
+            
+            // add sublimation
+            omega_is_sublim = (this->is_sublimation) ?
+                -this->F_lh(T_is)/(rho_cells.back()*GenConsts<NumType>::L_s) :
+                (NumType)0.0;
 
             // recalculate ice thickness
             dz_cells_new = this->Update_dz(dz_cells,
                                            omega_ib,
-                                           omega_is);
+                                           omega_is + omega_is_sublim);
             
             // recalculate radiation
-            if (is_radiation)
+            if (this->is_radiation)
             {
                 radiation_nodes = this->Compute_radiation_nodes(this->F_sw(T_is),
                                                                 IceConsts<NumType>::albedo_i,
@@ -749,7 +766,7 @@ namespace icethermo
             auto matrix_rhs = this->Assemble_advdiff_martix_rhs(T_cells_prev, T_cells,
                                                                 T_is, T_is, T_is_old,
                                                                 T_ib, T_ib, T_ib, 
-                                                                omega_ib, omega_is, 
+                                                                omega_ib, omega_is + omega_is_sublim, 
                                                                 dz_cells_new, dz_cells,
                                                                 salinity_cells,
                                                                 rho_cells,
@@ -786,7 +803,6 @@ namespace icethermo
                                                                                                     NumType rho_s,
                                                                                                     NumType precipitation_rate,
                                                                                                     NumType atm_temperature,
-                                                                                                    bool is_ice_radiation,
                                                                                                     int max_n_its,
                                                                                                     NumType tol)
     {
@@ -817,6 +833,9 @@ namespace icethermo
 
         std::vector<NumType> radiation_nodes_ice(T_i_cells.size() + 1);
 
+        NumType omega_ss_sublim;
+        NumType omega_interface = (NumType)0.0;
+
         int npseudo = 0;
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
@@ -840,12 +859,17 @@ namespace icethermo
             // recalculate conductivity of snow
             NumType k_s = Params<NumType>::Conductivity(this->snow_k_param, T_ss_prev, (NumType)0.0, rho_s);
 
+            // add sublimation 
+            omega_ss_sublim = (this->is_sublimation) ?
+                -this->F_lh(T_ss_new)/(rho_s*GenConsts<NumType>::L_s) :
+                (NumType)0.0;
+
             // compute new value of snow surface temperature
             T_ss_new = this->T_from_BC_0D(T_is_prev,
                                           h_s_new,
                                           k_s,
                                           (NumType)0.0,
-                                          omega_ss,
+                                          omega_ss + omega_ss_sublim,
                                           rho_s,
                                           false,
                                           true);
@@ -862,18 +886,24 @@ namespace icethermo
                 T_ss_new = sum_vec<NumType>(T_ss_history)/T_ss_history.size();
             }
 
+            // compute ice-snow interface omega value
+            if (this->si_transition_mode == SnowIceTransition::SlowCompaction)
+            {
+                omega_interface = ((NumType)1.0/GenConsts<NumType>::si_trans_time_scale)*h_s_new;
+            }
+
             // recalculate ice thickness
             dz_i_cells_new = this->Update_dz(dz_i_cells,
                                              omega_ib,
-                                             (NumType)0.0);
+                                             omega_interface);
 
             // recalculate snow thickness
             h_s_new = this->Update_dz_0D(thickness_s,
-                                         (NumType)0.0,
-                                         omega_ss);
+                                         omega_interface,
+                                         omega_ss + omega_ss_sublim);
 
             // recalculate ice radiation
-            if (is_ice_radiation)
+            if (this->is_radiation)
             {
                 radiation_nodes_ice = this->Compute_radiation_nodes(this->F_sw(T_ss_new),
                                                                     IceConsts<NumType>::albedo_i,
@@ -938,7 +968,6 @@ namespace icethermo
                                                                                           NumType rho_s,
                                                                                           NumType precipitation_rate,
                                                                                           NumType atm_temperature,
-                                                                                          bool is_ice_radiation,
                                                                                           int max_n_its,
                                                                                           NumType tol)
     {
@@ -964,6 +993,9 @@ namespace icethermo
         std::vector<NumType> old_temp_vec = concatenate<NumType>({T_i_cells, std::vector<NumType>{T_is}, std::vector<NumType>{T_ss_old}});
 
         std::vector<NumType> radiation_nodes_ice(T_i_cells.size() + 1);
+
+        NumType omega_ss_sublim;
+        NumType omega_interface = (NumType)0.0;
 
         int npseudo = 0;
 
@@ -995,21 +1027,32 @@ namespace icethermo
                                           false,
                                           true);
             
+            // add sublimation 
+            omega_ss_sublim = (this->is_sublimation) ?
+                -this->F_lh((NumType)0.0)/(rho_s*GenConsts<NumType>::L_s) :
+                (NumType)0.0;
+            
             if (atm_temperature < (NumType)0.0)
                 omega_ss -= precipitation_rate*WaterConsts<NumType>::rho_w/SnowConsts<NumType>::rho_s;
+
+            // compute ice-snow interface omega value
+            if (this->si_transition_mode == SnowIceTransition::SlowCompaction)
+            {
+                omega_interface = ((NumType)1.0/GenConsts<NumType>::si_trans_time_scale)*h_s_new;
+            }
 
             // recalculate ice thickness
             dz_i_cells_new = this->Update_dz(dz_i_cells,
                                              omega_ib,
-                                             (NumType)0.0);
+                                             omega_interface);
 
             // recalculate snow thickness
             h_s_new = this->Update_dz_0D(thickness_s,
-                                         (NumType)0.0,
-                                         omega_ss);
+                                         omega_interface,
+                                         omega_ss + omega_ss_sublim);
 
             // recalculate ice radiation
-            if (is_ice_radiation)
+            if (this->is_radiation)
             {
                 radiation_nodes_ice = this->Compute_radiation_nodes(this->F_sw((NumType)0.0),
                                                                     IceConsts<NumType>::albedo_i,
@@ -1069,7 +1112,6 @@ namespace icethermo
                                                                 const std::vector<NumType>& dz_cells,
                                                                 const std::vector<NumType>& salinity_cells,
                                                                 const std::vector<NumType>& rho_cells,
-                                                                bool is_radiation,
                                                                 int max_n_its,
                                                                 NumType tol)
     {
@@ -1103,6 +1145,8 @@ namespace icethermo
         std::vector<NumType> prev_temp_vec(T_cells.size() + 2);
         std::vector<NumType> old_temp_vec = concatenate<NumType>({std::vector<NumType>{T_ib}, T_cells, std::vector<NumType>{T_is}});
 
+        NumType omega_ss;
+
         int npseudo = 0;
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
@@ -1124,13 +1168,17 @@ namespace icethermo
                                        true,
                                        false);
             
+            // add sublimation
+            omega_ss = (this->is_sublimation) ? 
+                -this->F_lh(T_is_new)/(rho_cells.back()*GenConsts<NumType>::L_s) :
+                (NumType)0.0;
             
             // compute new value of ice surface temperature
             T_is_new = this->T_from_BC(T_cells_prev,
                                        dz_cells_new,
                                        salinity_cells,
                                        rho_cells,
-                                       0.0,
+                                       omega_ss,
                                        true,
                                        true);
             
@@ -1161,10 +1209,10 @@ namespace icethermo
             // recalculate ice thickness
             dz_cells_new = this->Update_dz(dz_cells,
                                            0.0,
-                                           0.0);
+                                           omega_ss);
             
             // recalculate radiation
-            if (is_radiation)
+            if (this->is_radiation)
             {
                 radiation_nodes = this->Compute_radiation_nodes(F_sw(T_is_new),
                                                                 IceConsts<NumType>::albedo_i,
@@ -1177,7 +1225,7 @@ namespace icethermo
             auto matrix_rhs = this->Assemble_advdiff_martix_rhs(T_cells_prev, T_cells,
                                                                 T_is_new, T_is_prev, T_is,
                                                                 T_ib_new, T_ib_prev, T_ib, 
-                                                                0.0, 0.0, 
+                                                                0.0, omega_ss, 
                                                                 dz_cells_new, dz_cells,
                                                                 salinity_cells,
                                                                 rho_cells,
@@ -1214,7 +1262,6 @@ namespace icethermo
                                                                 const std::vector<NumType>& dz_cells,
                                                                 const std::vector<NumType>& salinity_cells,
                                                                 const std::vector<NumType>& rho_cells,
-                                                                bool is_radiation,
                                                                 int max_n_its,
                                                                 NumType tol)
     {
@@ -1241,6 +1288,8 @@ namespace icethermo
         std::vector<NumType> full_temp_vec(T_cells.size() + 1);
         std::vector<NumType> prev_temp_vec(T_cells.size() + 1);
         std::vector<NumType> old_temp_vec = concatenate<NumType>(std::vector<NumType>{T_ib}, T_cells);
+
+        NumType omega_is_sublim;
 
         int npseudo = 0;
 
@@ -1280,15 +1329,19 @@ namespace icethermo
                                        rho_cells,
                                        true,
                                        true);
-            
+
+            // add sublimation
+            omega_is_sublim = (this->is_sublimation) ? 
+                -this->F_lh(T_is)/(rho_cells.back()*GenConsts<NumType>::L_s) :
+                (NumType)0.0;
 
             // recalculate ice thickness
             dz_cells_new = this->Update_dz(dz_cells,
                                            (NumType)0.0,
-                                           omega_is);
+                                           omega_is + omega_is_sublim);
             
             // recalculate radiation
-            if (is_radiation)
+            if (this->is_radiation)
             {
                 radiation_nodes = this->Compute_radiation_nodes(this->F_sw(T_is),
                                                                 IceConsts<NumType>::albedo_i,
@@ -1301,7 +1354,7 @@ namespace icethermo
             auto matrix_rhs = this->Assemble_advdiff_martix_rhs(T_cells_prev, T_cells,
                                                                 T_is, T_is, T_is_old,
                                                                 T_ib_new, T_ib_prev, T_ib, 
-                                                                omega_ib, omega_is, 
+                                                                omega_ib, omega_is + omega_is_sublim, 
                                                                 dz_cells_new, dz_cells,
                                                                 salinity_cells,
                                                                 rho_cells,

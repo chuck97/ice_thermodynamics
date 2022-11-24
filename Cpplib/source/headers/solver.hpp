@@ -18,6 +18,13 @@ namespace icethermo
         first, 
         second
     };
+
+    // snow-ice transition strategy
+    enum class SnowIceTransition
+    {
+        None,
+        SlowCompaction
+    };
     
     // base thermodynamics solver class
     template <typename NumType>
@@ -29,6 +36,8 @@ namespace icethermo
                      Mesh<NumType>* mesh_snow_,
                      NumType time_step_,
                      ApproxOrder grad_approx_order_ = ApproxOrder::first,
+                     bool is_radiation = true,
+                     bool is_sublimation_ = true,
                      Kparam ice_k_param_ = Kparam::FreshIce,
                      Cparam ice_c_eff_param_ = Cparam::FreshIce,
                      Eparam ice_E_param_ = Eparam::FreshIce,
@@ -81,8 +90,15 @@ namespace icethermo
         Eparam snow_E_param;
         Lparam snow_L_param;
 
+        // switchers for radiation and sublimation
+        bool is_radiation;
+        bool is_sublimation;
+
         // the order of gradient approximation
         ApproxOrder grad_approx_order;
+
+        // snow->ice transition mode
+        SnowIceTransition si_transition_mode;
 
     protected:
         // functions for checking mesh consistency
@@ -209,7 +225,6 @@ namespace icethermo
                                              const std::vector<NumType>& dz_cells,
                                              const std::vector<NumType>& salinity_cells,
                                              const std::vector<NumType>& rho_cells,
-                                             bool is_radiation = true,
                                              int max_n_its = 50,
                                              NumType tol = 1e-6);
         
@@ -229,7 +244,6 @@ namespace icethermo
                                           const std::vector<NumType>& dz_cells,
                                           const std::vector<NumType>& salinity_cells,
                                           const std::vector<NumType>& rho_cells,
-                                          bool is_radiation = true,
                                           int max_n_its = 50,
                                           NumType tol = 1e-6);
 
@@ -257,7 +271,6 @@ namespace icethermo
                                                                                  NumType rho_s,
                                                                                  NumType precipitation_rate,
                                                                                  NumType atm_temperature,
-                                                                                 bool is_ice_radiation = true,
                                                                                  int max_n_its = 50,
                                                                                  NumType tol = 1e-6);
         
@@ -284,7 +297,6 @@ namespace icethermo
                                                                        NumType rho_s,
                                                                        NumType precipitation_rate,
                                                                        NumType atm_temperature,
-                                                                       bool is_ice_radiation = true,
                                                                        int max_n_its = 50,
                                                                        NumType tol = 1e-6);
         
@@ -304,7 +316,6 @@ namespace icethermo
                                              const std::vector<NumType>& dz_cells,
                                              const std::vector<NumType>& salinity_cells,
                                              const std::vector<NumType>& rho_cells,
-                                             bool is_radiation = true,
                                              int max_n_its = 50,
                                              NumType tol = 1e-6);
 
@@ -324,7 +335,6 @@ namespace icethermo
                                              const std::vector<NumType>& dz_cells,
                                              const std::vector<NumType>& salinity_cells,
                                              const std::vector<NumType>& rho_cells,
-                                             bool is_radiation = true,
                                              int max_n_its = 50,
                                              NumType tol = 1e-6);
 
@@ -342,6 +352,8 @@ namespace icethermo
         // constructor
         SeaIce1D_Solver(Mesh<NumType>* mesh_ice_,
                         NumType time_step_,
+                        bool is_radiation = true,
+                        bool is_sublimation = true,
                         ApproxOrder grad_approx_order_ = ApproxOrder::first,
                         Kparam ice_k_param_ = Kparam::FreshIce,
                         Cparam ice_c_eff_param_ = Cparam::FreshIce,
@@ -375,12 +387,15 @@ namespace icethermo
         SeaIce1D_Snow0D_Solver(Mesh<NumType>* mesh_ice_,
                                Mesh<NumType>* mesh_snow_,
                                NumType time_step,
+                               bool is_radiation_ = true,
+                               bool is_sublimation_ = true,
                                Kparam ice_k_param_ = Kparam::FreshIce,
                                Cparam ice_c_eff_param_ = Cparam::FreshIce,
                                Eparam ice_E_param_ = Eparam::FreshIce,
                                Lparam ice_L_param_ = Lparam::FreshIce,
                                Kparam snow_k_param_ = Kparam::FreshSnow,
-                               Lparam snow_L_param_ = Lparam::FreshSnow);
+                               Lparam snow_L_param_ = Lparam::FreshSnow,
+                               SnowIceTransition si_transition_mode_ = SnowIceTransition::None);
 
         // update ocean salinity
         void UpdateOceanSalinity(NumType ocn_sal_);
@@ -407,6 +422,8 @@ namespace icethermo
         // constructor
         Glacier1D_Solver(Mesh<NumType>* mesh_ice_,
                          NumType time_step_,
+                         bool is_radiation_ = true,
+                         bool is_sublimation_ = true,
                          ApproxOrder grad_approx_order_ = ApproxOrder::first,
                          Kparam ice_k_param_ = Kparam::FreshIce,
                          Cparam ice_c_eff_param_ = Cparam::FreshIce,

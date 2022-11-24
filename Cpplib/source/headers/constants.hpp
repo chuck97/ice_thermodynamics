@@ -56,6 +56,8 @@ namespace icethermo
         static constexpr NumType emissivity = 0.99;
         static constexpr NumType C_sh = 1e-3;
         static constexpr NumType C_lh = 1e-3;
+        static constexpr NumType L_s = 2.83e6;
+        static constexpr NumType si_trans_time_scale = 1e7;
     };
 
     template<typename NumType>
@@ -97,7 +99,6 @@ namespace icethermo
         static constexpr NumType rho_s = 330.0;
         static constexpr NumType k0_s = 0.31;
         static constexpr NumType L_f0 = 3.33e5;
-        static constexpr NumType L_s0 = 2.83e6;
         static constexpr NumType kappa_s = 10;
         static constexpr NumType albedo_s = 0.8;
         static constexpr NumType i0_s = 0.08;

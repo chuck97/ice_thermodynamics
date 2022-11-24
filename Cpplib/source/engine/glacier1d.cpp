@@ -6,6 +6,8 @@ namespace icethermo
     template <typename NumType>
     Glacier1D_Solver<NumType>::Glacier1D_Solver(Mesh<NumType>* mesh_ice_,
                                                 NumType time_step_,
+                                                bool is_radiation_,
+                                                bool is_sublimation_,
                                                 ApproxOrder grad_approx_order_,
                                                 Kparam ice_k_param_,
                                                 Cparam ice_c_eff_param_,
@@ -15,6 +17,8 @@ namespace icethermo
                               NULL,
                               time_step_,
                               grad_approx_order_,
+                              is_radiation_,
+                              is_sublimation_,
                               ice_k_param_,
                               ice_c_eff_param_,
                               ice_E_param_,
