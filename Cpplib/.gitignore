@@ -2,3 +2,4 @@ build/
 json/
 .vscode/
 CMakeLists.txt.user
+*.mp4

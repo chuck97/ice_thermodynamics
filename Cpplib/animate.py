@@ -30,7 +30,6 @@ if __name__ == "__main__":
             
     class CustomFormatter(argparse.HelpFormatter):
         def _format_args(self, action, default_metavar):
-            print(action.__class__ is CustomAppend)
             if action.__class__ is CustomAppend:
                 return 'INPUT ([ip ICE_PREFIX] [sp SNOW_PREFIX])'
             else:

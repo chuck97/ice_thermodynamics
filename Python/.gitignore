@@ -3,6 +3,5 @@ Validation/
 utils/__pycache__/
 media/
 test*/
-*.mp4
 
 !Validation/full_data.csv

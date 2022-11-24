@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json as js
 from glob import glob
+import pathlib
 
 # == общие ==
 mu = 0.054
@@ -1133,6 +1134,8 @@ def main_process(time_step, time_end,
     it = 0
         
     if json_output_folder is not None:
+        
+        pathlib.Path(json_output_folder).mkdir(exist_ok=True)
         digits = len(str(time_end//time_step + 1))
         json_ice = \
         {
@@ -1219,7 +1222,7 @@ def main_process(time_step, time_end,
                 if sum(dzs_old) != 0:
                     dzs_new = Update_dz(dzs_old, 0.0, -p(time)*rho_w/rho_s, time_step)
                 else:
-                    dzs_new = np.full(Ns, time_step*p(time)*rho_w/rho_s/Ns)
+                    dzs_new = (np.full(Ns, time_step*p(time)*rho_w/rho_s/Ns) if Ns != 0 else np.array([]))
                     
                 if sum(dzs_new) >= snow_thickness_threshold:
                     # инициализируем температуру появившегося снега
@@ -1275,6 +1278,7 @@ def main_process(time_step, time_end,
                                                 axis=0)
             
         if json_output_folder is not None:
+            
             json_ice = \
             {
                 "cells data" : 
@@ -1290,7 +1294,6 @@ def main_process(time_step, time_end,
                     "up_temperature" : Tis_new
                 }
             }
-        
             with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_ice_prefix, it, digits), 'w') as file:
                 js.dump(json_ice, file)
             
@@ -1310,7 +1313,6 @@ def main_process(time_step, time_end,
                         "up_temperature" : Tsa_new
                     }
                 }
-
                 with open('{}/{}{:0>{}}.json'.format(json_output_folder, json_snow_prefix, it, digits), 'w') as file:
                     js.dump(json_snow, file)
                     
