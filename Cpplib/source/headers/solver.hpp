@@ -49,10 +49,11 @@ namespace icethermo
         Mesh<NumType>* mesh_ice;
         Mesh<NumType>* mesh_snow;
 
-        // upwards, downwards and short-wave radiation forcing, precipitation rate, atmosphere temperature
+        // upwards, downwards, short-wave radiation, latent heat flux, precipitation rate, atmosphere temperature
         FuncPtr<NumType> F_up;
         FuncPtr<NumType> F_down;
         FuncPtr<NumType> F_sw;
+        FuncPtr<NumType> F_lh;
         NumType prec_rate;
         NumType atm_temp;
 
@@ -89,19 +90,23 @@ namespace icethermo
                                           Mesh<NumType>* mesh_snow) = 0;
 
     public:
-        // update forcing
-        void UpdateForcing(FuncPtr<NumType> F_up_ = [](NumType T){return (NumType)0.0;},
-                           FuncPtr<NumType> F_down_ = [](NumType T){return (NumType)0.0;},
-                           FuncPtr<NumType> F_sw_ = [](NumType T){return (NumType)0.0;});
+        // update upper (atmosphere) flux
+        void UpdateUpperFlux(FuncPtr<NumType> F_up_);
+
+        // update lower (ocean/soil flux)
+        void UpdateLowerFlux(FuncPtr<NumType> F_down_);
+
+        // update short-wave radiation (used to compute penetrating radiation)
+        void UpdateShortWaveRadiation(FuncPtr<NumType> F_sw_);
+
+        // update latent heat flux (used to compute sublimation)
+        void UpdateLatentHeatFlux(FuncPtr<NumType> F_lh_);
         
-        // update precipitation rate (mm s-1)
+        // update precipitation rate (m s-1)
         void UpdatePrecipitationRate(NumType prec_rate_mm_sm1_);
 
         // update atmosphere temperature (deg C)
         void UpdateAtmosphereTemperature(NumType atm_temp_);
-
-        // update ocean salinity
-        void UpdateOceanSalinity(NumType ocn_sal_);
         
         // update mesh
         virtual void UpdateMesh(Mesh<NumType>* mesh_ice_,
@@ -343,7 +348,10 @@ namespace icethermo
                         Eparam ice_E_param_ = Eparam::FreshIce,
                         Lparam ice_L_param_ = Lparam::FreshIce);
 
-        // one evaluation step
+        // update ocean salinity
+        void UpdateOceanSalinity(NumType ocn_sal_);
+
+        // one-step evaluation
         void Evaluate() override;
 
     private:
@@ -373,7 +381,11 @@ namespace icethermo
                                Lparam ice_L_param_ = Lparam::FreshIce,
                                Kparam snow_k_param_ = Kparam::FreshSnow,
                                Lparam snow_L_param_ = Lparam::FreshSnow);
+
+        // update ocean salinity
+        void UpdateOceanSalinity(NumType ocn_sal_);
         
+        // one-step evaluation
         void Evaluate() override;
 
     private:

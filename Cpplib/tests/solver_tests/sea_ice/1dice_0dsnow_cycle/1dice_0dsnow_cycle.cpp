@@ -145,7 +145,7 @@ void run_model(NumType time_step,
                                           lowest_prec_rate,
                                           highest_prec_rate,
                                           step_num*time_step);
-        thermo_solver.UpdateForcing
+        thermo_solver.UpdateUpperFlux
         (
             [&step_num,
              &time_step,

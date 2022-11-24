@@ -27,6 +27,13 @@ namespace icethermo
         std::cout << "1D sea-ice solver class constructed!" << std::endl;
     } 
 
+    // update ocean salinity
+    template<typename NumType>
+    void SeaIce1D_Solver<NumType>::UpdateOceanSalinity(NumType ocn_sal_)
+    {
+        *(this->So) = ocn_sal_;
+    }
+
     // 1D ice solver evaluation
     template <typename NumType>
     void SeaIce1D_Solver<NumType>::Evaluate()

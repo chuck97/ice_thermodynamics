@@ -91,7 +91,7 @@ void run_model(NumType time_step,
     for (int step_num = 1; step_num < num_steps + 1; ++step_num)
     {
         // update atmospheric flux (it is not necessary in stationary case)
-        thermo_solver.UpdateForcing(atm_flux<NumType>);
+        thermo_solver.UpdateUpperFlux(atm_flux<NumType>);
 
         // update ocean salinity to 30 psu
         thermo_solver.UpdateOceanSalinity((NumType)30.0);

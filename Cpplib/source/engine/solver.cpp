@@ -28,16 +28,36 @@ namespace icethermo
         this->snow_c_eff_param = snow_c_eff_param_;
         this->snow_E_param = snow_E_param_;
         this->snow_L_param = snow_L_param_;
+        this->F_up = [](NumType T){return (NumType)0.0;};
+        this->F_down = [](NumType T){return (NumType)0.0;};
+        this->F_sw = [](NumType T){return (NumType)0.0;};
+        this->F_lh = [](NumType T){return (NumType)0.0;};
+        this->prec_rate = (NumType)0.0;
+        this->atm_temp = (NumType)0.0;
     }
 
     template<typename NumType>
-    void ThermoSolver<NumType>::UpdateForcing(FuncPtr<NumType> F_up_,
-                                              FuncPtr<NumType> F_down_,
-                                              FuncPtr<NumType> F_sw_)
+    void ThermoSolver<NumType>::UpdateUpperFlux(FuncPtr<NumType> F_up_)
     {
         this->F_up = F_up_;
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateLowerFlux(FuncPtr<NumType> F_down_)
+    {
         this->F_down = F_down_;
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateShortWaveRadiation(FuncPtr<NumType> F_sw_)
+    {
         this->F_sw = F_sw_;
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateLatentHeatFlux(FuncPtr<NumType> F_lh_)
+    {
+        this->F_lh = F_lh_;
     }
 
     template<typename NumType>
@@ -52,11 +72,6 @@ namespace icethermo
         this->atm_temp = atm_temp_;
     }
 
-    template<typename NumType>
-    void ThermoSolver<NumType>::UpdateOceanSalinity(NumType ocn_sal_)
-    {
-        *(this->So) = ocn_sal_;
-    }
 
     template<typename NumType>
     std::vector<NumType> ThermoSolver<NumType>::Update_dz(const std::vector<NumType>& dz_cells_old,

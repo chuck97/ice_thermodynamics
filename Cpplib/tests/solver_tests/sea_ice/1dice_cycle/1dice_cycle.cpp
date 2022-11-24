@@ -115,7 +115,7 @@ void run_model(NumType time_step,
     for (int step_num = 0; step_num < num_steps + 1; ++step_num)
     {
         // update atmospheric flux
-        thermo_solver.UpdateForcing
+        thermo_solver.UpdateUpperFlux
         (
             [&step_num,
              &time_step,

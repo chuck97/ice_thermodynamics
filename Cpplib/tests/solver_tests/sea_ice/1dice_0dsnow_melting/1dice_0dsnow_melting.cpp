@@ -99,7 +99,7 @@ void run_model(NumType time_step,
     for (int step_num = 1; step_num < num_steps + 1; ++step_num)
     {
         // update atmospheric flux (it is not necessary in stationary case)
-        thermo_solver.UpdateForcing
+        thermo_solver.UpdateUpperFlux
         (
             [&melt_time_end, &step_num, &time_step](NumType temp)
             {
