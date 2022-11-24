@@ -86,7 +86,7 @@ int main()
 {
     // model launcher (you can choose float or double)
     run_model<double>(3600.0,                // time step (seconds)
-                      250,                   // number of time steps
+                      1000,                  // number of time steps
                       1,                     // output frequency N (every N-th step would be written to file)
                       10,                    // number of uniform sigma-cells
                       2.0,                   // initial ice thickness (meters)
