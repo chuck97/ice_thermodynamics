@@ -887,7 +887,7 @@ namespace icethermo
             }
 
             // compute ice-snow interface omega value
-            if (this->si_transition_mode == SnowIceTransition::SlowCompaction)
+            if (this->si_transition_mode == SnowIceTransition::SnowAging)
             {
                 omega_interface = ((NumType)1.0/GenConsts<NumType>::si_trans_time_scale)*h_s_new;
             }
@@ -1036,7 +1036,7 @@ namespace icethermo
                 omega_ss -= precipitation_rate*WaterConsts<NumType>::rho_w/SnowConsts<NumType>::rho_s;
 
             // compute ice-snow interface omega value
-            if (this->si_transition_mode == SnowIceTransition::SlowCompaction)
+            if (this->si_transition_mode == SnowIceTransition::SnowAging)
             {
                 omega_interface = ((NumType)1.0/GenConsts<NumType>::si_trans_time_scale)*h_s_new;
             }
