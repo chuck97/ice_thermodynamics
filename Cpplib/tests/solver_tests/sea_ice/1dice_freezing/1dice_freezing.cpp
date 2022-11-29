@@ -66,8 +66,11 @@ void run_model(NumType time_step,
     // update ocean salinity to 30 psu
     thermo_solver.UpdateOceanSalinity((NumType)30.0);
 
+    // write initial mesh to JSON file
+    ice_mesh->SaveJSON((std::string)"./" + output_prefix, 0);
+
     // time stepping
-    for (int step_num = 0; step_num < num_steps + 1; ++step_num)
+    for (int step_num = 1; step_num < num_steps + 1; ++step_num)
     {
         // update atmospheric flux (it is not necessary in stationary case)
         thermo_solver.UpdateUpperFlux(atm_flux<NumType>);
