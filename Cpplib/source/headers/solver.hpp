@@ -23,7 +23,7 @@ namespace icethermo
     enum class SnowIceTransition
     {
         None,
-        SlowCompaction
+        SnowAging
     };
     
     // base thermodynamics solver class
