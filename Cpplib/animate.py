@@ -40,6 +40,8 @@ parser.add_argument('-i', '--input', action=CustomAppend, nargs='+',
                     help='Specifies input with prefixes')
 parser.add_argument('-flt', '--floating', action='store_true',
                     help='Enable floating (ground level will be sea level)')
+parser.add_argument('-l', '--labels', nargs='*',
+                    help='Labels for the output plots')
 parser.add_argument('-o', '--output', default='output.mp4',
                     help='Name for the output file (default format is .mp4).')
 
@@ -54,4 +56,5 @@ for proc_args in args.input:
     else:
         processes.append(ue.get_process_from_json_folder(path=proc_args['path'], snow_prefix=proc_args['sp']))
 
-uv.animate(processes, floating=args.floating, savepath=(args.output if '.' in args.output else args.output + '.mp4'))
+uv.animate(processes, floating=args.floating, names=args.labels,
+           savepath=(args.output if '.' in args.output else args.output + '.mp4'))
