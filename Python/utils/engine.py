@@ -251,7 +251,7 @@ def get_process_from_json_folder(path, ice_prefix=None, snow_prefix=None):
             time = int(snow_path[snow_path.rfind('/') + len(snow_prefix) + 1:-5])
             with open(snow_path) as json_snow:
                 json_pairs.setdefault(time, {})['snow'] = js.load(json_snow)
-        snow_cells_num = max(len(obj["snow"]["cells_thickness_array"]) for obj in json_pairs.values())
+        snow_cells_num = max(len(obj["snow"]["cells_thickness_array"]) for obj in json_pairs.values() if "snow" in obj)
 
     ice_dz_history = []
     snow_dz_history = []
@@ -289,8 +289,8 @@ def get_process_from_json_folder(path, ice_prefix=None, snow_prefix=None):
             sa_temp_history.append(dict_snow["single data"]["up_temperature"])
         else:
             snow_presence_history.append(False)
-            snow_dz_history.append([0.0]*ice_cells_num)
-            snow_temp_history.append([np.nan]*ice_cells_num)
+            snow_dz_history.append([0.0]*snow_cells_num)
+            snow_temp_history.append([np.nan]*snow_cells_num)
             sa_temp_history.append(np.nan)
         
     return Process(dzi_arr_init=np.array(ice_dz_history),
@@ -1136,7 +1136,7 @@ def main_process(time_step, time_end,
     if json_output_folder is not None:
         
         pathlib.Path(json_output_folder).mkdir(exist_ok=True)
-        digits = len(str(time_end//time_step + 1))
+        digits = int(np.ceil(np.log10(time_end//time_step)))
         json_ice = \
         {
             "cells data" : 

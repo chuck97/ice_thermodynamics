@@ -31,6 +31,7 @@ def get_Z(process, rho_s, rho_w, floating=True):
     Z_i = np.append(Z_i, Z_i[:, [-1]], axis=1)
     Z_i[:, 1:-1] -= dzi/2
     
+#     print(Z_i[:, [-1]], dzs)
     Z_s = np.concatenate((Z_i[:, [-1]], dzs), axis=1).cumsum(axis=1)
     Z_s = np.append(Z_s, Z_s[:, [-1]], axis=1)
     Z_s[:, 1:-1] -= dzs/2

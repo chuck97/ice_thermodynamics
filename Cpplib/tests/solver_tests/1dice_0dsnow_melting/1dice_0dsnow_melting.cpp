@@ -145,8 +145,8 @@ int main()
                       0.1,                 // initial snow thickness (meters)
                       -15.0,               // initial ice-snow interface temperature (deg Cel)
                       -20.0,               // initial snow surface temperature (deg Cel)
-                      "ice_mesh",          // output ice prefix
-                      "snow_mesh",         // output snow prefix
+                      "cpp_ice_mesh",          // output ice prefix
+                      "cpp_snow_mesh",         // output snow prefix
                       Kparam::BubblyBrine, // ice conductivity parameterization
                       Cparam::SeaIce,      // ice effective capacity parameterization
                       Eparam::SeaIce,      // ice enthalpy parameterization
