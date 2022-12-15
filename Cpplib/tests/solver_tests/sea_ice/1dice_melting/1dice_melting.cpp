@@ -67,6 +67,7 @@ void run_model(NumType time_step,
                                            time_step, 
                                            true,
                                            true,
+                                           true,
                                            grad_approx_order,
                                            conductivity_parameterization,
                                            eff_capacity_parameterization,
@@ -77,7 +78,9 @@ void run_model(NumType time_step,
     thermo_solver.UpdateOceanSalinity((NumType)30.0);
 
     // write initial mesh to JSON file
+#ifdef USE_JSON_OUTPUT
     ice_mesh->SaveJSON((std::string)"./" + output_prefix, 0);
+#endif
 
     // time stepping
     for (int step_num = 1; step_num < num_steps + 1; ++step_num)
@@ -97,7 +100,9 @@ void run_model(NumType time_step,
         // write mesh to file
         if (step_num % output_frequency == 0)
         {
+#ifdef USE_JSON_OUTPUT
             ice_mesh->SaveJSON(std::string("./") + output_prefix, step_num);
+#endif
         }
     }
 

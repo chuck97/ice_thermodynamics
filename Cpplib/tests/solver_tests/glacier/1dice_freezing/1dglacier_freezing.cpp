@@ -12,7 +12,7 @@ NumType atm_flux(NumType temp)
            AirConsts<NumType>::cp_a*
            GenConsts<NumType>::C_sh*
            (NumType)15.0*
-           ((NumType)-30.0 - temp);
+           ((NumType)-1.0);
 }
 
 // model launcher
@@ -45,16 +45,17 @@ void run_model(NumType time_step,
     // initialize mandatory values
     for (int i = 0; i < n_cells; ++i)
     {
-       (*initial_temp_cells)[i] = fusion_temp + (NumType)1.0*(i + (NumType)0.5)/(n_cells)*((NumType)-10.0 - fusion_temp);
+       (*initial_temp_cells)[i] = 0.0 + (NumType)1.0*(i + (NumType)0.5)/(n_cells)*((NumType)-5.0 - 0.0);
        (*initial_dens_cells)[i] = IceConsts<NumType>::rho_i;
     }
 
-    (*initial_ice_surf_temp) = (NumType)-10.0;
+    (*initial_ice_surf_temp) = (NumType)-5.0;
     (*initial_ice_base_temp) = (NumType)0.0;
 
     // create test 1d ice solver class
     Glacier1D_Solver<NumType> thermo_solver(ice_mesh,
                                             time_step,
+                                            true,
                                             true,
                                             true,
                                             grad_approx_order,
@@ -75,7 +76,9 @@ void run_model(NumType time_step,
         // write mesh to file
         if (step_num % output_frequency == 0)
         {
+#ifdef USE_JSON_OUTPUT
             ice_mesh->SaveJSON((std::string)"./" + output_prefix, step_num);
+#endif
         }
     }
 
@@ -91,7 +94,7 @@ int main()
                       1000,                  // number of time steps
                       1,                     // output frequency N (every N-th step would be written to file)
                       10,                    // number of uniform sigma-cells
-                      2.0,                   // initial ice thickness (meters)
+                      1.0,                   // initial ice thickness (meters)
                       "glacier_freezing",    // output ice prefix
                       ApproxOrder::second,   // gradient approximation order
                       Kparam::FreshIce,      // conductivity parameterization

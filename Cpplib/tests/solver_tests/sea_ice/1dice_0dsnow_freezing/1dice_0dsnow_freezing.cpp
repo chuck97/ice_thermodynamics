@@ -78,6 +78,7 @@ void run_model(NumType time_step,
                                                   time_step,
                                                   true,
                                                   true,
+                                                  true,
                                                   conductivity_ice_parameterization,
                                                   eff_capacity_ice_parameterization,
                                                   enthalpy_ice_parameterization,
@@ -86,8 +87,10 @@ void run_model(NumType time_step,
                                                   fusion_heat_snow_parameterization);
 
     // save initial state to file
+#ifdef USE_JSON_OUTPUT
     ice_mesh->SaveJSON((std::string)"./" + output_ice_prefix, 0);
     snow_mesh->SaveJSON((std::string)"./" + output_snow_prefix, 0);
+#endif
 
     // time stepping
     for (int step_num = 1; step_num < num_steps + 1; ++step_num)
@@ -110,8 +113,10 @@ void run_model(NumType time_step,
         // write mesh to file
         if (step_num % output_frequency == 0)
         {
+#ifdef USE_JSON_OUTPUT
             ice_mesh->SaveJSON((std::string)"./" + output_ice_prefix, step_num);
             snow_mesh->SaveJSON((std::string)"./" + output_snow_prefix, step_num);
+#endif
         }
     }
 

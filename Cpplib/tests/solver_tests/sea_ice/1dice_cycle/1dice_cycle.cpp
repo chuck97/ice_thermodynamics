@@ -93,7 +93,7 @@ void run_model(NumType time_step,
     for (int i = 0; i < n_cells; ++i)
     {
        (*initial_temp_cells)[i] = fusion_temp + (NumType)1.0*(i + 0.5)/(n_cells)*(ice_surf_temp - fusion_temp);
-       (*initial_sal_cells)[i] = 1.0 + 1.0*(i + 0.5)/(n_cells)*((NumType)4.0 - (NumType)1.0);
+       (*initial_sal_cells)[i] = 4.0 + 1.0*(i + 0.5)/(n_cells)*((NumType)1.0 - (NumType)4.0);
        (*initial_dens_cells)[i] = IceConsts<NumType>::rho_i;
     }
 
@@ -102,6 +102,7 @@ void run_model(NumType time_step,
     // create 1dice solver class
     SeaIce1D_Solver<NumType> thermo_solver(ice_mesh,
                                            time_step, 
+                                           true,
                                            true,
                                            true,
                                            grad_approx_order,
@@ -146,7 +147,9 @@ void run_model(NumType time_step,
         // write mesh to file
         if (step_num % output_frequency == 0)
         {
+#ifdef USE_JSON_OUTPUT
             ice_mesh->SaveJSON(std::string("./") + output_prefix, step_num);
+#endif
         }
     }
 

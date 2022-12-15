@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.17.0)
 
-project(IceThermo)
+project(IceThermo VERSION 1.0.0)
 
 # C/C++ compilers
 enable_language (CXX C)
@@ -10,37 +10,69 @@ if(NOT "${CMAKE_CXX_STANDARD}")
   set(CMAKE_CXX_STANDARD 20)
 endif()
 
-include_directories("source/headers")
-
 # options
-option(USE_FP64 "Use 64-bit floating-point types (usually on)" ON)
-option(COMPILE_TESTS "Compile tests" ON)
+option(USE_JSON_OUTPUT "Link library with nlohmann::json" OFF)
+option(COMPILE_TESTS "Compile tests" OFF)
 option(COMPILE_EXAMPLES "Compile examples" OFF)
+option(COMPILE_ITSLAV "Compile IceThermo inteface for SLAV model" OFF)
 
-if (COMPILE_TESTS)
-  MESSAGE(STATUS "Test compiling ENABLED")
+# add Fortran support if SLAV interfaces are compiled
+if (COMPILE_ITSLAV)
+  MESSAGE(STATUS "SLAV interfaces compilation ENABLED")
+  enable_language (Fortran)
 endif()
 
-if (COMPILE_EXAMPLES)
-  MESSAGE(STATUS "Examples compiling ENABLED")
-endif()
-
-# add subdirectories
+# add subdirectory with source code
 add_subdirectory(source)
+
+if (COMPILE_ITSLAV)
+  set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endif()
 
 # make library
 add_library(icethermo STATIC ${SOURCE} ${HEADER})
 
+# include directories
+target_include_directories(icethermo PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(icethermo PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/headers")
+
+# to install library
+set_property(TARGET icethermo PROPERTY PUBLIC_HEADER
+  "${PROJECT_SOURCE_DIR}/source/headers/constants.hpp"
+  "${PROJECT_SOURCE_DIR}/source/headers/defines.hpp"
+  "${PROJECT_SOURCE_DIR}/source/headers/icethermo.hpp"
+  "${PROJECT_SOURCE_DIR}/source/headers/matvec.hpp"
+  "${PROJECT_SOURCE_DIR}/source/headers/mesh.hpp"
+  "${PROJECT_SOURCE_DIR}/source/headers/solver.hpp"
+  "${PROJECT_SOURCE_DIR}/source/headers/tools.hpp"
+  "${PROJECT_BINARY_DIR}/itslav.mod")
+
+install(TARGETS icethermo 
+	      ARCHIVE DESTINATION lib
+	      LIBRARY DESTINATION lib
+	      RUNTIME DESTINATION bin
+	      PUBLIC_HEADER DESTINATION include)
+
+if (COMPILE_ITSLAV)
+  install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY} DESTINATION fortran)
+endif()
+
+
 # link library with nlohmann::json
-find_package(nlohmann_json 3.2.0 REQUIRED)
-target_link_libraries(icethermo PUBLIC nlohmann_json::nlohmann_json)
+if (USE_JSON_OUTPUT)
+  target_compile_definitions(icethermo PUBLIC USE_JSON_OUTPUT)
+  find_package(nlohmann_json 3.2.0 REQUIRED)
+  target_link_libraries(icethermo PUBLIC nlohmann_json::nlohmann_json)
+endif()
 
 # compile tests
 if(COMPILE_TESTS)
+  MESSAGE(STATUS "Test compiling ENABLED")
   add_subdirectory(tests)
 endif(COMPILE_TESTS)
 
 # compile examples
 if (COMPILE_EXAMPLES)
+  MESSAGE(STATUS "Examples compiling ENABLED")
   add_subdirectory(examples)
 endif()

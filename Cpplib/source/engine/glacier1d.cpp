@@ -2,12 +2,22 @@
 
 namespace icethermo
 {
-    // 1D ice solver constructor
+    // default 1D glacier solver constructor
+    template <typename NumType>
+    Glacier1D_Solver<NumType>::Glacier1D_Solver():
+        ThermoSolver<NumType>(NULL,
+                              NULL,
+                              (NumType)0.0)
+    {
+    }
+
+    // 1D glacier solver constructor
     template <typename NumType>
     Glacier1D_Solver<NumType>::Glacier1D_Solver(Mesh<NumType>* mesh_ice_,
                                                 NumType time_step_,
                                                 bool is_radiation_,
                                                 bool is_sublimation_,
+                                                bool is_verbose_,
                                                 ApproxOrder grad_approx_order_,
                                                 Kparam ice_k_param_,
                                                 Cparam ice_c_eff_param_,
@@ -19,6 +29,7 @@ namespace icethermo
                               grad_approx_order_,
                               is_radiation_,
                               is_sublimation_,
+                              is_verbose_,
                               ice_k_param_,
                               ice_c_eff_param_,
                               ice_E_param_,
@@ -28,7 +39,10 @@ namespace icethermo
         this->UpdateMesh(mesh_ice_);
 
         // log
-        std::cout << "1D glacier solver class constructed!" << std::endl;
+        if (this->is_verbose)
+        {
+            std::cout << "1D glacier solver class constructed!" << std::endl;
+        }
     } 
 
     // 1D ice solver evaluation
@@ -50,7 +64,10 @@ namespace icethermo
         if ((std::get<2>(freezing_values))[0] >= surface_fusion_temp)
         {   
             // log mode
-            std::cout << "1D-GLACIER MELTING MODE" << std::endl;
+            if (this->is_verbose)
+            {
+                std::cout << "1D-GLACIER MELTING MODE" << std::endl;
+            }
 
             // force surface temperature to melting point
             *(this->Ti_s) = surface_fusion_temp; 
@@ -73,7 +90,10 @@ namespace icethermo
         else
         {
             // log mode
-            std::cout << "1D-GLACIER FREEZING MODE" << std::endl;
+            if (this->is_verbose)
+            {
+                std::cout << "1D-GLACIER FREEZING MODE" << std::endl;
+            }
 
             // update mesh values
             *(this->Ti_b) = (std::get<0>(freezing_values))[0];

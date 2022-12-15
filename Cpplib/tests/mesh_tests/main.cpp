@@ -65,10 +65,14 @@ int main()
     mesh1.SaveTXT("./mesh", 1488);
 
     // one can save file to json
+#ifdef USE_JSON_OUTPUT
     mesh1.SaveJSON("./mesh");
+#endif
 
     // one can save mesh to .json file with postfix number (relevant for time series)
+#ifdef USE_JSON_OUTPUT
     mesh1.SaveJSON("./mesh", 2007);
+#endif
 
     // ### examples of another Mesh class constructor ###
 
@@ -102,7 +106,9 @@ int main()
         it = Params<double>::Density(Dparam::FreshIce, 0.0, 0.0);
     }
 
+#ifdef USE_JSON_OUTPUT
     mesh_vis.SaveJSON("./mesh_vis");
+#endif
     
     // wrong constructor (it should be unit segment partition 0.5 + 0.4 != 1.0)
     Mesh<float> mesh4({0.5, 0.4}, 5.0);

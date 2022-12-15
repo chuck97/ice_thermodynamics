@@ -9,6 +9,7 @@ namespace icethermo
                                         ApproxOrder grad_approx_order_,
                                         bool is_radiation_,
                                         bool is_sublimation_,
+                                        bool is_verbose_,
                                         Kparam ice_k_param_,
                                         Cparam ice_c_eff_param_,
                                         Eparam ice_E_param_,
@@ -16,7 +17,8 @@ namespace icethermo
                                         Kparam snow_k_param_,
                                         Cparam snow_c_eff_param_,
                                         Eparam snow_E_param_,
-                                        Lparam snow_L_param_)
+                                        Lparam snow_L_param_,
+                                        SnowIceTransition si_transition_mode_)
     {
         this->mesh_ice = mesh_ice_;
         this->mesh_snow = mesh_snow_;
@@ -38,7 +40,8 @@ namespace icethermo
         this->atm_temp = (NumType)0.0;
         this->is_radiation = is_radiation_;
         this->is_sublimation = is_sublimation_;
-
+        this->si_transition_mode = si_transition_mode_;
+        this->is_verbose = is_verbose_;
     }
 
     template<typename NumType>
@@ -686,7 +689,11 @@ namespace icethermo
                 break;
         }
 
-        std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        if (this->is_verbose)
+        {
+            std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        }
+        
         return {T_cells_new, std::vector<NumType>{T_is_new}, dz_cells_new};
     }
 
@@ -785,8 +792,10 @@ namespace icethermo
             if (current_err < tol)
                 break;
         }
-
-        std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        if (this->is_verbose)
+        {
+            std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        }
         return {T_cells_new, dz_cells_new};
     }
 
@@ -951,7 +960,11 @@ namespace icethermo
                 break;
         }
 
-        std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        if (this->is_verbose)
+        {
+            std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        }
+
         return {{T_i_cells_new, std::vector<NumType>{T_is_new}, dz_i_cells_new}, {std::vector<NumType>{T_ss_new}, std::vector<NumType>{h_s_new}}};
     }
 
@@ -1099,7 +1112,11 @@ namespace icethermo
             if (current_err < tol)
                 break;
         }
-        std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+
+        if (this->is_verbose)
+        {
+            std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        }
 
         return {{T_i_cells_new, std::vector<NumType>{T_is_new}, dz_i_cells_new}, h_s_new};
     }
@@ -1249,7 +1266,11 @@ namespace icethermo
                 break;
         }
 
-        std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        if (this->is_verbose)
+        {
+            std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        }
+
         return {std::vector<NumType>{T_ib_new}, T_cells_new, std::vector<NumType>{T_is_new}, dz_cells_new};
     }
 
@@ -1376,7 +1397,11 @@ namespace icethermo
                 break;
         }
 
-        std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        if (this->is_verbose)
+        {
+            std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        }
+
         return {std::vector<NumType>{T_ib_new}, T_cells_new, dz_cells_new};
     }
 

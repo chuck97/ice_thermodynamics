@@ -15,11 +15,6 @@ namespace icethermo
             THERMO_ERR("Number of layers in mesh should be greater than 1!");
         }
 
-        if (thickness <= 0.0)
-        {
-            THERMO_ERR("mesh thickness should be greater than 0.0!");
-        }
-
         std::vector<NumType> thicknesses(n_uniform_layers);
         
         for (int i =0; i < n_uniform_layers; ++i)
@@ -36,12 +31,7 @@ namespace icethermo
 
     template<typename NumType>
     Mesh<NumType>::Mesh(const std::vector<NumType>& unit_segment_decomposition, NumType thickness)
-    {
-        if (thickness <= 0.0)
-        {
-            THERMO_ERR("mesh thickness should be greater than 0.0!");
-        }
-        
+    {   
         NumType sum_decomp = sum_vec(unit_segment_decomposition);
         
         if (std::abs(sum_decomp - 1.0) > 1e-5)
@@ -339,6 +329,8 @@ namespace icethermo
         SaveTXT(file);
     }
 
+#ifdef USE_JSON_OUTPUT
+
     template<typename NumType>
     void Mesh<NumType>::SaveJSON(const std::string& filename) const
     {
@@ -393,6 +385,10 @@ namespace icethermo
         std::cout << "Mesh saved to \'" + filename_json + "\'\n";
     }
 
+#endif
+
+#ifdef USE_JSON_OUTPUT
+
     template<typename NumType>
     void Mesh<NumType>::SaveJSON(const std::string& filename, int postscript) const
     {
@@ -402,6 +398,7 @@ namespace icethermo
         file += ss.str();
         SaveJSON(file);
     }
+#endif
 
     template<typename NumType>
     bool Mesh<NumType>::CheckCellsDataExistency(const std::string& varname) const

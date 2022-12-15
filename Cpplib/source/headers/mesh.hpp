@@ -9,9 +9,12 @@
 #include <sstream>
 #include <iomanip>
 #include <memory>
-#include <nlohmann/json.hpp>
 
+#ifdef USE_JSON_OUTPUT
+#include <nlohmann/json.hpp>
 using json = nlohmann::json;
+#endif
+
 
 #include "defines.hpp"
 #include "matvec.hpp"
@@ -64,8 +67,11 @@ namespace icethermo
         void SaveTXT(const std::string& filename) const;
         void SaveTXT(const std::string& filename, int postscript) const;
 
+#ifdef USE_JSON_OUTPUT
+
         void SaveJSON(const std::string& filename) const;
         void SaveJSON(const std::string& filename, int postscript) const;
+#endif
 
         // Check existency of data
         bool CheckCellsDataExistency(const std::string& varname) const;

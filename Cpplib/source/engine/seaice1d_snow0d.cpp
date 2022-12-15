@@ -9,6 +9,7 @@ namespace icethermo
                                                             NumType time_step_,
                                                             bool is_radiation_,
                                                             bool is_sublimation_,
+                                                            bool is_verbose_,
                                                             Kparam ice_k_param_,
                                                             Cparam ice_c_eff_param_,
                                                             Eparam ice_E_param_,
@@ -22,6 +23,7 @@ namespace icethermo
                               ApproxOrder::first,
                               is_radiation_,
                               is_sublimation_,
+                              is_verbose_,
                               ice_k_param_,
                               ice_c_eff_param_,
                               ice_E_param_,
@@ -39,7 +41,10 @@ namespace icethermo
                          mesh_snow_);
 
         // log
-        std::cout << "1D sea-ice with 0D snow solver class constructed!" << std::endl;
+        if (this->is_verbose)
+        {
+            std::cout << "1D sea-ice with 0D snow solver class constructed!" << std::endl;
+        }
     } 
 
     // Update ocean salinity
@@ -82,7 +87,10 @@ namespace icethermo
             if ((std::get<1>(freezing_values))[0] >= surface_fusion_temp)
             {   
                 // log mode
-                std::cout << "1D-SEA-ICE MELTING MODE" << std::endl;
+                if (this->is_verbose)
+                {
+                    std::cout << "1D-SEA-ICE MELTING MODE" << std::endl;
+                }
 
                 // force ice surface temperature to melting point
                 *(this->Ti_s) = surface_fusion_temp; 
@@ -103,7 +111,10 @@ namespace icethermo
             else
             {
                 // log mode
-                std::cout << "1D-SEA-ICE FREEZING MODE" << std::endl;
+                if (this->is_verbose)
+                {
+                    std::cout << "1D-SEA-ICE FREEZING MODE" << std::endl;
+                }
 
                 // update mesh values
                 *(this->Ti_cells) = std::get<0>(freezing_values);
@@ -154,7 +165,10 @@ namespace icethermo
             if ((std::get<0>(freezing_snow))[0] > (NumType)0.0)
             {
                 // log mode
-                std::cout << "1D-SEA-ICE WITH 0D-SNOW MELTING MODE" << std::endl;
+                if (this->is_verbose)
+                {
+                    std::cout << "1D-SEA-ICE WITH 0D-SNOW MELTING MODE" << std::endl;
+                }
 
                 // force snow surface temperature to melting point
                 *(this->Ts_s) = (NumType)0.0; 
@@ -185,7 +199,10 @@ namespace icethermo
             else
             {
                 // log mode
-                std::cout << "1D-SEA-ICE WITH 0D-SNOW FREEZING MODE" << std::endl;
+                if (this->is_verbose)
+                {
+                    std::cout << "1D-SEA-ICE WITH 0D-SNOW FREEZING MODE" << std::endl;
+                }
 
                 // update mesh values
                 *(this->Ti_cells) = std::get<0>(freezing_ice);

@@ -38,6 +38,7 @@ namespace icethermo
                      ApproxOrder grad_approx_order_ = ApproxOrder::first,
                      bool is_radiation = true,
                      bool is_sublimation_ = true,
+                     bool is_verbose_ = true,
                      Kparam ice_k_param_ = Kparam::FreshIce,
                      Cparam ice_c_eff_param_ = Cparam::FreshIce,
                      Eparam ice_E_param_ = Eparam::FreshIce,
@@ -45,7 +46,8 @@ namespace icethermo
                      Kparam snow_k_param_ = Kparam::FreshSnow,
                      Cparam snow_c_eff_param_ = Cparam::FreshSnow,
                      Eparam snow_E_param_ = Eparam::FreshSnow,
-                     Lparam snow_L_param_ = Lparam::FreshSnow);
+                     Lparam snow_L_param_ = Lparam::FreshSnow,
+                     SnowIceTransition si_transition_mode_ = SnowIceTransition::None);
 
         // virtual Evaluation function
         virtual void Evaluate() = 0; 
@@ -99,6 +101,9 @@ namespace icethermo
 
         // snow->ice transition mode
         SnowIceTransition si_transition_mode;
+
+        // verbose output?
+        bool is_verbose;
 
     protected:
         // functions for checking mesh consistency
@@ -225,7 +230,7 @@ namespace icethermo
                                              const std::vector<NumType>& dz_cells,
                                              const std::vector<NumType>& salinity_cells,
                                              const std::vector<NumType>& rho_cells,
-                                             int max_n_its = 50,
+                                             int max_n_its = 20,
                                              NumType tol = 1e-6);
         
         
@@ -244,7 +249,7 @@ namespace icethermo
                                           const std::vector<NumType>& dz_cells,
                                           const std::vector<NumType>& salinity_cells,
                                           const std::vector<NumType>& rho_cells,
-                                          int max_n_its = 50,
+                                          int max_n_its = 20,
                                           NumType tol = 1e-6);
 
         // !! sea-ice freezing mode with snow (for 1d-ice and 0d-snow profile) !!
@@ -271,7 +276,7 @@ namespace icethermo
                                                                                  NumType rho_s,
                                                                                  NumType precipitation_rate,
                                                                                  NumType atm_temperature,
-                                                                                 int max_n_its = 50,
+                                                                                 int max_n_its = 20,
                                                                                  NumType tol = 1e-6);
         
         // !! snow melting mode with sea-ice (for 1d-ice and 0d-snow profile) !!
@@ -297,7 +302,7 @@ namespace icethermo
                                                                        NumType rho_s,
                                                                        NumType precipitation_rate,
                                                                        NumType atm_temperature,
-                                                                       int max_n_its = 50,
+                                                                       int max_n_its = 20,
                                                                        NumType tol = 1e-6);
         
         // !! glacier freezing mode (for 1d profile) !!
@@ -316,7 +321,7 @@ namespace icethermo
                                              const std::vector<NumType>& dz_cells,
                                              const std::vector<NumType>& salinity_cells,
                                              const std::vector<NumType>& rho_cells,
-                                             int max_n_its = 50,
+                                             int max_n_its = 20,
                                              NumType tol = 1e-6);
 
         // !! galcier melting mode (for 1d profile) !!
@@ -335,7 +340,7 @@ namespace icethermo
                                              const std::vector<NumType>& dz_cells,
                                              const std::vector<NumType>& salinity_cells,
                                              const std::vector<NumType>& rho_cells,
-                                             int max_n_its = 50,
+                                             int max_n_its = 20,
                                              NumType tol = 1e-6);
 
     };
@@ -354,6 +359,7 @@ namespace icethermo
                         NumType time_step_,
                         bool is_radiation = true,
                         bool is_sublimation = true,
+                        bool is_verbose_ = true,
                         ApproxOrder grad_approx_order_ = ApproxOrder::first,
                         Kparam ice_k_param_ = Kparam::FreshIce,
                         Cparam ice_c_eff_param_ = Cparam::FreshIce,
@@ -389,6 +395,7 @@ namespace icethermo
                                NumType time_step,
                                bool is_radiation_ = true,
                                bool is_sublimation_ = true,
+                               bool is_verbose_ = true,
                                Kparam ice_k_param_ = Kparam::FreshIce,
                                Cparam ice_c_eff_param_ = Cparam::FreshIce,
                                Eparam ice_E_param_ = Eparam::FreshIce,
@@ -419,11 +426,14 @@ namespace icethermo
     class Glacier1D_Solver : public ThermoSolver<NumType>
     {
     public:
-        // constructor
+        // constructors
+        Glacier1D_Solver();
+
         Glacier1D_Solver(Mesh<NumType>* mesh_ice_,
                          NumType time_step_,
                          bool is_radiation_ = true,
                          bool is_sublimation_ = true,
+                         bool is_verbose_ = true,
                          ApproxOrder grad_approx_order_ = ApproxOrder::first,
                          Kparam ice_k_param_ = Kparam::FreshIce,
                          Cparam ice_c_eff_param_ = Cparam::FreshIce,
