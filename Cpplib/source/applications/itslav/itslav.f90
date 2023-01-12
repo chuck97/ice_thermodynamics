@@ -223,10 +223,10 @@ module itslav
     subroutine InitThermodynamics(time_step, &             ! time step (seconds)
                                   num_ice_cells, &         ! number of ice cells in vertical mesh
                                   min_ice_thick, &         ! minimal ice thickness (meters)
-                                  min_lon_ind, &           ! minimal longitude index
-                                  max_lon_ind, &           ! maximal longitude index
-                                  min_lat_ind, &           ! minimal latitude index
-                                  max_lat_ind, &           ! maximal latitude index
+                                  min_lon_ind, &           ! minimal longitude index (inclusively)
+                                  max_lon_ind, &           ! maximal longitude index (inclusively)
+                                  min_lat_ind, &           ! minimal latitude index (inclusively)
+                                  max_lat_ind, &           ! maximal latitude index (inclusively)
                                   init_base_temp, &        ! 2D-array of initial base temp (deg Cel) 
                                   init_surf_temp, &        ! 2D-array of initial surface temp (deg Cel)
                                   init_ice_thick)          ! 2D-array of initial ice thickness (meters)
@@ -276,10 +276,10 @@ module itslav
 
     ! update atmosphere flux
     subroutine UpdateAtmFlux(atm_flux_values, &  ! 2D-array of total atm flux values (W m-2)
-                             min_lon_ind, &      ! minimal longitude index
-                             max_lon_ind, &      ! maximal longitude index
-                             min_lat_ind, &      ! minimal latitude index
-                             max_lat_ind)        ! maximal latitude index
+                             min_lon_ind, &      ! minimal longitude index (inclusively)
+                             max_lon_ind, &      ! maximal longitude index (inclusively)
+                             min_lat_ind, &      ! minimal latitude index (inclusively)
+                             max_lat_ind)        ! maximal latitude index (inclusively)
         
         implicit none
 
@@ -302,10 +302,10 @@ module itslav
 
     ! update short-wave radiation flux
     subroutine UpdateSwRadiation(sw_values, &     ! 2D-array of short-wave radiation flux (W m-2)
-                                 min_lon_ind, &   ! minimal longitude index
-                                 max_lon_ind, &   ! maximal longitude index
-                                 min_lat_ind, &   ! minimal latitude index
-                                 max_lat_ind)     ! maximal latitude index
+                                 min_lon_ind, &   ! minimal longitude index (inclusively)
+                                 max_lon_ind, &   ! maximal longitude index (inclusively)
+                                 min_lat_ind, &   ! minimal latitude index (inclusively)
+                                 max_lat_ind)     ! maximal latitude index (inclusively)
         
         implicit none
 
@@ -328,10 +328,10 @@ module itslav
 
     ! update latent heat flux
     subroutine UpdateLatentHeatFlux(lh_values, &     ! 2D-array of latent heat flux (W m-2)
-                                    min_lon_ind, &   ! minimal longitude index
-                                    max_lon_ind, &   ! maximal longitude index
-                                    min_lat_ind, &   ! minimal latitude index
-                                    max_lat_ind)     ! maximal latitude index
+                                    min_lon_ind, &   ! minimal longitude index (inclusively)
+                                    max_lon_ind, &   ! maximal longitude index (inclusively)
+                                    min_lat_ind, &   ! minimal latitude index (inclusively)
+                                    max_lat_ind)     ! maximal latitude index (inclusively)
         
         implicit none
         
@@ -353,11 +353,10 @@ module itslav
     end subroutine
 
     ! one-step evaluation
-    
-    subroutine Evaluate(min_lon_ind, &   ! minimal longitude index
-                        max_lon_ind, &   ! maximal longitude index
-                        min_lat_ind, &   ! minimal latitude index
-                        max_lat_ind)     ! maximal latitude index
+    subroutine Evaluate(min_lon_ind, &   ! minimal longitude index (inclusively)
+                        max_lon_ind, &   ! maximal longitude index (inclusively)
+                        min_lat_ind, &   ! minimal latitude index (inclusively)
+                        max_lat_ind)     ! maximal latitude index (inclusively)
         
         implicit none
 
@@ -378,10 +377,10 @@ module itslav
 
     ! return ice surface temperature
     subroutine GetIceSurfaceTemperature(array, &         ! 2D-array of ice surface temperature (deg Cel) - output
-                                        min_lon_ind, &   ! minimal longitude index
-                                        max_lon_ind, &   ! maximal longitude index
-                                        min_lat_ind, &   ! minimal latitude index
-                                        max_lat_ind)     ! maximal latitude index
+                                        min_lon_ind, &   ! minimal longitude index (inclusively)
+                                        max_lon_ind, &   ! maximal longitude index (inclusively)
+                                        min_lat_ind, &   ! minimal latitude index (inclusively)
+                                        max_lat_ind)     ! maximal latitude index (inclusively)
         
         implicit none
 
@@ -404,10 +403,10 @@ module itslav
 
     ! return ice thickness 
     subroutine GetIceThickness(array, &         ! 2D-array of ice thickness (m) - output
-                               min_lon_ind, &   ! minimal longitude index
-                               max_lon_ind, &   ! maximal longitude index
-                               min_lat_ind, &   ! minimal latitude index
-                               max_lat_ind)     ! maximal latitude index
+                               min_lon_ind, &   ! minimal longitude index (inclusively)
+                               max_lon_ind, &   ! maximal longitude index (inclusively)
+                               min_lat_ind, &   ! minimal latitude index (inclusively)
+                               max_lat_ind)     ! maximal latitude index (inclusively)
             
         implicit none
 
@@ -430,10 +429,10 @@ module itslav
 
     ! return ice thickness 
     subroutine GetSurfaceConductiveFlux(array, &         ! 2D-array of ice surface conductive flux (W m-2) - output
-                                        min_lon_ind, &   ! minimal longitude index
-                                        max_lon_ind, &   ! maximal longitude index
-                                        min_lat_ind, &   ! minimal latitude index
-                                        max_lat_ind)     ! maximal latitude index
+                                        min_lon_ind, &   ! minimal longitude index (inclusively)
+                                        max_lon_ind, &   ! maximal longitude index (inclusively)
+                                        min_lat_ind, &   ! minimal latitude index (inclusively)
+                                        max_lat_ind)     ! maximal latitude index (inclusively)
             
         implicit none
 

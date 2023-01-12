@@ -259,8 +259,11 @@ namespace icethermo
 
         // single data
         *ofs << "#### Single data ###\n";
-        for (auto [key, val]: single_data)
+        for (auto item: single_data)
         {
+            auto key = item.first;
+            auto val = item.second;
+
             if (val.second)
             {
                 *ofs << key + "\n";
@@ -271,8 +274,11 @@ namespace icethermo
 
         // cells data
         *ofs << "#### Cells data ###\n";
-        for (auto [key, val]: cells_data)
+        for (auto item: cells_data)
         {
+            auto key = item.first;
+            auto val = item.second;
+
             if (val.second)
             {
                 *ofs << key + "\n";
@@ -293,8 +299,11 @@ namespace icethermo
 
         // nodes data
         *ofs << "#### Nodes data ###\n";
-        for (auto [key, val]: nodes_data)
+        for (auto item: nodes_data)
         {
+            auto key = item.first;
+            auto val = item.second;
+
             if (val.second)
             {
                 *ofs << key + "\n";
@@ -341,8 +350,10 @@ namespace icethermo
         j["cells_thickness_array"] = *cells_thickness;
 
         // single data
-        for (auto [key, val]: single_data)
+        for (auto item: single_data)
         {
+            auto key = item.first;
+            auto val = item.second;
             if (val.second)
             {
                 j["single data"][key] = *(val.first);
@@ -350,8 +361,10 @@ namespace icethermo
         }
 
         // cells data
-        for (auto [key, val]: cells_data)
+        for (auto item: cells_data)
         {
+            auto key = item.first;
+            auto val = item.second;
             if (val.second)
             {
                 j["cells data"][key] = *(val.first);
@@ -359,8 +372,11 @@ namespace icethermo
         }
 
         // nodes data
-        for (auto [key, val]: nodes_data)
+        for (auto item: nodes_data)
         {
+            auto key = item.first;
+            auto val = item.second;
+
             if (val.second)
             {
                 j["nodes data"][key] = *(val.first);
