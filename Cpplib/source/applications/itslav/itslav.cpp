@@ -4,7 +4,7 @@ using namespace icethermo;
 
 // constructor 
 ThermoModelsSet::ThermoModelsSet(double time_step_,
-                                 int num_ice_cells,
+                                 int num_ice_cells_,
                                  double min_ice_thick_,
                                  int min_lon_ind_,
                                  int max_lon_ind_,
@@ -16,37 +16,38 @@ ThermoModelsSet::ThermoModelsSet(double time_step_,
                                  bool is_verbose_
                                  ):
         time_step(time_step_),
+        num_ice_cells(num_ice_cells_),
         min_ice_thick(min_ice_thick_),
         min_lon_ind(min_lon_ind_),
         max_lon_ind(max_lon_ind_),
         min_lat_ind(min_lat_ind_),
         max_lat_ind(max_lat_ind_),
         is_verbose(is_verbose_)
-        
 {
-    if (min_lon_ind > max_lon_ind)
+
+    if (min_lon_ind_ > max_lon_ind_)
     {
         THERMO_ERR((std::string)"Thermodynamics constructor error: minimal longitude index is greater than maximal longitude index!");
     }
 
-    if (min_lat_ind > max_lat_ind)
+    if (min_lat_ind_ > max_lat_ind_)
     {
         THERMO_ERR((std::string)"Thermodynamics constructor error: minimal latitude index is greater than maximal latitude index!");
     }
 
-    lon_dim = max_lon_ind - min_lon_ind + 1;
-    lat_dim = max_lat_ind - min_lat_ind + 1;
+    int lon_dim = max_lon_ind - min_lon_ind + 1;
+    int lat_dim = max_lat_ind - min_lat_ind + 1;
 
     // create 2d field of 1D meshes
-    for (int lat_ind = min_lat_ind; lat_ind < max_lat_ind + 1; ++lat_ind)
+    for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
     {
-        int local_lat_ind = lat_ind - min_lat_ind;
+        int local_lat_ind = lat_ind - min_lat_ind_;
 
         std::vector<Mesh<double>*> current_lat_meshes;
 
-        for (int lon_ind = min_lon_ind; lon_ind < max_lon_ind + 1; ++lon_ind)
+        for (int lon_ind = min_lon_ind_; lon_ind < max_lon_ind_ + 1; ++lon_ind)
         {
-            int local_lon_ind = lon_ind - min_lon_ind;
+            int local_lon_ind = lon_ind - min_lon_ind_;
 
             double current_ice_thick = init_ice_thick[local_lat_ind*lon_dim + local_lon_ind];
 
@@ -55,7 +56,7 @@ ThermoModelsSet::ThermoModelsSet(double time_step_,
                 new(Mesh<double>)(num_ice_cells, current_ice_thick)
             );
         }
-        meshes.push_back(current_lat_meshes);
+        current_meshes.push_back(current_lat_meshes);
     }
 
     if (is_verbose)
@@ -64,13 +65,13 @@ ThermoModelsSet::ThermoModelsSet(double time_step_,
     }
 
     // initialize 2d field of 1D meshes (linear temperature profiles from base to surface temperature, constant densities)
-    for (int lat_ind = min_lat_ind; lat_ind < max_lat_ind + 1; ++lat_ind)
+    for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
     {
-        int local_lat_ind = lat_ind - min_lat_ind;
+        int local_lat_ind = lat_ind - min_lat_ind_;
 
-        for (int lon_ind = min_lon_ind; lon_ind < max_lon_ind + 1; ++lon_ind)
+        for (int lon_ind = min_lon_ind_; lon_ind < max_lon_ind_ + 1; ++lon_ind)
         {
-            int local_lon_ind = lon_ind - min_lon_ind;
+            int local_lon_ind = lon_ind - min_lon_ind_;
 
             double current_ice_thick = init_ice_thick[local_lat_ind*lon_dim + local_lon_ind];
 
@@ -78,7 +79,7 @@ ThermoModelsSet::ThermoModelsSet(double time_step_,
 
             double current_surf_temp = init_surf_temp[local_lat_ind*lon_dim + local_lon_ind];
             
-            Mesh<double>* local_mesh = meshes[local_lat_ind][local_lon_ind];
+            Mesh<double>* local_mesh = current_meshes[local_lat_ind][local_lon_ind];
 
             auto initial_temp_cells = local_mesh->CreateCellsData("cells_temperature_array");
             auto initial_dens_cells = local_mesh->CreateCellsData("cells_density_array");
@@ -93,7 +94,7 @@ ThermoModelsSet::ThermoModelsSet(double time_step_,
                 (*initial_temp_cells)[i] = current_base_temp + (i + 0.5)/(local_mesh->GetCellsNum())*(current_surf_temp - current_base_temp);
                 (*initial_dens_cells)[i] = IceConsts<double>::rho_i;
             }
-            
+
             (*initial_ice_surf_temp) = current_surf_temp;
         }
     }
@@ -104,16 +105,16 @@ ThermoModelsSet::ThermoModelsSet(double time_step_,
     }
 
     // create 2d field of 1D solvers
-    for (int lat_ind = min_lat_ind; lat_ind < max_lat_ind + 1; ++lat_ind)
+    for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
     {
-        int local_lat_ind = lat_ind - min_lat_ind;
+        int local_lat_ind = lat_ind - min_lat_ind_;
 
         std::vector<Glacier1D_Solver<double>*> current_lat_solvers;
 
-        for (int lon_ind = min_lon_ind; lon_ind < max_lon_ind + 1; ++lon_ind)
+        for (int lon_ind = min_lon_ind_; lon_ind < max_lon_ind_ + 1; ++lon_ind)
         {
-            int local_lon_ind = lon_ind - min_lon_ind;
-            Mesh<double>* local_mesh = meshes[local_lat_ind][local_lon_ind];
+            int local_lon_ind = lon_ind - min_lon_ind_;
+            Mesh<double>* local_mesh = current_meshes[local_lat_ind][local_lon_ind];
 
             current_lat_solvers.push_back
             (
@@ -136,18 +137,29 @@ ThermoModelsSet::ThermoModelsSet(double time_step_,
     {
         std::cout << "Solvers are initialized!\n";
     }
-}
 
-// destructor realization
-ThermoModelsSet::~ThermoModelsSet()
-{
-    for (int local_lat_ind = 0; local_lat_ind < lat_dim; ++local_lat_ind)
+    // make copy of current meeshes to store
+    for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
     {
-        for (int local_lon_ind = 0; local_lon_ind < lon_dim; ++local_lon_ind)
+        int local_lat_ind = lat_ind - min_lat_ind_;
+
+        std::vector<Mesh<double>*> current_lat_meshes;
+
+        for (int lon_ind = min_lon_ind_; lon_ind < max_lon_ind_ + 1; ++lon_ind)
         {
-            delete meshes[local_lat_ind][local_lon_ind];
-            delete solvers[local_lat_ind][local_lon_ind];
+            int local_lon_ind = lon_ind - min_lon_ind_;
+
+            current_lat_meshes.push_back
+            (
+                new(Mesh<double>)(*(current_meshes[local_lat_ind][local_lon_ind]))
+            );
         }
+        stored_meshes.push_back(current_lat_meshes);
+    }
+
+    if (is_verbose)
+    {
+        std::cout << "Meshes are stored!\n";
     }
 }
 
@@ -159,6 +171,26 @@ void ThermoModelsSet::UpdateAtmFlux(double* atm_flux_values,
                                     int max_lat_ind_
                                     )
 {
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateAtmFlux error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateAtmFlux error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateAtmFlux error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateAtmFlux error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
     for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
     {
         int local_lat_ind = lat_ind - min_lat_ind;
@@ -187,6 +219,27 @@ void ThermoModelsSet::UpdateSwRadiation(double* sw_values,
                                         int max_lat_ind_
                                         )
 {
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateSwRadiation error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateSwRadiation error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateSwRadiation error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateSwRadiation error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
+
     for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
     {
         int local_lat_ind = lat_ind - min_lat_ind;
@@ -218,6 +271,26 @@ void ThermoModelsSet::UpdateLatentHeatFlux(double* lh_values,
                                            int max_lat_ind_
                                            )
 {
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateLatentHeatFlux error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateLatentHeatFlux error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateLatentHeatFlux error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateLatentHeatFlux error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
     for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
     {
         int local_lat_ind = lat_ind - min_lat_ind;
@@ -248,6 +321,26 @@ void ThermoModelsSet::Evaluate(int min_lon_ind_,
                                int max_lat_ind_
                                )
 {
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"Evaluate error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"Evaluate error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"Evaluate error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"Evaluate error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
     for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
     {
         int local_lat_ind = lat_ind - min_lat_ind;
@@ -256,7 +349,7 @@ void ThermoModelsSet::Evaluate(int min_lon_ind_,
         {
             int local_lon_ind = lon_ind - min_lon_ind;
 
-            double current_ice_thick = meshes[local_lat_ind][local_lon_ind]->GetTotalThickness();
+            double current_ice_thick = current_meshes[local_lat_ind][local_lon_ind]->GetTotalThickness();
 
             if (current_ice_thick > min_ice_thick)
             {
@@ -274,6 +367,26 @@ void ThermoModelsSet::GetIceSurfaceTemperature(double* array,
                                                int max_lat_ind_
                                                )
 {
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"GetIceSurfaceTemperature error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"GetIceSurfaceTemperature error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"GetIceSurfaceTemperature error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"GetIceSurfaceTemperature error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
     for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
     {
         int local_lat_ind = lat_ind - min_lat_ind;
@@ -284,7 +397,7 @@ void ThermoModelsSet::GetIceSurfaceTemperature(double* array,
             int local_lon_ind = lon_ind - min_lon_ind;
             int local_lon_ind_ = lon_ind - min_lon_ind_;
 
-            double current_surf_temp = *(meshes[local_lat_ind][local_lon_ind]->GetSingleData("up_temperature"));
+            double current_surf_temp = *(current_meshes[local_lat_ind][local_lon_ind]->GetSingleData("up_temperature"));
 
             array[local_lat_ind_*(max_lon_ind_ - min_lon_ind_ + 1) + local_lon_ind_] = current_surf_temp;
         }
@@ -299,6 +412,26 @@ void ThermoModelsSet::GetIceThickness(double* array,
                                       int max_lat_ind_
                                       )
 {
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"GetIceThickness error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"GetIceThickness error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"GetIceThickness error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"GetIceThickness error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
     for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
     {
         int local_lat_ind = lat_ind - min_lat_ind;
@@ -309,7 +442,7 @@ void ThermoModelsSet::GetIceThickness(double* array,
             int local_lon_ind = lon_ind - min_lon_ind;
             int local_lon_ind_ = lon_ind - min_lon_ind_;
 
-            double current_thick = meshes[local_lat_ind][local_lon_ind]->GetTotalThickness();
+            double current_thick = current_meshes[local_lat_ind][local_lon_ind]->GetTotalThickness();
 
             array[local_lat_ind_*(max_lon_ind_ - min_lon_ind_ + 1) + local_lon_ind_] = current_thick;
         }
@@ -324,6 +457,26 @@ void ThermoModelsSet::GetSurfaceConductiveFlux(double* array,
                                                int max_lat_ind_
                                                )
 {
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"GetSurfaceConductiveFlux error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"GetSurfaceConductiveFlux error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"GetSurfaceConductiveFlux error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"GetSurfaceConductiveFlux error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
     for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
     {
         int local_lat_ind = lat_ind - min_lat_ind;
@@ -334,9 +487,9 @@ void ThermoModelsSet::GetSurfaceConductiveFlux(double* array,
             int local_lon_ind = lon_ind - min_lon_ind;
             int local_lon_ind_ = lon_ind - min_lon_ind_;
 
-            double surf_temp = *(meshes[local_lat_ind][local_lon_ind]->GetSingleData("up_temperature"));
-            double top_layer_temp = (*(meshes[local_lat_ind][local_lon_ind]->GetCellsData("cells_temperature_array"))).back();
-            double top_layer_size =  (*(meshes[local_lat_ind][local_lon_ind]->GetCellsThickness())).back();
+            double surf_temp = *(current_meshes[local_lat_ind][local_lon_ind]->GetSingleData("up_temperature"));
+            double top_layer_temp = (*(current_meshes[local_lat_ind][local_lon_ind]->GetCellsData("cells_temperature_array"))).back();
+            double top_layer_size =  (*(current_meshes[local_lat_ind][local_lon_ind]->GetCellsThickness())).back();
             double k_value = Params<double>::Conductivity(k_param, top_layer_temp, 0.0, IceConsts<double>::rho_i);
 
             double cond_flux = (top_layer_size < REAL_MIN_VAL(double)) ? 0.0 : -k_value*(surf_temp - top_layer_temp)/(0.5*top_layer_size);
@@ -346,7 +499,89 @@ void ThermoModelsSet::GetSurfaceConductiveFlux(double* array,
     }
 }
 
+// realization of save current ModelsSet current_state to stored_state 
+void ThermoModelsSet::StoreState(int min_lon_ind_,        
+                                 int max_lon_ind_,        
+                                 int min_lat_ind_,        
+                                 int max_lat_ind_)
+{
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"StoreState error: minimal longitude index is less than minimal mesh longitude index!");
+    }
 
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"StoreState error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"StoreState error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"StoreState error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+    
+    // store 2d field of 1D meshes
+    for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
+    {
+        int local_lat_ind = lat_ind - min_lat_ind;
+
+        for (int lon_ind = min_lon_ind_; lon_ind < max_lon_ind_ + 1; ++lon_ind)
+        {
+            int local_lon_ind = lon_ind - min_lon_ind;
+
+            icethermo::Mesh<double>* stored_mesh_ptr = stored_meshes[local_lat_ind][local_lon_ind];
+            delete stored_mesh_ptr;
+            stored_mesh_ptr = new(icethermo::Mesh<double>)(*current_meshes[local_lat_ind][local_lon_ind]);
+        }
+    }
+}
+
+void ThermoModelsSet::RestoreState(int min_lon_ind_,        
+                                   int max_lon_ind_,        
+                                   int min_lat_ind_,        
+                                   int max_lat_ind_)
+{
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"RestoreState error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"RestoreState error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"RestoreState error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"RestoreState error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
+    // restore 2d field of 1D meshes and update solvers
+    for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
+    {
+        int local_lat_ind = lat_ind - min_lat_ind;
+
+        for (int lon_ind = min_lon_ind_; lon_ind < max_lon_ind_ + 1; ++lon_ind)
+        {
+            int local_lon_ind = lon_ind - min_lon_ind;
+
+            icethermo::Mesh<double>* current_mesh_ptr = current_meshes[local_lat_ind][local_lon_ind];
+            delete current_mesh_ptr;
+            current_mesh_ptr = new(icethermo::Mesh<double>)(*stored_meshes[local_lat_ind][local_lon_ind]);
+            solvers[local_lat_ind][local_lon_ind]->UpdateMesh(current_mesh_ptr);
+        }
+    }
+}
 
 // realization of initialization of thermodynamics
 void* InitThermodynamics(double time_step,
@@ -493,4 +728,34 @@ void GetSurfaceConductiveFlux(void* obj,
                                   max_lon_ind,        
                                   min_lat_ind,        
                                   max_lat_ind);
+}
+
+// realization of storing
+void StoreState(void* obj,
+                int min_lon_ind,        
+                int max_lon_ind,        
+                int min_lat_ind,        
+                int max_lat_ind
+                )
+{
+    ThermoModelsSet* ptr = (ThermoModelsSet*)obj;
+    ptr->StoreState(min_lon_ind,        
+                    max_lon_ind,        
+                    min_lat_ind,        
+                    max_lat_ind);
+}
+
+// realization of restoring
+void RestoreState(void* obj,
+                  int min_lon_ind,        
+                  int max_lon_ind,        
+                  int min_lat_ind,        
+                  int max_lat_ind
+                  )
+{
+    ThermoModelsSet* ptr = (ThermoModelsSet*)obj;
+    ptr->RestoreState(min_lon_ind,        
+                      max_lon_ind,        
+                      min_lat_ind,        
+                      max_lat_ind);
 }

@@ -203,6 +203,48 @@ module itslav
             
         end subroutine
     end interface
+
+    ! store state
+    interface
+        subroutine StoreState_(obj, &           ! pointer to allocated Cpp class
+                               min_lon_ind, &   ! minimal longitude index
+                               max_lon_ind, &   ! maximal longitude index
+                               min_lat_ind, &   ! minimal latitude index
+                               max_lat_ind) &   ! maximal latitude index
+                               bind(C, name="StoreState")
+            
+            import:: c_int, c_ptr
+            implicit none
+
+            ! Argument list
+            type(c_ptr), intent(in), value :: obj
+            integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+            integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+            
+        end subroutine
+    end interface
+
+    ! restore state
+    interface
+        subroutine RestoreState_(obj, &           ! pointer to allocated Cpp class
+                                 min_lon_ind, &   ! minimal longitude index
+                                 max_lon_ind, &   ! maximal longitude index
+                                 min_lat_ind, &   ! minimal latitude index
+                                 max_lat_ind) &   ! maximal latitude index
+                                 bind(C, name="RestoreState")
+            
+            import:: c_int, c_ptr
+            implicit none
+
+            ! Argument list
+            type(c_ptr), intent(in), value :: obj
+            integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+            integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+            
+        end subroutine
+    end interface
+
+
     
     ! Hold Cpp class
     type(c_ptr), save :: obj = c_null_ptr
@@ -216,6 +258,8 @@ module itslav
     public :: GetIceSurfaceTemperature
     public :: GetIceThickness
     public :: GetSurfaceConductiveFlux
+    public :: StoreState
+    public :: RestoreState
  
  contains
  
@@ -427,7 +471,7 @@ module itslav
             
     end subroutine
 
-    ! return ice thickness 
+    ! return surface conductive heat flux 
     subroutine GetSurfaceConductiveFlux(array, &         ! 2D-array of ice surface conductive flux (W m-2) - output
                                         min_lon_ind, &   ! minimal longitude index (inclusively)
                                         max_lon_ind, &   ! maximal longitude index (inclusively)
@@ -451,5 +495,49 @@ module itslav
                                            max_lat_ind)
         end if        
     end subroutine
+
+    ! store state
+    subroutine StoreState(min_lon_ind, &   ! minimal longitude index (inclusively)
+                          max_lon_ind, &   ! maximal longitude index (inclusively)
+                          min_lat_ind, &   ! minimal latitude index (inclusively)
+                          max_lat_ind)     ! maximal latitude index (inclusively)
+
+        implicit none
+
+        ! Argument list
+        integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+        integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+
+        ! Body
+        if (c_associated(obj)) then
+            call StoreState_(obj, &
+                             min_lon_ind, &   
+                             max_lon_ind, &   
+                             min_lat_ind, &   
+                             max_lat_ind)
+        end if        
+    end subroutine
+
+    ! restore state
+    subroutine RestoreState(min_lon_ind, &   ! minimal longitude index (inclusively)
+                            max_lon_ind, &   ! maximal longitude index (inclusively)
+                            min_lat_ind, &   ! minimal latitude index (inclusively)
+                            max_lat_ind)     ! maximal latitude index (inclusively)
+
+        implicit none
+
+        ! Argument list
+        integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+        integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+
+        ! Body
+        if (c_associated(obj)) then
+            call RestoreState_(obj, &
+                               min_lon_ind, &   
+                               max_lon_ind, &   
+                               min_lat_ind, &   
+                               max_lat_ind)
+        end if        
+end subroutine
 
 end module itslav

@@ -9,7 +9,10 @@ program itslav_example
                        Evaluate, &
                        GetIceSurfaceTemperature, &
                        GetIceThickness, &
-                       GetSurfaceConductiveFlux
+                       GetSurfaceConductiveFlux, &
+                       StoreState, &
+                       RestoreState
+
     
     ! iso_c_binding module for types
     use, intrinsic :: iso_c_binding, only : c_int, c_double
@@ -73,6 +76,31 @@ program itslav_example
                             init_surf_temp = init_surf_temp, &    ! 2D-array of initial surface temp (deg Cel)
                             init_ice_thick = init_thick)          ! 2D-array of initial ice thickness (meters) 
 
+    
+
+    ! store initial mesh
+    call StoreState(min_lon_ind = 1, &
+                    max_lon_ind = nlon, &
+                    min_lat_ind = 1, &
+                    max_lat_ind = nlat)
+    
+    ! restore initial state for check
+    call RestoreState(min_lon_ind = 1, &
+                      max_lon_ind = nlon, &
+                      min_lat_ind = 1, &
+                      max_lat_ind = nlat)
+
+    call GetIceSurfaceTemperature(surf_temp(1:nlon, 1:nlat), &
+                                  min_lon_ind = 1, &
+                                  max_lon_ind = nlon, &
+                                  min_lat_ind = 1, &
+                                  max_lat_ind = nlat)
+
+    print *,  "before computations,  Surface temperatures ="
+    call print_slice(surf_temp(1:nlon, 1:nlat), nlon, nlat, &
+                               2, nlon-2, &
+                               2, nlat-2)
+    
     ! time stepping
     current_time = 0.0
 
@@ -147,6 +175,23 @@ program itslav_example
                                        2, nlat-2)
         end if
     end do
+
+    ! restore initial state and print temps
+    call RestoreState(min_lon_ind = 1, &
+                      max_lon_ind = nlon, &
+                      min_lat_ind = 1, &
+                      max_lat_ind = nlat)
+    
+    call GetIceSurfaceTemperature(surf_temp(1:nlon, 1:nlat), &
+                                  min_lon_ind = 1, &
+                                  max_lon_ind = nlon, &
+                                  min_lat_ind = 1, &
+                                  max_lat_ind = nlat)
+
+    print *,  "after computations and restoring,  Surface temperatures ="
+    call print_slice(surf_temp(1:nlon, 1:nlat), nlon, nlat, &
+                               2, nlon-2, &
+                               2, nlat-2)
  
     ! finalization of thermodynamics solver at the end of the program (freeing the memory)
     call FinalizeThermodynamics()

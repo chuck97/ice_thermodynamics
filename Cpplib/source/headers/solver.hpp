@@ -49,6 +49,9 @@ namespace icethermo
                      Lparam snow_L_param_ = Lparam::FreshSnow,
                      SnowIceTransition si_transition_mode_ = SnowIceTransition::None);
 
+        // destructor
+        ~ThermoSolver();
+
         // virtual Evaluation function
         virtual void Evaluate() = 0; 
     
@@ -57,29 +60,32 @@ namespace icethermo
         NumType time_step;
 
         // ice and snow mesh
-        Mesh<NumType>* mesh_ice;
-        Mesh<NumType>* mesh_snow;
+        Mesh<NumType>* mesh_ice = NULL;
+        Mesh<NumType>* mesh_snow = NULL;
 
         // upwards, downwards, short-wave radiation, latent heat flux, precipitation rate, atmosphere temperature
-        FuncPtr<NumType> F_up;
-        FuncPtr<NumType> F_down;
-        FuncPtr<NumType> F_sw;
-        FuncPtr<NumType> F_lh;
+        FuncPtr<NumType> F_up = [](NumType T){return 0.0;};
+        FuncPtr<NumType> F_down = [](NumType T){return 0.0;};
+        FuncPtr<NumType> F_sw = [](NumType T){return 0.0;};
+        FuncPtr<NumType> F_lh = [](NumType T){return 0.0;};
         NumType prec_rate;
         NumType atm_temp;
 
         // mandatory ice prognostic variables
-        std::shared_ptr<std::vector<NumType>> Ti_cells;
-        std::shared_ptr<std::vector<NumType>> dzi_cells;
-        std::shared_ptr<std::vector<NumType>> Si_cells;
-        std::shared_ptr<std::vector<NumType>> rhoi_cells;
-        std::shared_ptr<NumType> Ti_s, Ti_b, So;
+        std::shared_ptr<std::vector<NumType>> Ti_cells = NULL;
+        std::shared_ptr<std::vector<NumType>> dzi_cells = NULL;
+        std::shared_ptr<std::vector<NumType>> Si_cells = NULL;
+        std::shared_ptr<std::vector<NumType>> rhoi_cells = NULL;
+        std::shared_ptr<NumType> Ti_s = NULL;
+        std::shared_ptr<NumType> Ti_b = NULL;
+        std::shared_ptr<NumType> So = NULL;
 
         // mandatory snow prognostic variables
-        std::shared_ptr<std::vector<NumType>> Ts_cells;
-        std::shared_ptr<std::vector<NumType>> dzs_cells;
-        std::shared_ptr<std::vector<NumType>> rhos_cells;
-        std::shared_ptr<NumType> Ts_s, Ts_b;
+        std::shared_ptr<std::vector<NumType>> Ts_cells = NULL;
+        std::shared_ptr<std::vector<NumType>> dzs_cells = NULL;
+        std::shared_ptr<std::vector<NumType>> rhos_cells = NULL;
+        std::shared_ptr<NumType> Ts_s = NULL;
+        std::shared_ptr<NumType> Ts_b= NULL;
 
         // parametrizations
         Kparam ice_k_param;

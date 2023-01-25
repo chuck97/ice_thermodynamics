@@ -44,6 +44,32 @@ namespace icethermo
         this->is_verbose = is_verbose_;
     }
 
+    template <typename NumType>
+    ThermoSolver<NumType>::~ThermoSolver()
+    {
+        mesh_ice = NULL;
+        mesh_snow = NULL;
+
+        Ti_cells = NULL;
+        dzi_cells = NULL;
+        Si_cells = NULL;
+        rhoi_cells = NULL;    
+        Ti_s = NULL;
+        Ti_b = NULL;
+        So = NULL;
+
+        Ts_cells = NULL;
+        dzs_cells = NULL;
+        rhos_cells = NULL;
+        Ts_s = NULL;
+        Ts_b = NULL; 
+
+        F_up = [](NumType T){return 0.0;};
+        F_down = [](NumType T){return 0.0;};
+        F_sw = [](NumType T){return 0.0;};
+        F_lh = [](NumType T){return 0.0;};
+    }
+
     template<typename NumType>
     void ThermoSolver<NumType>::UpdateUpperFlux(FuncPtr<NumType> F_up_)
     {

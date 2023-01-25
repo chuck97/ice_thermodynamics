@@ -44,6 +44,86 @@ namespace icethermo
     }
 
     template<typename NumType>
+    Mesh<NumType>::Mesh(const Mesh<NumType>& other)
+    {   
+        this->cells_thickness = std::make_shared<std::vector<NumType>>(*(other.cells_thickness));
+
+        for (auto item: other.single_data)
+        {
+            auto key = item.first;
+            auto value = item.second;
+
+            (this->single_data)[key] = 
+            std::make_pair
+            (
+                std::make_shared<NumType>(*(value.first)),
+                value.second
+            );
+        }
+
+        for (auto item: other.cells_data)
+        {
+            auto key = item.first;
+            auto value = item.second;
+
+            (this->cells_data)[key] = 
+            std::make_pair
+            (
+                std::make_shared<std::vector<NumType>>(*(value.first)),
+                value.second
+            );
+        }
+
+        for (auto item: other.nodes_data)
+        {
+            auto key = item.first;
+            auto value = item.second;
+
+            (this->nodes_data)[key] = 
+            std::make_pair
+            (
+                std::make_shared<std::vector<NumType>>(*(value.first)),
+                value.second
+            );
+        }
+    }
+
+    template<typename NumType>
+    Mesh<NumType>::~Mesh()
+    {   
+        //delete cells_thickness.get();
+
+        //std::cout << 111 << std::endl;
+        
+        //for (auto item: this->single_data)
+        //{
+        //    auto value = item.second;
+
+        //    delete (value.first).get();
+        //}
+
+        //std::cout << 222 << std::endl;
+
+        //for (auto item: this->cells_data)
+        //{
+        //    auto value = item.second;
+
+        //    delete (value.first).get();
+        //}
+
+        //std::cout << 333 << std::endl;
+
+        //for (auto item: this->nodes_data)
+        //{
+        //    auto value = item.second;
+
+        //    delete (value.first).get();
+        //}
+
+        //std::cout << 444 << std::endl;
+    }
+
+    template<typename NumType>
     int Mesh<NumType>::GetCellsNum() const
     {
         return cells_thickness->size();

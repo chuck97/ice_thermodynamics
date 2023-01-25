@@ -63,6 +63,8 @@ void run_model(NumType time_step,
                                             eff_capacity_parameterization,
                                             enthalpy_parameterization,
                                             fusion_heat_parameterization);
+    
+    Mesh<NumType>* another_mesh = new(Mesh<NumType>)(*ice_mesh);
 
     // time stepping
     for (int step_num = 0; step_num < num_steps + 1; ++step_num)

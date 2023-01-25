@@ -30,6 +30,8 @@ namespace icethermo
         Mesh(NumType thickness); // constructor with 10 uniform layers with given thicknes
         Mesh(int n_uniform_layers, NumType thickness); // constructor with given number of uniform layers and given thickness
         Mesh(const std::vector<NumType>& unit_segment_decomposition, NumType thickness); // constructor with manual partition for sigma layer grid and thickness
+        Mesh(const Mesh<NumType>& other); // copy constructor
+        ~Mesh(); // destructor
 
         // cells and nodes number getters
         int GetCellsNum() const;
