@@ -310,6 +310,89 @@ namespace icethermo
                                                                        NumType atm_temperature,
                                                                        int max_n_its = 20,
                                                                        NumType tol = 1e-6);
+
+        // !! sea-ice freezing mode with snow (for 0d-ice and 0d-snow profile) !!
+        /* 
+            output - pair of 0d-ice and 0d-snow values
+            
+            0d-ice values:
+                new temperature of ice-snow interface
+                new ice thicknesses
+            
+            0d-snow values:
+                new snow surface temperature
+                new snow thickness
+        */
+        std::pair<std::pair<NumType, NumType>, std::pair<NumType, NumType>> seaice0d_snow0d_freezing(NumType T_ib,
+                                                                                                     NumType T_is,
+                                                                                                     NumType thickness_i,
+                                                                                                     NumType salinity_i,
+                                                                                                     NumType rho_i,
+                                                                                                     NumType T_ss,
+                                                                                                     NumType thickness_s,
+                                                                                                     NumType rho_s,
+                                                                                                     NumType precipitation_rate,
+                                                                                                     NumType atm_temperature,
+                                                                                                     int max_n_its = 20,
+                                                                                                     NumType tol = 1e-6);
+        
+        
+        // !! snow melting mode with sea-ice (for 0d-ice and 0d-snow profile) !!
+        /* 
+            output - pair of 0d-ice and 0d-snow values
+            
+            0d-ice values:
+                new temperature of ice-snow interface
+                new ice thickness
+            
+            0d-snow values:
+                new snow thickness
+        */
+        std::pair<std::pair<NumType, NumType>, NumType> seaice0d_snow0d_melting(NumType T_ib,
+                                                                                NumType T_is,
+                                                                                NumType thickness_i,
+                                                                                NumType salinity_i,
+                                                                                NumType rho_i,
+                                                                                NumType T_ss,
+                                                                                NumType thickness_s,
+                                                                                NumType rho_s,
+                                                                                NumType precipitation_rate,
+                                                                                NumType atm_temperature,
+                                                                                int max_n_its = 20,
+                                                                                NumType tol = 1e-6);
+
+        // !! seaice freezing mode (for 0d profile) !!
+        /* 
+            output - 0d-ice values
+            
+            0d-ice values:
+                new ice surface temperature
+                new ice thickness
+        */
+
+        std::pair<NumType, NumType> seaice0d_freezing(NumType T_ib,
+                                                      NumType T_is,
+                                                      NumType thickness_i,
+                                                      NumType salinity_i,
+                                                      NumType rho_i,
+                                                      int max_n_its = 20,
+                                                      NumType tol = 1e-6);
+
+        // !! seaice melting mode (for 0d profile) !!
+        /* 
+            output - 0d-ice values
+            
+            0d-ice values:
+                new ice thickness
+        */
+        NumType seaice0d_melting(NumType T_ib,
+                                 NumType T_is,
+                                 NumType thickness_i,
+                                 NumType salinity_i,
+                                 NumType rho_i,
+                                 int max_n_its = 20,
+                                 NumType tol = 1e-6);
+        
         
         // !! glacier freezing mode (for 1d profile) !!
         /* 
@@ -400,6 +483,42 @@ namespace icethermo
                                Mesh<NumType>* mesh_snow_,
                                NumType time_step,
                                bool is_radiation_ = true,
+                               bool is_sublimation_ = true,
+                               bool is_verbose_ = true,
+                               Kparam ice_k_param_ = Kparam::FreshIce,
+                               Cparam ice_c_eff_param_ = Cparam::FreshIce,
+                               Eparam ice_E_param_ = Eparam::FreshIce,
+                               Lparam ice_L_param_ = Lparam::FreshIce,
+                               Kparam snow_k_param_ = Kparam::FreshSnow,
+                               Lparam snow_L_param_ = Lparam::FreshSnow,
+                               SnowIceTransition si_transition_mode_ = SnowIceTransition::None);
+
+        // update ocean salinity
+        void UpdateOceanSalinity(NumType ocn_sal_);
+        
+        // one-step evaluation
+        void Evaluate() override;
+
+    private:
+        void CheckMeshConsistency(Mesh<NumType>* ice_mesh,
+                                  Mesh<NumType>* snow_mesh) override;
+    
+    public:
+        void UpdateMesh(Mesh<NumType>* mesh_ice_,
+                        Mesh<NumType>* mesh_snow_) override;
+    };
+
+    //   ######################################################
+    //   ############# 0D SEA ICE + 0D SNOW CLASS #############
+    //   ######################################################
+
+    template<typename NumType>
+    class SeaIce0D_Snow0D_Solver : public ThermoSolver<NumType>
+    {
+    public:
+        SeaIce0D_Snow0D_Solver(Mesh<NumType>* mesh_ice_,
+                               Mesh<NumType>* mesh_snow_,
+                               NumType time_step,
                                bool is_sublimation_ = true,
                                bool is_verbose_ = true,
                                Kparam ice_k_param_ = Kparam::FreshIce,

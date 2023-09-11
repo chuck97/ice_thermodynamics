@@ -1,0 +1,3 @@
+python3 animate.py -i /home/chuck/Desktop/ice_thermodynamics/Cpplib/build/tests/solver_tests/sea_ice/1dice_0dsnow_cycle ip ice_mesh sp snow_mesh -flt
+
+python3 plot_ts.py -i /home/chuck/Desktop/ice_thermodynamics/Cpplib/build/tests/solver_tests/sea_ice/0dice_0dsnow_cycle -ip ice_mesh -sp snow_mesh

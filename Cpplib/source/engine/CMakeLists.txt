@@ -4,6 +4,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/solver.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/seaice1d.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/seaice1d_snow0d.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/seaice0d_snow0d.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/glacier1d.cpp
     PARENT_SCOPE
 )

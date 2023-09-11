@@ -631,8 +631,7 @@ namespace icethermo
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
         {
-            ++npseudo;
-
+            npseudo++;
             T_cells_prev = T_cells_new;
             T_is_prev = T_is_new;
             prev_surface_err = surface_err;
@@ -723,6 +722,102 @@ namespace icethermo
         return {T_cells_new, std::vector<NumType>{T_is_new}, dz_cells_new};
     }
 
+    // 1d sea-ice freezing mode
+    template<typename NumType>
+    std::pair<NumType, NumType> ThermoSolver<NumType>::seaice0d_freezing(NumType T_ib,
+                                                                         NumType T_is,
+                                                                         NumType thickness_i,
+                                                                         NumType salinity_i,
+                                                                         NumType rho_i,
+                                                                         int max_n_its,
+                                                                         NumType tol)
+    {
+        NumType T_is_new = T_is;
+        NumType T_is_prev = T_is;
+
+        NumType thickness_old = thickness_i;
+        NumType thickness_new = thickness_i;
+        NumType thickness_prev = thickness_i;
+
+        NumType omega_ib = (NumType)0.0;
+        NumType omega_is = (NumType)0.0;
+
+        std::vector<NumType> T_is_history = {T_is};
+
+        NumType current_err = std::numeric_limits<NumType>::max();
+        NumType surface_err = std::numeric_limits<NumType>::max();
+
+        NumType prev_surface_err = surface_err; 
+
+        int npseudo = 0;
+
+        for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
+        {
+            npseudo++;
+
+            T_is_prev = T_is_new;
+            thickness_prev = thickness_new;
+            prev_surface_err = surface_err;
+
+            // recalculate conductivity of ice
+            NumType k_i = Params<NumType>::Conductivity(this->ice_k_param, salinity_i, 0.5*(T_ib + T_is_new), rho_i);
+
+            // compute new value of omega at the base
+            omega_ib = this->W_from_BC_0D(T_ib,
+                                          T_is_prev,
+                                          thickness_prev,
+                                          k_i,
+                                          salinity_i,
+                                          rho_i,
+                                          true,
+                                          false);
+
+            // add sublimation
+            omega_is = (this->is_sublimation) ?
+                -this->F_lh(T_is_new)/(rho_i*GenConsts<NumType>::L_s) :
+                (NumType)0.0;
+            
+            // compute new value of ice surface temperature
+            T_is_new = this->T_from_BC_0D(T_ib,
+                                          thickness_prev,
+                                          k_i,
+                                          salinity_i,
+                                          omega_is,
+                                          rho_i,
+                                          true,
+                                          true);
+
+            // force the convergence of surface temperature
+            surface_err = std::abs(T_is_new - T_is_prev)/(std::abs(T_is) + (NumType)0.1);
+            
+            if (surface_err < prev_surface_err)
+            {
+                T_is_history.push_back(T_is_new);
+            }
+            else
+            {
+                T_is_new = sum_vec<NumType>(T_is_history)/T_is_history.size();
+            }
+
+            // recalculate ice thickness
+            thickness_new = this->Update_dz_0D(thickness_old,
+                                               omega_ib,
+                                               omega_is);
+
+            //if (surface_err < tol)
+            //{
+            //    break;
+            //}
+        }
+
+        if (this->is_verbose)
+        {
+            std::cout << "nits:" << npseudo << ", err:" << surface_err << std::endl;
+        }
+        
+        return {T_is_new, thickness_new};
+    }
+
     // 1d sea-ice melting mode
     template<typename NumType>
     TwoVecs<NumType> ThermoSolver<NumType>::seaice1d_melting(NumType T_ib,
@@ -753,7 +848,7 @@ namespace icethermo
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
         {
-            ++npseudo;
+            npseudo++;
 
             T_cells_prev = T_cells_new;
             
@@ -825,6 +920,314 @@ namespace icethermo
         return {T_cells_new, dz_cells_new};
     }
 
+    // 0d sea-ice melting mode
+    template<typename NumType>
+    NumType ThermoSolver<NumType>::seaice0d_melting(NumType T_ib,
+                                                    NumType T_is,
+                                                    NumType thickness_i,
+                                                    NumType salinity_i,
+                                                    NumType rho_i,
+                                                    int max_n_its,
+                                                    NumType tol)
+    {
+
+        NumType omega_ib = 0.0;
+        NumType omega_is = 0.0;
+
+        NumType thickness_new = thickness_i;
+        NumType thickness_prev = thickness_i;
+        NumType thickness_old = thickness_i;
+
+        NumType current_err = std::numeric_limits<NumType>::max();
+
+        NumType omega_is_sublim;
+
+        int npseudo = 0;
+
+        for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
+        {   
+            npseudo++;
+
+            thickness_prev = thickness_new;
+
+            // recalculate conductivity of ice
+            NumType k_i = Params<NumType>::Conductivity(this->ice_k_param, salinity_i, 0.5*(T_ib + T_is), rho_i);
+
+            // compute new value of omega at the base
+            omega_ib = this->W_from_BC_0D(T_ib,
+                                          T_is,
+                                          thickness_prev,
+                                          k_i,
+                                          salinity_i,
+                                          rho_i,
+                                          true,
+                                          false);
+
+            // compute new value of omega at the base
+            omega_is = this->W_from_BC_0D(T_is,
+                                          T_ib,
+                                          thickness_prev,
+                                          k_i,
+                                          salinity_i,
+                                          rho_i,
+                                          true,
+                                          true);
+            
+            // add sublimation
+            omega_is_sublim = (this->is_sublimation) ?
+                -this->F_lh(T_is)/(rho_i*GenConsts<NumType>::L_s) :
+                (NumType)0.0;
+
+            // recalculate ice thickness
+            thickness_new = this->Update_dz_0D(thickness_old,
+                                               omega_ib,
+                                               omega_is + omega_is_sublim);
+            
+
+            // evaluate the error
+            current_err = std::abs(thickness_new - thickness_prev)/std::abs(thickness_old + 0.1);
+
+            //if (current_err < tol)
+            //    break;
+        }
+        if (this->is_verbose)
+        {
+            std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        }
+        return thickness_new;
+    }
+
+    template<typename NumType>
+    std::pair<std::pair<NumType, NumType>, std::pair<NumType, NumType>> ThermoSolver<NumType>::seaice0d_snow0d_freezing
+            (NumType T_ib,
+             NumType T_is,
+             NumType thickness_i,
+             NumType salinity_i,
+             NumType rho_i,
+             NumType T_ss,
+             NumType thickness_s,
+             NumType rho_s,
+             NumType precipitation_rate,
+             NumType atm_temperature,
+             int max_n_its,
+             NumType tol)
+    {
+        NumType T_is_new = T_is;
+        NumType T_is_prev = T_is;
+
+        NumType T_ss_new = T_ss;
+        NumType T_ss_prev = T_ss;
+
+        NumType thickness_s_old = thickness_s;
+        NumType thickness_s_new = thickness_s;
+        NumType thickness_s_prev = thickness_s;
+
+        NumType thickness_i_old = thickness_i;
+        NumType thickness_i_new = thickness_i;
+        NumType thickness_i_prev = thickness_i;
+
+        NumType omega_ib = (NumType)0.0;
+        NumType omega_ss = (atm_temperature < 0.0) ? -precipitation_rate*WaterConsts<NumType>::rho_w/rho_s : 0.0;
+        std::cout << "atm_temp=" << atm_temperature << std::endl;
+        std::cout << "precipitation_rate=" << precipitation_rate << std::endl;
+        std::cout << "omega_ss=" << omega_ss << std::endl;
+        
+        NumType omega_ss_subl = 0.0;
+
+        std::vector<NumType> T_ss_history = {T_ss};
+
+        NumType surface_err = std::numeric_limits<NumType>::max();
+        NumType current_err = std::numeric_limits<NumType>::max();
+        NumType prev_surface_err = surface_err; 
+
+
+        int npseudo = 0;
+
+        for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
+        {
+            npseudo++;
+
+            T_is_prev = T_is_new;
+            T_ss_prev = T_ss_new;
+            thickness_s_prev = thickness_s_new;
+            thickness_i_prev = thickness_i_new;
+            prev_surface_err = surface_err;
+
+            // recalculate conductivity of ice
+            NumType k_i = Params<NumType>::Conductivity(this->ice_k_param, salinity_i, 0.5*(T_ib + T_is_prev), rho_i);
+
+            // compute new value of omega at the base
+            omega_ib = this->W_from_BC_0D(T_ib,
+                                          T_is_prev,
+                                          thickness_i_prev,
+                                          k_i,
+                                          salinity_i,
+                                          rho_i,
+                                          true,
+                                          false);
+
+            // add sublimation
+            omega_ss_subl = (this->is_sublimation) ?
+                -this->F_lh(T_ss_prev)/(rho_s*GenConsts<NumType>::L_s) :
+                (NumType)0.0;
+            
+            // compute new value of snow surface temperature
+            NumType k_s = SnowConsts<NumType>::k0_s;
+            T_ss_new = this->T_from_BC_0D(T_is_prev,
+                                          thickness_s_prev,
+                                          k_s,
+                                          0.0,
+                                          omega_ss + omega_ss_subl,
+                                          rho_s,
+                                          false,
+                                          true);
+
+            // force the convergence of snow surface temperature
+            surface_err = std::abs(T_ss_new - T_ss_prev)/(std::abs(T_ss) + (NumType)0.1);
+            
+            if (surface_err < prev_surface_err)
+            {
+                T_ss_history.push_back(T_ss_new);
+            }
+            else
+            {
+                T_ss_new = sum_vec<NumType>(T_ss_history)/T_ss_history.size();
+            }
+
+            // recalculate ice thickness
+            thickness_i_new = this->Update_dz_0D(thickness_i_old,
+                                                 omega_ib,
+                                                 0.0);
+
+            // recalculate snow thickness
+            thickness_s_new = this->Update_dz_0D(thickness_s_old,
+                                                 0.0,
+                                                 omega_ss + omega_ss_subl);
+
+
+            // recalculate interface temperature
+            NumType ratio = (k_i*thickness_s_new)/(k_s*thickness_i_new);
+            T_is_new  = (NumType)((1.0/(ratio + 1.0))*T_ss_new + ((ratio)/(ratio + 1.0))*T_ib);
+
+            // evaluate the error
+            std::vector<NumType> prev_temps = {T_is_prev, T_ss_prev};
+            std::vector<NumType> new_temps = {T_is_new, T_ss_new};
+
+            current_err = L2_norm(new_temps - prev_temps)/(L2_norm(std::vector<NumType>{T_is, T_ss}) + (NumType)0.1);
+        }
+
+        if (this->is_verbose)
+        {
+            std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        }
+        
+        return {{T_is_new, thickness_i_new}, {T_ss_new, thickness_s_new}};
+    }
+
+    template<typename NumType>
+    std::pair<std::pair<NumType, NumType>, NumType> ThermoSolver<NumType>::seaice0d_snow0d_melting
+    (NumType T_ib,
+     NumType T_is,
+     NumType thickness_i,
+     NumType salinity_i,
+     NumType rho_i,
+     NumType T_ss,
+     NumType thickness_s,
+     NumType rho_s,
+     NumType precipitation_rate,
+     NumType atm_temperature,
+     int max_n_its,
+     NumType tol)
+    {
+        NumType T_is_new = T_is;
+        NumType T_is_prev = T_is;
+
+        NumType thickness_s_old = thickness_s;
+        NumType thickness_s_new = thickness_s;
+        NumType thickness_s_prev = thickness_s;
+
+        NumType thickness_i_old = thickness_i;
+        NumType thickness_i_new = thickness_i;
+        NumType thickness_i_prev = thickness_i;
+
+        NumType omega_ib = (NumType)0.0;
+        NumType omega_ss = (NumType)0.0;
+        NumType omega_ss_subl = 0.0;
+
+        NumType current_err = std::numeric_limits<NumType>::max();
+
+        NumType omega_ss_precip = (this->atm_temp < 0.0) ? -precipitation_rate*WaterConsts<NumType>::rho_w/rho_s : 0.0;
+
+        int npseudo = 0;
+
+        for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
+        {
+            npseudo++;
+
+            T_is_prev = T_is_new;
+            thickness_s_prev = thickness_s_new;
+            thickness_i_prev = thickness_i_new;
+
+            // recalculate conductivity of ice
+            NumType k_i = Params<NumType>::Conductivity(this->ice_k_param, salinity_i, 0.5*(T_ib + T_is_prev), rho_i);
+
+            // compute new value of omega at the ice base
+            omega_ib = this->W_from_BC_0D(T_ib,
+                                          T_is_prev,
+                                          thickness_i_prev,
+                                          k_i,
+                                          salinity_i,
+                                          rho_i,
+                                          true,
+                                          false);
+
+            // recalculate sublimation
+            omega_ss_subl = (this->is_sublimation) ?
+                -this->F_lh(T_ss)/(rho_s*GenConsts<NumType>::L_s) :
+                (NumType)0.0;
+
+            // recalculate conductivity of snow
+            NumType k_s = SnowConsts<NumType>::k0_s;
+
+            // compute new value of omega at snow surface
+            omega_ss = this->W_from_BC_0D(T_ss,
+                                          T_is_prev,
+                                          thickness_s_prev,
+                                          k_s,
+                                          0.0,
+                                          rho_s,
+                                          false,
+                                          true);
+
+            // recalculate ice thickness
+            thickness_i_new = this->Update_dz_0D(thickness_i_old,
+                                                 omega_ib,
+                                                 0.0);
+
+            // recalculate snow thickness
+            thickness_s_new = this->Update_dz_0D(thickness_s_old,
+                                                 0.0,
+                                                 omega_ss + omega_ss_precip + omega_ss_subl);
+
+            // recalculate interface temperature
+            NumType ratio = (k_i*thickness_s_new)/(k_s*thickness_i_new);
+            T_is_new  = (NumType)((1.0/(ratio + 1.0))*T_ss + ((ratio)/(ratio + 1.0))*T_ib);
+
+            // evaluate the error
+            std::vector<NumType> prev_temps = {T_is_prev};
+            std::vector<NumType> new_temps = {T_is_new};
+
+            current_err = L2_norm(new_temps - prev_temps)/(L2_norm(std::vector<NumType>{T_is}) + (NumType)0.1);
+        }
+
+        if (this->is_verbose)
+        {
+            std::cout << "nits:" << npseudo << ", err:" << current_err << std::endl;
+        }
+        
+        return {{T_is_new, thickness_i_new}, thickness_s_new};
+    }
+
     // 1d sea-ice with 0d snow freezing mode
     template<typename NumType>
     std::pair<ThreeVecs<NumType>, TwoVecs<NumType>> ThermoSolver<NumType>::seaice1d_snow0d_freezing(NumType T_ib,
@@ -875,7 +1278,7 @@ namespace icethermo
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
         {
-            ++npseudo;
+            npseudo++;
 
             T_i_cells_prev = T_i_cells_new;
             T_is_prev = T_is_new;
@@ -1040,7 +1443,7 @@ namespace icethermo
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
         {
-            ++npseudo;
+            npseudo++;
 
             T_i_cells_prev = T_i_cells_new;
             T_is_prev = T_is_new;
@@ -1194,7 +1597,7 @@ namespace icethermo
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
         {
-            ++npseudo;
+            npseudo++;
 
             T_ib_prev = T_ib_new;
             T_cells_prev = T_cells_new;
@@ -1342,8 +1745,8 @@ namespace icethermo
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
         {
-            ++npseudo;
-
+            npseudo++;
+            
             T_cells_prev = T_cells_new;
             T_ib_prev = T_ib_new;
             
