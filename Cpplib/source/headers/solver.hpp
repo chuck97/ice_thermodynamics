@@ -64,12 +64,40 @@ namespace icethermo
         Mesh<NumType>* mesh_snow = NULL;
 
         // upwards, downwards, short-wave radiation, latent heat flux, precipitation rate, atmosphere temperature
+        
+        // total atmosphere flux
         FuncPtr<NumType> F_up = [](NumType T){return 0.0;};
+
+        // total ground/ocean flux
         FuncPtr<NumType> F_down = [](NumType T){return 0.0;};
+
+        // descending short-wave radiation
         FuncPtr<NumType> F_sw = [](NumType T){return 0.0;};
+
+        // descending long-wave radiation
+        FuncPtr<NumType> F_lw = [](NumType T){return 0.0;};
+
+        // atmosphere latent heat flux
         FuncPtr<NumType> F_lh = [](NumType T){return 0.0;};
-        NumType prec_rate;
-        NumType atm_temp;
+        
+        // atmosphere sensible heat flux
+        FuncPtr<NumType> F_sh = [](NumType T){return 0.0;};
+
+        // ascending long-wave ice/snow emitting
+        FuncPtr<NumType> F_lwi = [](NumType T){return 0.0;};
+
+        // precipitation heat flux
+        FuncPtr<NumType> F_P = [](NumType T){return 0.0;};
+
+
+        std::shared_ptr<NumType> prec_rate = NULL;      // in snow-water equavalent (mm/s)
+        std::shared_ptr<NumType> atm_temp = NULL;       // in deg Cel
+        std::shared_ptr<NumType> atm_press = NULL;      // in Pascals
+        std::shared_ptr<NumType> atm_humid = NULL;      // in g/kg
+        std::shared_ptr<NumType> abs_wind_speed = NULL; // m/s
+        std::shared_ptr<NumType> sh_trans_coeff = NULL; // -
+        std::shared_ptr<NumType> lh_trans_coeff = NULL; // -
+        std::shared_ptr<NumType> So = NULL;             // psu
 
         // mandatory ice prognostic variables
         std::shared_ptr<std::vector<NumType>> Ti_cells = NULL;
@@ -78,7 +106,6 @@ namespace icethermo
         std::shared_ptr<std::vector<NumType>> rhoi_cells = NULL;
         std::shared_ptr<NumType> Ti_s = NULL;
         std::shared_ptr<NumType> Ti_b = NULL;
-        std::shared_ptr<NumType> So = NULL;
 
         // mandatory snow prognostic variables
         std::shared_ptr<std::vector<NumType>> Ts_cells = NULL;
@@ -119,6 +146,7 @@ namespace icethermo
     public:
         // update upper (atmosphere) flux
         void UpdateUpperFlux(FuncPtr<NumType> F_up_);
+        void UpdateUpperFlux(); // assign default total flux
 
         // update lower (ocean/soil flux)
         void UpdateLowerFlux(FuncPtr<NumType> F_down_);
@@ -126,14 +154,50 @@ namespace icethermo
         // update short-wave radiation (used to compute penetrating radiation)
         void UpdateShortWaveRadiation(FuncPtr<NumType> F_sw_);
 
-        // update latent heat flux (used to compute sublimation)
+        // update long-wave radiation from atmosphere
+        void UpdateLongWaveRadiation(FuncPtr<NumType> F_lw_);
+
+        // update latent heat flux 
         void UpdateLatentHeatFlux(FuncPtr<NumType> F_lh_);
+        void UpdateLatentHeatFlux(); // assign default latent heat flux parameterization
+
+        // update sensible heat flux
+        void UpdateSensibleHeatFlux(FuncPtr<NumType> F_sh_);
+        void UpdateSensibleHeatFlux(); // assign default sensible heat flux parameterization
+
+        // update sensible heat flux
+        void UpdatePrecipitationHeatFlux(FuncPtr<NumType> F_p_);
+        void UpdatePrecipitationHeatFlux(); // assign default precipitation heat flux parameterization
+
+        // update sensible heat flux
+        void UpdateEmittingHeatFlux(FuncPtr<NumType> F_lwi_);
+        void UpdateEmittingHeatFlux(); // assign default surface emitting heat flux parameterization
+
+
+
+
+
         
         // update precipitation rate (m s-1)
         void UpdatePrecipitationRate(NumType prec_rate_mm_sm1_);
 
         // update atmosphere temperature (deg C)
         void UpdateAtmosphereTemperature(NumType atm_temp_);
+
+        // update atmosphere pressure (Pascals = N/m^2)
+        void UpdateAtmospherePressure(NumType atm_press_);
+
+        // update atmosphere specific humidity (g/kg)
+        void UpdateAirSpecificHumidity(NumType atm_humid_);
+
+        // update absolute wind speed (m/s)
+        void UpdateAbsWindSpeed(NumType abs_wind_speed_);
+
+        // update sensible heat transfer coefficient (-)
+        void UpdateShTransCoeff(NumType sh_coeff_);
+
+        // update latent heat transfer coefficient (-)
+        void UpdateLhTransCoeff(NumType lh_coeff_);
         
         // update mesh
         virtual void UpdateMesh(Mesh<NumType>* mesh_ice_,
@@ -447,7 +511,7 @@ namespace icethermo
         SeaIce1D_Solver(Mesh<NumType>* mesh_ice_,
                         NumType time_step_,
                         bool is_radiation = true,
-                        bool is_sublimation = true,
+                        bool is_sublimation = false,
                         bool is_verbose_ = true,
                         ApproxOrder grad_approx_order_ = ApproxOrder::first,
                         Kparam ice_k_param_ = Kparam::FreshIce,
@@ -483,7 +547,7 @@ namespace icethermo
                                Mesh<NumType>* mesh_snow_,
                                NumType time_step,
                                bool is_radiation_ = true,
-                               bool is_sublimation_ = true,
+                               bool is_sublimation_ = false,
                                bool is_verbose_ = true,
                                Kparam ice_k_param_ = Kparam::FreshIce,
                                Cparam ice_c_eff_param_ = Cparam::FreshIce,
@@ -519,7 +583,7 @@ namespace icethermo
         SeaIce0D_Snow0D_Solver(Mesh<NumType>* mesh_ice_,
                                Mesh<NumType>* mesh_snow_,
                                NumType time_step,
-                               bool is_sublimation_ = true,
+                               bool is_sublimation_ = false,
                                bool is_verbose_ = true,
                                Kparam ice_k_param_ = Kparam::FreshIce,
                                Cparam ice_c_eff_param_ = Cparam::FreshIce,
@@ -557,7 +621,7 @@ namespace icethermo
         Glacier1D_Solver(Mesh<NumType>* mesh_ice_,
                          NumType time_step_,
                          bool is_radiation_ = true,
-                         bool is_sublimation_ = true,
+                         bool is_sublimation_ = false,
                          bool is_verbose_ = true,
                          ApproxOrder grad_approx_order_ = ApproxOrder::first,
                          Kparam ice_k_param_ = Kparam::FreshIce,

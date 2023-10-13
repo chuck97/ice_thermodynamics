@@ -199,20 +199,20 @@ namespace icethermo
             }
 
             // if there are precipitations with less than zero atm temp add snow
-            if ((this->atm_temp < (NumType)0.0) and 
+            if ((*(this->atm_temp) < (NumType)0.0) and 
                ((*(this->dzs_cells))[0] < (NumType)SNOW_THICKNESS_THRESHOLD))
             {
                 // update snow thickness according to precipitation rate
                 (*(this->dzs_cells))[0] = this->Update_dz_0D((*(this->dzs_cells))[0],
                                                               (NumType)0.0, 
-                                                              -(this->prec_rate)*
+                                                              -(*(this->prec_rate))*
                                                               WaterConsts<NumType>::rho_w/
                                                               SnowConsts<NumType>::rho_s);
                 
                 // if snow appeared initialize snow temperatures
                 if ((*(this->dzs_cells))[0] > (NumType)SNOW_THICKNESS_THRESHOLD)
                 {
-                    *(this->Ts_s) = this->atm_temp;
+                    *(this->Ts_s) = *(this->atm_temp);
                     *(this->Ts_b) = *(this->Ti_s);
                     (*(this->Ts_cells))[0] = (NumType)0.5*(*(this->Ts_s) + *(this->Ts_b));
                 }
@@ -231,8 +231,8 @@ namespace icethermo
                                                                   *(this->Ts_s),
                                                                   (*this->dzs_cells)[0],
                                                                   (*this->rhos_cells)[0],
-                                                                  this->prec_rate,
-                                                                  this->atm_temp);
+                                                                  *(this->prec_rate),
+                                                                  *(this->atm_temp));
 
             auto freezing_ice = freezing_values.first;
             auto freezing_snow = freezing_values.second;
@@ -259,8 +259,8 @@ namespace icethermo
                                                                     *(this->Ts_s),
                                                                     (*this->dzs_cells)[0],
                                                                     (*this->rhos_cells)[0],
-                                                                    this->prec_rate,
-                                                                    this->atm_temp);
+                                                                    *(this->prec_rate),
+                                                                    *(this->atm_temp));
                 auto melting_ice = melting_values.first;
                 auto melting_snow = melting_values.second;
 

@@ -36,8 +36,14 @@ namespace icethermo
         this->F_down = [](NumType T){return (NumType)0.0;};
         this->F_sw = [](NumType T){return (NumType)0.0;};
         this->F_lh = [](NumType T){return (NumType)0.0;};
-        this->prec_rate = (NumType)0.0;
-        this->atm_temp = (NumType)0.0;
+        this->prec_rate = std::make_shared<NumType>(0.0);
+        this->atm_temp = std::make_shared<NumType>(0.0);
+        this->atm_press = std::make_shared<NumType>(101325.0); // Pa
+        this->atm_humid = std::make_shared<NumType>(0.0); // g/kg
+        this->abs_wind_speed = std::make_shared<NumType>(5.0);
+        this->sh_trans_coeff = std::make_shared<NumType>(GenConsts<NumType>::C_sh);
+        this->lh_trans_coeff = std::make_shared<NumType>(GenConsts<NumType>::C_lh);
+        this->abs_wind_speed = std::make_shared<NumType>(5.0);
         this->is_radiation = is_radiation_;
         this->is_sublimation = is_sublimation_;
         this->si_transition_mode = si_transition_mode_;
@@ -77,6 +83,108 @@ namespace icethermo
     }
 
     template<typename NumType>
+    void ThermoSolver<NumType>::UpdateUpperFlux()
+    {
+        if ((this->mesh_snow != NULL) and 
+            ((this->mesh_snow)->GetTotalThickness() > (NumType)SNOW_THICKNESS_THRESHOLD))
+        {
+            // assign common parameterizations
+            this->UpdateLatentHeatFlux();
+            this->UpdateSensibleHeatFlux();
+            this->UpdatePrecipitationHeatFlux();
+            this->UpdateEmittingHeatFlux();
+
+            NumType em_s = GenConsts<NumType>::emissivity;
+            NumType alb_s = SnowConsts<NumType>::albedo_s;
+            NumType i0_s = SnowConsts<NumType>::i0_s;
+
+            FuncPtr<NumType> F_lws = this->F_lw;
+            FuncPtr<NumType> F_lwis = this->F_lwi;
+            FuncPtr<NumType> F_sws = this->F_sw;
+            FuncPtr<NumType> F_shs = this->F_sh;
+            FuncPtr<NumType> F_lhs = this->F_lh;
+            FuncPtr<NumType> F_Ps = this->F_P;
+
+            std::cout << "F_lws:" << F_lws(0.0) << std::endl;
+            std::cout << "F_lwis:" << F_lwis(0.0) << std::endl;
+            std::cout << "F_sws:" << F_sws(0.0) << std::endl;
+            std::cout << "F_shs:" << F_shs(0.0) << std::endl;
+            std::cout << "F_lhs:" << F_lhs(0.0) << std::endl;
+            std::cout << "F_Ps:" << F_Ps(0.0) << std::endl;
+
+            this->F_up = [em_s,
+                          alb_s,
+                          i0_s,
+                          F_lws,
+                          F_lwis,
+                          F_sws,
+                          F_shs,
+                          F_lhs,
+                          F_Ps
+                          ](NumType T)
+            {
+                return    em_s*F_lws(T)
+                        - em_s*F_lwis(T)
+                        + (1.0 - alb_s)*(1.0 - i0_s)*F_sws(T)
+                        + F_shs(T)  
+                        + F_lhs(T) 
+                        + F_Ps(T)
+                        ;
+            };
+        }
+        else if (this->mesh_ice != NULL)
+        {
+            // assign common parameterizations
+            this->UpdateLatentHeatFlux();
+            this->UpdateSensibleHeatFlux();
+            this->UpdatePrecipitationHeatFlux();
+            this->UpdateEmittingHeatFlux();
+
+            NumType em_i = GenConsts<NumType>::emissivity;
+            NumType alb_i = IceConsts<NumType>::albedo_i;
+            NumType i0_i = IceConsts<NumType>::i0_i;
+
+            FuncPtr<NumType> F_lwi = this->F_lw;
+            FuncPtr<NumType> F_lwii = this->F_lwi;
+            FuncPtr<NumType> F_swi = this->F_sw;
+            FuncPtr<NumType> F_shi = this->F_sh;
+            FuncPtr<NumType> F_lhi = this->F_lh;
+            FuncPtr<NumType> F_Pi = this->F_P;
+
+            std::cout << "F_lwi:" << F_lwi(0.0) << std::endl;
+            std::cout << "F_lwii:" << F_lwii(0.0) << std::endl;
+            std::cout << "F_swi:" << F_swi(0.0) << std::endl;
+            std::cout << "F_shi:" << F_shi(0.0) << std::endl;
+            std::cout << "F_lhi:" << F_lhi(0.0) << std::endl;
+            std::cout << "F_Pi:" << F_Pi(0.0) << std::endl;
+
+            this->F_up = [em_i,
+                          alb_i,
+                          i0_i,
+                          F_lwi,
+                          F_lwii,
+                          F_swi,
+                          F_shi,
+                          F_lhi,
+                          F_Pi
+                          ](NumType T)
+            {
+                return    em_i*F_lwi(T)
+                        - em_i*F_lwii(T) 
+                        + (1.0 - alb_i)*(1.0 - i0_i)*F_swi(T) 
+                       + F_shi(T)   
+                       + F_lhi(T) 
+                       + F_Pi(T)
+                       ;
+            };
+        }
+        else
+        {
+            THERMO_ERR((std::string) "At least ice mesh should be assigned to assemble default atm flux\n");
+        }
+    }
+
+    template<typename NumType>
     void ThermoSolver<NumType>::UpdateLowerFlux(FuncPtr<NumType> F_down_)
     {
         this->F_down = F_down_;
@@ -89,23 +197,142 @@ namespace icethermo
     }
 
     template<typename NumType>
+    void ThermoSolver<NumType>::UpdateLongWaveRadiation(FuncPtr<NumType> F_lw_)
+    {
+        this->F_lw = F_lw_;
+    }
+
+    template<typename NumType>
     void ThermoSolver<NumType>::UpdateLatentHeatFlux(FuncPtr<NumType> F_lh_)
     {
         this->F_lh = F_lh_;
     }
 
     template<typename NumType>
+    void ThermoSolver<NumType>::UpdateLatentHeatFlux()
+    {
+        auto press = this->atm_press;
+        auto ws = this->abs_wind_speed;
+        auto ah = this->atm_humid;
+        auto Clh = this->lh_trans_coeff;
+
+        NumType c1 = IceConsts<NumType>::c1_i;
+        NumType c2 = IceConsts<NumType>::c2_i;
+        NumType T_0 = GenConsts<NumType>::T0;
+        NumType ra = AirConsts<NumType>::rho_a;
+        NumType Ls = GenConsts<NumType>::L_s;
+
+        this->F_lh = [c1, c2, T_0, ra, Ls, press, ws, ah, Clh](NumType T)
+        {   
+            NumType es = (NumType)(6.11*exp(c1*T/(T + T_0 - c2)));
+            NumType q_surf = 0.622*es/((*press) - 0.378*es);
+             
+            return ra*Ls*(*Clh)*(*ws)*((*ah)*1e-3 - q_surf);
+        };
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateSensibleHeatFlux(FuncPtr<NumType> F_sh_)
+    {
+        this->F_sh = F_sh_;
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateSensibleHeatFlux()
+    {
+        NumType ra = AirConsts<NumType>::rho_a;
+        NumType cpa = AirConsts<NumType>::cp_a;
+
+        auto ws = this->abs_wind_speed;
+        auto at = this->atm_temp;
+        auto Csh = this->sh_trans_coeff;
+
+        this->F_sh = [ra, cpa, ws, at, Csh](NumType T)
+        {
+            return ra*cpa*(*Csh)*(*ws)*((*at) - T);
+        };
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdatePrecipitationHeatFlux(FuncPtr<NumType> F_p_)
+    {
+        this->F_P = F_p_;
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdatePrecipitationHeatFlux()
+    {
+        NumType rw = WaterConsts<NumType>::rho_w;
+        NumType cpw = WaterConsts<NumType>::c_pw;
+
+        auto pr = this->prec_rate;
+        auto at = this->atm_temp;
+
+        this->F_P = [rw, cpw, pr, at](NumType T)
+        {
+            return (((*at) - T) > 0.0) ? (*pr)*rw*cpw*((*at) - T) : 0.0;
+        };
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateEmittingHeatFlux(FuncPtr<NumType> F_lwi_)
+    {
+        this->F_lwi = F_lwi_;
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateEmittingHeatFlux()
+    {
+        NumType sig = GenConsts<NumType>::sigma;
+        NumType T_0 = GenConsts<NumType>::T0;
+
+        this->F_lwi = [sig, T_0](NumType T)
+        {
+            return sig*(T + T_0)*(T + T_0)*(T + T_0)*(T + T_0);
+        };
+    }
+
+    template<typename NumType>
     void ThermoSolver<NumType>::UpdatePrecipitationRate(NumType prec_rate_mm_sm1_)
     {
-        this->prec_rate = prec_rate_mm_sm1_;
+        *(this->prec_rate) = prec_rate_mm_sm1_;
     }
 
     template<typename NumType>
     void ThermoSolver<NumType>::UpdateAtmosphereTemperature(NumType atm_temp_)
     {
-        this->atm_temp = atm_temp_;
+        *(this->atm_temp) = atm_temp_;
     }
 
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateAtmospherePressure(NumType atm_press_)
+    {
+        *(this->atm_press) = atm_press_;
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateAirSpecificHumidity(NumType atm_humid_)
+    {
+        *(this->atm_humid) = atm_humid_;
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateAbsWindSpeed(NumType abs_wind_speed_)
+    {
+        *(this->abs_wind_speed) = abs_wind_speed_;
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateShTransCoeff(NumType sh_coeff_)
+    {
+        *(this->sh_trans_coeff) = sh_coeff_;
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateLhTransCoeff(NumType lh_coeff_)
+    {
+        *(this->lh_trans_coeff) = lh_coeff_;
+    }
 
     template<typename NumType>
     std::vector<NumType> ThermoSolver<NumType>::Update_dz(const std::vector<NumType>& dz_cells_old,
@@ -1028,9 +1255,6 @@ namespace icethermo
 
         NumType omega_ib = (NumType)0.0;
         NumType omega_ss = (atm_temperature < 0.0) ? -precipitation_rate*WaterConsts<NumType>::rho_w/rho_s : 0.0;
-        std::cout << "atm_temp=" << atm_temperature << std::endl;
-        std::cout << "precipitation_rate=" << precipitation_rate << std::endl;
-        std::cout << "omega_ss=" << omega_ss << std::endl;
         
         NumType omega_ss_subl = 0.0;
 
@@ -1156,7 +1380,7 @@ namespace icethermo
 
         NumType current_err = std::numeric_limits<NumType>::max();
 
-        NumType omega_ss_precip = (this->atm_temp < 0.0) ? -precipitation_rate*WaterConsts<NumType>::rho_w/rho_s : 0.0;
+        NumType omega_ss_precip = (atm_temperature < 0.0) ? -precipitation_rate*WaterConsts<NumType>::rho_w/rho_s : 0.0;
 
         int npseudo = 0;
 

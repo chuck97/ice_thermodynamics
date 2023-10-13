@@ -112,11 +112,12 @@ void run_model(NumType time_step,
     (*initial_snow_dens_cells)[0] = SnowConsts<NumType>::rho_s;
     (*initial_snow_surf_temp) = initial_snow_surface_temperature;
 
+
     // create 0d ice with 0d snow solver class
     SeaIce0D_Snow0D_Solver<NumType> thermo_solver(ice_mesh,
                                                   snow_mesh,
                                                   time_step,
-                                                  true,
+                                                  false,
                                                   true,
                                                   conductivity_ice_parameterization,
                                                   eff_capacity_ice_parameterization,
@@ -124,6 +125,7 @@ void run_model(NumType time_step,
                                                   fusion_heat_ice_parameterization,
                                                   conductivity_snow_parameterization,
                                                   fusion_heat_snow_parameterization);
+    
 
     // save initial state to file
 #ifdef USE_JSON_OUTPUT
@@ -144,24 +146,48 @@ void run_model(NumType time_step,
                                           highest_prec_rate,
                                           step_num*time_step);
 
-        thermo_solver.UpdateUpperFlux
-        (
-            [&step_num,
-             &time_step,
-             &curr_forc](NumType temp)
-            {
-                return atm_flux<NumType>(temp, step_num*time_step, curr_forc.first);
-            }
-        );
+        //thermo_solver.UpdateUpperFlux
+        //(
+        //    [&step_num,
+        //     &time_step,
+        //     &curr_forc](NumType temp)
+        //    {
+        //        return atm_flux<NumType>(temp, step_num*time_step, curr_forc.first);
+        //    }
+        //);
+
 
         // update ocean salinity to 30 psu
-        thermo_solver.UpdateOceanSalinity((NumType)30.0);
+        //thermo_solver.UpdateOceanSalinity((NumType)30.0);
 
         // update atmosphere temperature
         thermo_solver.UpdateAtmosphereTemperature(curr_forc.first);
 
+        // update atmosphere pressure
+        thermo_solver.UpdateAtmospherePressure(101325.0);
+
         // update precipitation rate
         thermo_solver.UpdatePrecipitationRate(curr_forc.second);
+
+        // update atm humidity
+        thermo_solver.UpdateAirSpecificHumidity(0.5);
+
+        // update wind speed
+        thermo_solver.UpdateAbsWindSpeed(15.0);
+
+        // update downwards long-wawe radiation
+        thermo_solver.UpdateLongWaveRadiation
+        (
+            [](NumType T){return 300.0;}
+        );
+
+        thermo_solver.UpdateShortWaveRadiation
+        (
+            [curr_forc](NumType T){return (curr_forc.first > 0.0) ? 100.0 : 0.0;}
+        );
+
+        // update default atm flux parameterization
+        thermo_solver.UpdateUpperFlux();
 
         // evaluation of thermo solver
         thermo_solver.Evaluate();
@@ -186,7 +212,7 @@ int main()
 {
     // model launcher (you can choose float or double)
     run_model<double>(3600.0,              // time step (seconds) 
-                      2000,                // number of time steps 
+                      1000,                // number of time steps 
                       1,                   // output frequency N (every N-th step would be written to file)  
                       2.0,                 // initial ice thickness (meters) 
                       0.1,                 // initial snow thickness (meters)

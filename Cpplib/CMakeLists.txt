@@ -14,11 +14,18 @@ endif()
 option(USE_JSON_OUTPUT "Link library with nlohmann::json" OFF)
 option(COMPILE_TESTS "Compile tests" OFF)
 option(COMPILE_EXAMPLES "Compile examples" OFF)
-option(COMPILE_ITSLAV "Compile IceThermo inteface for SLAV model" OFF)
+option(COMPILE_ITSLAV "Compile IceThermo intefaces for SLAV model" OFF)
+option(COMPILE_ITINMCM "Compile IceThermo intefaces for INMCM model" OFF)
 
 # add Fortran support if SLAV interfaces are compiled
 if (COMPILE_ITSLAV)
   MESSAGE(STATUS "SLAV interfaces compilation ENABLED")
+  enable_language (Fortran)
+endif()
+
+# add Fortran support if INMCM interfaces are compiled
+if (COMPILE_ITINMCM)
+  MESSAGE(STATUS "INMCM interfaces compilation ENABLED")
   enable_language (Fortran)
 endif()
 

@@ -5,6 +5,7 @@
 #include <string>
 #include <tuple>
 #include <functional>
+#include <cmath>
 #include "defines.hpp"
 
 namespace icethermo
