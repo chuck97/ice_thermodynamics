@@ -42,28 +42,11 @@ add_library(icethermo STATIC ${SOURCE} ${HEADER})
 # include directories
 target_include_directories(icethermo PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_include_directories(icethermo PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/headers")
+target_include_directories(icethermo PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
 
-# to install library
-set_property(TARGET icethermo PROPERTY PUBLIC_HEADER
-  "${PROJECT_SOURCE_DIR}/source/headers/constants.hpp"
-  "${PROJECT_SOURCE_DIR}/source/headers/defines.hpp"
-  "${PROJECT_SOURCE_DIR}/source/headers/icethermo.hpp"
-  "${PROJECT_SOURCE_DIR}/source/headers/matvec.hpp"
-  "${PROJECT_SOURCE_DIR}/source/headers/mesh.hpp"
-  "${PROJECT_SOURCE_DIR}/source/headers/solver.hpp"
-  "${PROJECT_SOURCE_DIR}/source/headers/tools.hpp"
-  "${PROJECT_BINARY_DIR}/itslav.mod")
-
-install(TARGETS icethermo 
-	      ARCHIVE DESTINATION lib
-	      LIBRARY DESTINATION lib
-	      RUNTIME DESTINATION bin
-	      PUBLIC_HEADER DESTINATION include)
-
-if (COMPILE_ITSLAV)
-  install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY} DESTINATION fortran)
+if (COMPILE_ITINMCM)
+  target_include_directories(icethermo PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/applications/itinmcm")
 endif()
-
 
 # link library with nlohmann::json
 if (USE_JSON_OUTPUT)
