@@ -1017,7 +1017,7 @@ module itinmcm0d
         end if
 
     end subroutine
-
+    
     ! update 2D bool snow presence array
     subroutine GetIsSnow(array, &        ! 2D output bool array for snow presence
                          min_lon_ind,  & ! minimal longitude index (inclusively)
