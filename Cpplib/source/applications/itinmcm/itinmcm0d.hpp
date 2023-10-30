@@ -388,7 +388,8 @@ extern "C"
                          );
     
     // recieve 2d-array (boolean) of snow presence
-    void GetIsSnow(bool* array,
+    void GetIsSnow(void* obj,
+                   bool* array,
                    int min_lon_ind_,        
                    int max_lon_ind_,        
                    int min_lat_ind_,        
@@ -396,7 +397,8 @@ extern "C"
                    );
     
     // get 2d-array (boolean) of ice presence
-    void GetIsIce(bool* array,
+    void GetIsIce(void* obj,
+                  bool* array,
                   int min_lon_ind_,        
                   int max_lon_ind_,        
                   int min_lat_ind_,        
