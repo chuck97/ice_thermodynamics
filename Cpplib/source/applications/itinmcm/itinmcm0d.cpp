@@ -82,7 +82,7 @@ ThermoModelsSet0D::ThermoModelsSet0D(double time_step_,
             );
         }
         ice_meshes.push_back(current_lat_ice_meshes);
-        snow_meshes.push_back(current_lat_ice_meshes);
+        snow_meshes.push_back(current_lat_snow_meshes);
     }
 
     if (is_verbose)
@@ -156,8 +156,8 @@ ThermoModelsSet0D::ThermoModelsSet0D(double time_step_,
                 new(SeaIce0D_Snow0D_Solver<double>)(local_ice_mesh,
                                                     local_snow_mesh,
                                                     time_step,
-                                                    true,
-                                                    true)
+                                                    false,
+                                                    false)
             );
         }
         solvers.push_back(current_lat_solvers);
@@ -657,6 +657,49 @@ void ThermoModelsSet0D::UpdateLhCoeff(double* lhc_values,
     if (is_verbose)
     {
         std::cout << "Updated 2d latent heat coefficients array!\n";
+    }
+}
+
+void ThermoModelsSet0D::UpdateTotalAtmFlux(int min_lon_ind_,        
+                                           int max_lon_ind_,        
+                                           int min_lat_ind_,        
+                                           int max_lat_ind_)
+{
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateTotalAtmFlux error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateTotalAtmFlux error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateTotalAtmFlux error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateTotalAtmFlux error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
+    for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
+    {
+        int local_lat_ind = lat_ind - min_lat_ind_;
+
+        for (int lon_ind = min_lon_ind_; lon_ind < max_lon_ind_ + 1; ++lon_ind)
+        {
+            int local_lon_ind = lon_ind - min_lon_ind_;
+
+            solvers[local_lat_ind][local_lon_ind]->UpdateUpperFlux();
+        }
+    }
+
+    if (is_verbose)
+    {
+        std::cout << "Updated 2d total atmosphere flux!\n";
     }
 }
 
@@ -1407,6 +1450,19 @@ void UpdateLhCoeff(void* obj,
                        max_lon_ind,
                        min_lat_ind,
                        max_lat_ind);
+}
+
+void UpdateTotalAtmFlux(void* obj,
+                        int min_lon_ind,        
+                        int max_lon_ind,        
+                        int min_lat_ind,        
+                        int max_lat_ind)
+{
+    ThermoModelsSet0D* ptr = (ThermoModelsSet0D*)obj;
+    ptr->UpdateTotalAtmFlux(min_lon_ind,
+                            max_lon_ind,
+                            min_lat_ind,
+                            max_lat_ind);
 }
 
 void UpdateOceanSalinity(void* obj,

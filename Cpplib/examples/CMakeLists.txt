@@ -3,5 +3,5 @@ if (COMPILE_ITSLAV)
 endif()
 
 if (COMPILE_ITINMCM)
-    #add_subdirectory(itinmcm0d_example)
+    add_subdirectory(itinmcm0d_example)
 endif()
