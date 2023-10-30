@@ -103,6 +103,12 @@ public:
                        int max_lon_ind_,        
                        int min_lat_ind_,        
                        int max_lat_ind_);
+    
+    // update total atm flux
+    void UpdateTotalAtmFlux(int min_lon_ind_,        
+                            int max_lon_ind_,        
+                            int min_lat_ind_,        
+                            int max_lat_ind_);
 
     // update ocean salinity
     void UpdateOceanSalinity(double* os_values,
@@ -315,6 +321,13 @@ extern "C"
                        int max_lon_ind,        
                        int min_lat_ind,        
                        int max_lat_ind);
+    
+    // update 2d total atmosphere flux
+    void UpdateTotalAtmFlux(void* obj,
+                            int min_lon_ind,        
+                            int max_lon_ind,        
+                            int min_lat_ind,        
+                            int max_lat_ind);
 
     // update 2d ocean salinity
     void UpdateOceanSalinity(void* obj,
