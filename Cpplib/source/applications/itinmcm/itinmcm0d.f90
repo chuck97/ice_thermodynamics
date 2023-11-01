@@ -457,6 +457,7 @@ module itinmcm0d
         end subroutine
     end interface
 
+
     ! recieve bool is_snow array
     interface
         subroutine GetIsSnow_(obj, &           ! pointer to allocated Cpp class
@@ -500,7 +501,7 @@ module itinmcm0d
             
         end subroutine
     end interface
-    
+
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!! HOLD CPP CLASS !!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -534,6 +535,7 @@ module itinmcm0d
     public :: GetIceThickness
     public :: GetIsSnow
     public :: GetIsIce
+
  
  contains
  
@@ -1089,7 +1091,7 @@ module itinmcm0d
     end subroutine
     
     ! update 2D bool snow presence array
-    subroutine GetIsSnow(array, &        ! 2D output bool array for snow presence
+    subroutine GetIsSnow(array,        & ! 2D output bool array for snow presence
                          min_lon_ind,  & ! minimal longitude index (inclusively)
                          max_lon_ind,  & ! maximal longitude index (inclusively)
                          min_lat_ind,  & ! minimal latitude index (inclusively)
@@ -1115,7 +1117,7 @@ module itinmcm0d
     end subroutine
 
     ! update 2D bool ice presence array
-    subroutine GetIsIce(array, &        ! 2D output bool array for ice presence
+    subroutine GetIsIce(array,        & ! 2D output bool array for ice presence
                         min_lon_ind,  & ! minimal longitude index (inclusively)
                         max_lon_ind,  & ! maximal longitude index (inclusively)
                         min_lat_ind,  & ! minimal latitude index (inclusively)
@@ -1139,5 +1141,5 @@ module itinmcm0d
         end if
 
     end subroutine
-    
+   
 end module itinmcm0d
