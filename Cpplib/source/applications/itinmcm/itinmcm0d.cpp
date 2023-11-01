@@ -933,7 +933,9 @@ void ThermoModelsSet0D::Evaluate(int min_lon_ind_,
         {
             int local_lon_ind = lon_ind - min_lon_ind_;
 
-            if (is_water[local_lat_ind][local_lon_ind] and do_compute[local_lat_ind][local_lon_ind])
+            double current_ice_thick = ice_meshes[local_lat_ind][local_lon_ind]->GetTotalThickness();
+
+            if (is_water[local_lat_ind][local_lon_ind] and do_compute[local_lat_ind][local_lon_ind] and (current_ice_thick > min_ice_thick))
             {
                 solvers[local_lat_ind][local_lon_ind]->Evaluate();
             }
