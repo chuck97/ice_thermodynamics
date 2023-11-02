@@ -105,12 +105,12 @@ namespace icethermo
             FuncPtr<NumType> F_lhs = this->F_lh;
             FuncPtr<NumType> F_Ps = this->F_P;
 
-            std::cout << "F_lws:" << F_lws(0.0) << std::endl;
-            std::cout << "F_lwis:" << F_lwis(0.0) << std::endl;
-            std::cout << "F_sws:" << F_sws(0.0) << std::endl;
-            std::cout << "F_shs:" << F_shs(0.0) << std::endl;
-            std::cout << "F_lhs:" << F_lhs(0.0) << std::endl;
-            std::cout << "F_Ps:" << F_Ps(0.0) << std::endl;
+            //std::cout << "F_lws:" << F_lws(0.0) << std::endl;
+            //std::cout << "F_lwis:" << F_lwis(0.0) << std::endl;
+            //std::cout << "F_sws:" << F_sws(0.0) << std::endl;
+            //std::cout << "F_shs:" << F_shs(0.0) << std::endl;
+            //std::cout << "F_lhs:" << F_lhs(0.0) << std::endl;
+            //std::cout << "F_Ps:" << F_Ps(0.0) << std::endl;
 
             this->F_up = [em_s,
                           alb_s,
@@ -151,12 +151,12 @@ namespace icethermo
             FuncPtr<NumType> F_lhi = this->F_lh;
             FuncPtr<NumType> F_Pi = this->F_P;
 
-            std::cout << "F_lwi:" << F_lwi(0.0) << std::endl;
-            std::cout << "F_lwii:" << F_lwii(0.0) << std::endl;
-            std::cout << "F_swi:" << F_swi(0.0) << std::endl;
-            std::cout << "F_shi:" << F_shi(0.0) << std::endl;
-            std::cout << "F_lhi:" << F_lhi(0.0) << std::endl;
-            std::cout << "F_Pi:" << F_Pi(0.0) << std::endl;
+            //std::cout << "F_lwi:" << F_lwi(0.0) << std::endl;
+            //std::cout << "F_lwii:" << F_lwii(0.0) << std::endl;
+            //std::cout << "F_swi:" << F_swi(0.0) << std::endl;
+            //std::cout << "F_shi:" << F_shi(0.0) << std::endl;
+            //std::cout << "F_lhi:" << F_lhi(0.0) << std::endl;
+            //std::cout << "F_Pi:" << F_Pi(0.0) << std::endl;
 
             this->F_up = [em_i,
                           alb_i,
