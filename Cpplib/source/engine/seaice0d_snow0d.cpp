@@ -105,11 +105,19 @@ namespace icethermo
                 this->So = this->mesh_ice->CreateSingleData("ocean_salinity", false);
                 *(this->So) = (NumType)30.0;
             }
+            else
+            {
+                this->So =  this->mesh_ice->GetSingleData("ocean_salinity");
+            }
 
             if (!this->mesh_ice->CheckSingleDataExistency("down_temperature"))
             {
                 this->Ti_b = this->mesh_ice->CreateSingleData("down_temperature");
                 *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
+            }
+            else
+            {
+                this->Ti_b = this->mesh_ice->GetSingleData("down_temperature");
             }
         }
 
@@ -127,6 +135,10 @@ namespace icethermo
             {
                 this->Ts_b = this->mesh_snow->CreateSingleData("down_temperature");
             }
+            else
+            {
+                this->Ts_b = this->mesh_snow->GetSingleData("down_temperature");
+            }
         }
     }
 
@@ -135,6 +147,7 @@ namespace icethermo
     void SeaIce0D_Snow0D_Solver<NumType>::Evaluate()
     {
         // force base temperature to freezing point
+
         *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
 
         // check if snow exists

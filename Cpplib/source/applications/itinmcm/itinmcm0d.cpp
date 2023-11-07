@@ -660,29 +660,29 @@ void ThermoModelsSet0D::UpdateLhCoeff(double* lhc_values,
     }
 }
 
-void ThermoModelsSet0D::UpdateTotalAtmFlux(int min_lon_ind_,        
-                                           int max_lon_ind_,        
-                                           int min_lat_ind_,        
-                                           int max_lat_ind_)
+void ThermoModelsSet0D::AssembleTotalAtmFlux(int min_lon_ind_,        
+                                             int max_lon_ind_,        
+                                             int min_lat_ind_,        
+                                             int max_lat_ind_)
 {
     if (min_lon_ind_ < min_lon_ind)
     {
-        THERMO_ERR((std::string)"UpdateTotalAtmFlux error: minimal longitude index is less than minimal mesh longitude index!");
+        THERMO_ERR((std::string)"AssembleTotalAtmFlux error: minimal longitude index is less than minimal mesh longitude index!");
     }
 
     if (max_lon_ind_ > max_lon_ind)
     {
-        THERMO_ERR((std::string)"UpdateTotalAtmFlux error: maximal longitude index is greater than maximal mesh longitude index!");
+        THERMO_ERR((std::string)"AssembleTotalAtmFlux error: maximal longitude index is greater than maximal mesh longitude index!");
     }
 
     if (min_lat_ind_ < min_lat_ind)
     {
-        THERMO_ERR((std::string)"UpdateTotalAtmFlux error: minimal latitude index is less than minimal mesh latitude index!");
+        THERMO_ERR((std::string)"AssembleTotalAtmFlux error: minimal latitude index is less than minimal mesh latitude index!");
     }
 
     if (max_lat_ind_ > max_lat_ind)
     {
-        THERMO_ERR((std::string)"UpdateTotalAtmFlux error: maximal latitude index is greater than maximal mesh latitude index!");
+        THERMO_ERR((std::string)"AssembleTotalAtmFlux error: maximal latitude index is greater than maximal mesh latitude index!");
     }
 
     for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
@@ -1454,17 +1454,17 @@ void UpdateLhCoeff(void* obj,
                        max_lat_ind);
 }
 
-void UpdateTotalAtmFlux(void* obj,
-                        int min_lon_ind,        
-                        int max_lon_ind,        
-                        int min_lat_ind,        
-                        int max_lat_ind)
+void AssembleTotalAtmFlux(void* obj,
+                          int min_lon_ind,        
+                          int max_lon_ind,        
+                          int min_lat_ind,        
+                          int max_lat_ind)
 {
     ThermoModelsSet0D* ptr = (ThermoModelsSet0D*)obj;
-    ptr->UpdateTotalAtmFlux(min_lon_ind,
-                            max_lon_ind,
-                            min_lat_ind,
-                            max_lat_ind);
+    ptr->AssembleTotalAtmFlux(min_lon_ind,
+                              max_lon_ind,
+                              min_lat_ind,
+                              max_lat_ind);
 }
 
 void UpdateOceanSalinity(void* obj,

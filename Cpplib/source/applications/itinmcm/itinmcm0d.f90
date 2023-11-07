@@ -270,12 +270,12 @@ module itinmcm0d
 
     ! update total atm flux
     interface 
-       subroutine UpdateTotalAtmFlux_(obj ,        & ! pointer to allocated Cpp class
-                                      min_lon_ind, & ! minimal longitude index
-                                      max_lon_ind, & ! maximal longitude index
-                                      min_lat_ind, & ! minimal latitude index
-                                      max_lat_ind) & ! maximal latitude index
-                                      bind(C, name="UpdateTotalAtmFlux")
+       subroutine AssembleTotalAtmFlux_(obj ,        & ! pointer to allocated Cpp class
+                                        min_lon_ind, & ! minimal longitude index
+                                        max_lon_ind, & ! maximal longitude index
+                                        min_lat_ind, & ! minimal latitude index
+                                        max_lat_ind) & ! maximal latitude index
+                                        bind(C, name="AssembleTotalAtmFlux")
           import:: c_int, c_double, c_ptr
           implicit none
           
@@ -524,7 +524,7 @@ module itinmcm0d
     public :: UpdateAbsWindSpeed
     public :: UpdateShCoeff
     public :: UpdateLhCoeff
-    public :: UpdateTotalAtmFlux
+    public :: AssembleTotalAtmFlux
     public :: UpdateOceanSalinity
     public :: UpdateOceanFlux
     public :: UpdateIceThickness
@@ -863,10 +863,10 @@ module itinmcm0d
     end subroutine
 
     ! update 2D total atm flux
-    subroutine UpdateTotalAtmFlux(min_lon_ind, & ! minimal longitude index (inclusively)
-                                  max_lon_ind, & ! maximal longitude index (inclusively)
-                                  min_lat_ind, & ! minimal latitude index (inclusively)
-                                  max_lat_ind)   ! maximal latitude index (inclusively)
+    subroutine AssembleTotalAtmFlux(min_lon_ind, & ! minimal longitude index (inclusively)
+                                    max_lon_ind, & ! maximal longitude index (inclusively)
+                                    min_lat_ind, & ! minimal latitude index (inclusively)
+                                    max_lat_ind)   ! maximal latitude index (inclusively)
         
         implicit none
 
@@ -876,11 +876,11 @@ module itinmcm0d
 
         ! Body
         if (c_associated(obj)) then
-            call UpdateTotalAtmFlux_(obj, &
-                                     min_lon_ind, &      
-                                     max_lon_ind, &      
-                                     min_lat_ind, &      
-                                     max_lat_ind)
+            call AssembleTotalAtmFlux_(obj, &
+                                       min_lon_ind, &      
+                                       max_lon_ind, &      
+                                       min_lat_ind, &      
+                                       max_lat_ind)
         end if
 
     end subroutine

@@ -32,10 +32,6 @@ namespace icethermo
         this->snow_c_eff_param = snow_c_eff_param_;
         this->snow_E_param = snow_E_param_;
         this->snow_L_param = snow_L_param_;
-        this->F_up = [](NumType T){return (NumType)0.0;};
-        this->F_down = [](NumType T){return (NumType)0.0;};
-        this->F_sw = [](NumType T){return (NumType)0.0;};
-        this->F_lh = [](NumType T){return (NumType)0.0;};
         this->prec_rate = std::make_shared<NumType>(0.0);
         this->atm_temp = std::make_shared<NumType>(0.0);
         this->atm_press = std::make_shared<NumType>(101325.0); // Pa
@@ -43,7 +39,7 @@ namespace icethermo
         this->abs_wind_speed = std::make_shared<NumType>(5.0);
         this->sh_trans_coeff = std::make_shared<NumType>(GenConsts<NumType>::C_sh);
         this->lh_trans_coeff = std::make_shared<NumType>(GenConsts<NumType>::C_lh);
-        this->abs_wind_speed = std::make_shared<NumType>(5.0);
+        this->So = std::make_shared<NumType>(30.0);
         this->is_radiation = is_radiation_;
         this->is_sublimation = is_sublimation_;
         this->si_transition_mode = si_transition_mode_;
