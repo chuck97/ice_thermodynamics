@@ -101,12 +101,13 @@ namespace icethermo
             FuncPtr<NumType> F_lhs = this->F_lh;
             FuncPtr<NumType> F_Ps = this->F_P;
 
-            //std::cout << "F_lws:" << F_lws(0.0) << std::endl;
-            //std::cout << "F_lwis:" << F_lwis(0.0) << std::endl;
-            //std::cout << "F_sws:" << F_sws(0.0) << std::endl;
-            //std::cout << "F_shs:" << F_shs(0.0) << std::endl;
-            //std::cout << "F_lhs:" << F_lhs(0.0) << std::endl;
-            //std::cout << "F_Ps:" << F_Ps(0.0) << std::endl;
+            //NumType Tss = *(this->Ts_s);
+            //std::cout << "F_lws:" << F_lws(Tss) << std::endl;
+            //std::cout << "F_lwis:" << F_lwis(Tss) << std::endl;
+            //std::cout << "F_sws:" << F_sws(Tss) << std::endl;
+            //std::cout << "F_shs:" << F_shs(Tss) << std::endl;
+            //std::cout << "F_lhs:" << F_lhs(Tss) << std::endl;
+            //std::cout << "F_Ps:" << F_Ps(Tss) << std::endl;
 
             this->F_up = [em_s,
                           alb_s,
@@ -221,7 +222,7 @@ namespace icethermo
         this->F_lh = [c1, c2, T_0, ra, Ls, press, ws, ah, Clh](NumType T)
         {   
             NumType es = (NumType)(6.11*exp(c1*T/(T + T_0 - c2)));
-            NumType q_surf = 0.622*es/((*press) - 0.378*es);
+            NumType q_surf = 0.622*es/((*press)*1e-2 - 0.378*es);
              
             return ra*Ls*(*Clh)*(*ws)*((*ah)*1e-3 - q_surf);
         };
@@ -996,9 +997,7 @@ namespace icethermo
                                           false);
 
             // add sublimation
-            omega_is = (this->is_sublimation) ?
-                -this->F_lh(T_is_new)/(rho_i*GenConsts<NumType>::L_s) :
-                (NumType)0.0;
+            omega_is = (NumType)0.0;
             
             // compute new value of ice surface temperature
             T_is_new = this->T_from_BC_0D(T_ib,
@@ -1163,8 +1162,6 @@ namespace icethermo
 
         NumType current_err = std::numeric_limits<NumType>::max();
 
-        NumType omega_is_sublim;
-
         int npseudo = 0;
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
@@ -1195,16 +1192,11 @@ namespace icethermo
                                           rho_i,
                                           true,
                                           true);
-            
-            // add sublimation
-            omega_is_sublim = (this->is_sublimation) ?
-                -this->F_lh(T_is)/(rho_i*GenConsts<NumType>::L_s) :
-                (NumType)0.0;
 
             // recalculate ice thickness
             thickness_new = this->Update_dz_0D(thickness_old,
                                                omega_ib,
-                                               omega_is + omega_is_sublim);
+                                               omega_is);
             
 
             // evaluate the error
@@ -1250,9 +1242,6 @@ namespace icethermo
         NumType thickness_i_prev = thickness_i;
 
         NumType omega_ib = (NumType)0.0;
-        NumType omega_ss = (atm_temperature < 0.0) ? -precipitation_rate*WaterConsts<NumType>::rho_w/rho_s : 0.0;
-        
-        NumType omega_ss_subl = 0.0;
 
         std::vector<NumType> T_ss_history = {T_ss};
 
@@ -1285,11 +1274,6 @@ namespace icethermo
                                           rho_i,
                                           true,
                                           false);
-
-            // add sublimation
-            omega_ss_subl = (this->is_sublimation) ?
-                -this->F_lh(T_ss_prev)/(rho_s*GenConsts<NumType>::L_s) :
-                (NumType)0.0;
             
             // compute new value of snow surface temperature
             NumType k_s = SnowConsts<NumType>::k0_s;
@@ -1297,10 +1281,12 @@ namespace icethermo
                                           thickness_s_prev,
                                           k_s,
                                           0.0,
-                                          omega_ss + omega_ss_subl,
+                                          0.0,
                                           rho_s,
                                           false,
                                           true);
+
+            //std::cout << "iter " << pseudoit << ": surf temp = " << T_ss_new << std::endl;
 
             // force the convergence of snow surface temperature
             surface_err = std::abs(T_ss_new - T_ss_prev)/(std::abs(T_ss) + (NumType)0.1);
@@ -1322,7 +1308,7 @@ namespace icethermo
             // recalculate snow thickness
             thickness_s_new = this->Update_dz_0D(thickness_s_old,
                                                  0.0,
-                                                 omega_ss + omega_ss_subl);
+                                                 0.0);
 
 
             // recalculate interface temperature
@@ -1372,7 +1358,6 @@ namespace icethermo
 
         NumType omega_ib = (NumType)0.0;
         NumType omega_ss = (NumType)0.0;
-        NumType omega_ss_subl = 0.0;
 
         NumType current_err = std::numeric_limits<NumType>::max();
 
@@ -1401,11 +1386,6 @@ namespace icethermo
                                           true,
                                           false);
 
-            // recalculate sublimation
-            omega_ss_subl = (this->is_sublimation) ?
-                -this->F_lh(T_ss)/(rho_s*GenConsts<NumType>::L_s) :
-                (NumType)0.0;
-
             // recalculate conductivity of snow
             NumType k_s = SnowConsts<NumType>::k0_s;
 
@@ -1427,7 +1407,7 @@ namespace icethermo
             // recalculate snow thickness
             thickness_s_new = this->Update_dz_0D(thickness_s_old,
                                                  0.0,
-                                                 omega_ss + omega_ss_precip + omega_ss_subl);
+                                                 omega_ss);
 
             // recalculate interface temperature
             NumType ratio = (k_i*thickness_s_new)/(k_s*thickness_i_new);

@@ -150,6 +150,28 @@ namespace icethermo
 
         *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
 
+        // if there are precipitations with less than zero atm temp add snow
+        if (*(this->atm_temp) < (NumType)0.0)
+        {
+            NumType snow_thick_before = (*(this->dzs_cells))[0];
+
+            // update snow thickness according to precipitation rate
+            (*(this->dzs_cells))[0] = this->Update_dz_0D((*(this->dzs_cells))[0],
+                                                          (NumType)0.0, 
+                                                          -(*(this->prec_rate))*
+                                                          WaterConsts<NumType>::rho_w/
+                                                          SnowConsts<NumType>::rho_s);
+                
+            // if snow appeared initialize snow temperatures
+            if (((*(this->dzs_cells))[0] > (NumType)SNOW_THICKNESS_THRESHOLD) and 
+                 (snow_thick_before < (NumType)SNOW_THICKNESS_THRESHOLD))
+            {
+                *(this->Ts_s) = *(this->atm_temp);
+                *(this->Ts_b) = *(this->Ti_s);
+                (*(this->Ts_cells))[0] = (NumType)0.5*(*(this->Ts_s) + *(this->Ts_b));
+            }
+        }
+
         // check if snow exists
         if ((*(this->dzs_cells))[0] < (NumType)SNOW_THICKNESS_THRESHOLD)
         {
@@ -203,32 +225,12 @@ namespace icethermo
                 // log mode
                 if (this->is_verbose)
                 {
-                    std::cout << "1D-SEA-ICE FREEZING MODE" << std::endl;
+                    std::cout << "0D-SEA-ICE FREEZING MODE" << std::endl;
                 }
                 // update mesh values
                 (*(this->Ti_cells))[0] = 0.5*(freezing_values.first + *(this->Ti_b));
                 *(this->Ti_s) = freezing_values.first;
                 (*this->dzi_cells)[0] = freezing_values.second;
-            }
-
-            // if there are precipitations with less than zero atm temp add snow
-            if ((*(this->atm_temp) < (NumType)0.0) and 
-               ((*(this->dzs_cells))[0] < (NumType)SNOW_THICKNESS_THRESHOLD))
-            {
-                // update snow thickness according to precipitation rate
-                (*(this->dzs_cells))[0] = this->Update_dz_0D((*(this->dzs_cells))[0],
-                                                              (NumType)0.0, 
-                                                              -(*(this->prec_rate))*
-                                                              WaterConsts<NumType>::rho_w/
-                                                              SnowConsts<NumType>::rho_s);
-                
-                // if snow appeared initialize snow temperatures
-                if ((*(this->dzs_cells))[0] > (NumType)SNOW_THICKNESS_THRESHOLD)
-                {
-                    *(this->Ts_s) = *(this->atm_temp);
-                    *(this->Ts_b) = *(this->Ti_s);
-                    (*(this->Ts_cells))[0] = (NumType)0.5*(*(this->Ts_s) + *(this->Ts_b));
-                }
             }
         }
         else

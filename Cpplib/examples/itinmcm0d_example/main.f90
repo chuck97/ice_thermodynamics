@@ -43,6 +43,19 @@ program itinmcm0d_example
 
     real(c_double), dimension(:,:), allocatable :: a
 
+    ! parameters for experiment
+    real(c_double), parameter :: prec_rate_value =  -4.729855467084298E-007
+    real(c_double), parameter :: ocean_sal_value =  12.9635429382324
+    real(c_double), parameter :: sw_value =  0.000000000000000E+000
+    real(c_double), parameter :: lw_value =  169.440445547989
+    real(c_double), parameter :: atm_temp_value =  -36.3920440673828
+    real(c_double), parameter :: spec_humid_value =  5.438818334368989E-003
+    real(c_double), parameter :: sh_coeff_value =  1.112553058192134E-003
+    real(c_double), parameter :: lh_coeff_value =  1.112553058192134E-003
+    real(c_double), parameter :: abs_wind_speed_value =  3.67417045010245
+    real(c_double), parameter :: atm_pressure_value =  101291.031250000
+    real(c_double), parameter :: ocean_flux_value =  0.0
+
     
     ! allocate memory
     allocate(init_ice_surf_temp(1:nlon, 1:nlat))
@@ -58,9 +71,10 @@ program itinmcm0d_example
     init_ice_surf_temp = -5.0
     init_ice_base_temp = 0.0
     init_snow_surf_temp = -10.0
-    init_ice_thick = 0.927882974865668
-    init_snow_thick = 0.224891981820196
+    init_ice_thick = 1.16312337182931
+    init_snow_thick = 0.145257069201982
     water_marker = .true.
+
 
     print *,  "Initialization of arrays done!" 
 
@@ -84,7 +98,7 @@ program itinmcm0d_example
     
     ! update atmosphere temperature
     allocate(atm_temp(1:nlon, 1:nlat))
-    atm_temp = -16.7572822570801
+    atm_temp = atm_temp_value
     call UpdateAirTemperature(atm_temp, 1, nlon, 1, nlat)
 
     print *,  "Update of atm temperature done!" 
@@ -92,7 +106,7 @@ program itinmcm0d_example
 
     ! update atmosphere pressure
     allocate(atm_press(1:nlon, 1:nlat))
-    atm_press = 99370.1953125000
+    atm_press = atm_pressure_value
     call UpdateAirPressure(atm_press, 1, nlon, 1, nlat)
 
     print *,  "Update of atm pressure done!" 
@@ -100,7 +114,7 @@ program itinmcm0d_example
 
     ! update ocean salinity
     allocate(ocean_sal(1:nlon, 1:nlat))
-    ocean_sal = 33.8294955492020
+    ocean_sal = ocean_sal_value
     call UpdateOceanSalinity(ocean_sal, 1, nlon, 1, nlat)
 
     print *,  "Update of ocean salinity done!" 
@@ -108,7 +122,7 @@ program itinmcm0d_example
 
     ! update precipitation rate
     allocate(prec_rate(1:nlon, 1:nlat))
-    prec_rate = 1.766659540028353E-008
+    prec_rate = prec_rate_value
     call UpdatePrecipitationRate(prec_rate, 1, nlon, 1, nlat)
 
     print *,  "Update of precipitation rate done!" 
@@ -116,7 +130,7 @@ program itinmcm0d_example
 
     ! update atmosphere specific humidity
     allocate(atm_humid(1:nlon, 1:nlat))
-    atm_humid = 0.350144924595952
+    atm_humid = spec_humid_value
     call UpdateAirSpecificHumidity(atm_humid, 1, nlon, 1, nlat)
 
     print *,  "Update of air specific humidity done!" 
@@ -124,7 +138,7 @@ program itinmcm0d_example
 
     ! update absolute value of wind speed
     allocate(wind_speed(1:nlon, 1:nlat))
-    wind_speed = 5.03235126691271
+    wind_speed = abs_wind_speed_value
     call UpdateAbsWindSpeed(wind_speed, 1, nlon, 1, nlat)
 
     print *,  "Update of wind speed done!" 
@@ -132,7 +146,7 @@ program itinmcm0d_example
 
     ! update long-wave radiation from atmosphere
     allocate(lw_rad(1:nlon, 1:nlat))
-    lw_rad = 213.781041404054
+    lw_rad = lw_value
     call UpdateLwRadiation(lw_rad, 1, nlon, 1, nlat)
 
     print *,  "Update of long-wave radiation done!" 
@@ -140,7 +154,7 @@ program itinmcm0d_example
 
     ! update short-wave radiation from atmosphere
     allocate(sw_rad(1:nlon, 1:nlat))
-    sw_rad = 1.09829045743943
+    sw_rad = sw_value
     call UpdateSwRadiation(sw_rad, 1, nlon, 1, nlat)
 
     print *,  "Update of short-wave radiation done!" 
@@ -148,7 +162,7 @@ program itinmcm0d_example
 
     ! update sensible heat transfer coefficient
     allocate(sh_coeff(1:nlon, 1:nlat))
-    sh_coeff = 1.066140597686172E-003
+    sh_coeff = sh_coeff_value
     call UpdateShCoeff(sh_coeff, 1, nlon, 1, nlat)
 
     print *,  "Update of sensible heat coefficient done!" 
@@ -156,7 +170,7 @@ program itinmcm0d_example
 
     ! update latent heat transfer coefficient
     allocate(lh_coeff(1:nlon, 1:nlat))
-    lh_coeff = 1.066140597686172E-003
+    lh_coeff = lh_coeff_value
     call UpdateLhCoeff(lh_coeff, 1, nlon, 1, nlat)
 
     print *,  "Update of latent heat coefficient done!" 
@@ -170,7 +184,7 @@ program itinmcm0d_example
 
     ! update total flux from ocean
     allocate(ocean_flux(1:nlon, 1:nlat))
-    ocean_flux = 0.0
+    ocean_flux = ocean_flux_value
     call UpdateOceanFlux(ocean_flux, 1, nlon, 1, nlat)
 
     print *,  "Update of total ocean flux done!" 

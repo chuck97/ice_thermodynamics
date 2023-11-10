@@ -60,7 +60,7 @@ void run_model(NumType time_step,
                                                   snow_mesh,
                                                   time_step,
                                                   false,
-                                                  false,
+                                                  true,
                                                   Kparam::BubblyBrine, 
                                                   Cparam::SeaIce,      
                                                   Eparam::SeaIce,      
@@ -140,6 +140,9 @@ void run_model(NumType time_step,
         std::cout << "SNOW THICKNESS: " << snow_mesh->GetTotalThickness() << std::endl;
         std::cout << "SNOW SURFACE TEMPERATURE: " << *(snow_mesh->GetSingleData("up_temperature")) << std::endl;
         std::cout << std::endl;
+
+        // update default atm flux parameterization
+        thermo_solver.UpdateUpperFlux();
     }
 
     // delete mesh
@@ -151,22 +154,22 @@ void run_model(NumType time_step,
 int main()
 {
     // model launcher (you can choose float or double)
-    run_model<double>(1800.0,                 // time step (seconds) 
-                      1,                      // number of steps 
-                      0.927882974865668,      // initial ice thickness (meters) 
-                      0.224891981820196,      // initial snow thickness (meters)
-                      -5.0,                   // initial ice-snow interface temperature (deg Cel) 
-                      -10.0,                  // initial snow surface temperature (deg Cel) 
-                      1.766659540028353e-8,   // precipitation rate in water equivalent (m s-1)
-                      33.8294955492020,       // ocean salinity (psu)
-                      1.09829045743943,       // short-wave radiation from atm (W m-2)
-                      213.781041404054,       // lond-wave radiation from atm (W m-2)
-                      -16.7572822570801,      // atmosphere temperature (deg Cel)
-                      0.350144924595952,      // atmosphere specific humidity (g kg-1)
-                      1.066140597686172e-3,   // sensible heat tranport coefficient (-)
-                      1.066140597686172e-3,   // latent heat tranport coefficient (-)
-                      5.03235126691271,       // abs wind speed (m s-1)
-                      99370.1953125000,       // atmosphere pressure (Pa)
-                      0.0                     // total flux from ocean (W m-2)
+    run_model<double>(1800.0,                             // time step (seconds) 
+                      1,                                  // number of steps 
+                      1.419268276083153e-2/8.4573828E-02, // initial ice thickness (meters) 
+                      1.304949969687685e-2/8.4573828E-02, // initial snow thickness (meters)
+                      -5.0,                               // initial ice-snow interface temperature (deg Cel) 
+                      -16.18651,                          // initial snow surface temperature (deg Cel) 
+                      0.0,                                // precipitation rate in water equivalent (m s-1)
+                      34.2381200194359,                   // ocean salinity (psu)
+                      0.0,                                // short-wave radiation from atm (W m-2)
+                      201.226056432724,                   // long-wave radiation from atm (W m-2)
+                      -16.1380462646484,                  // atmosphere temperature (deg Cel)
+                      0.702764606103301,                  // atmosphere specific humidity (g kg-1)
+                      1.060099340975285e-3,               // sensible heat tranport coefficient (-)
+                      1.060099340975285e-3,               // latent heat tranport coefficient (-)
+                      6.16969834842462,                   // abs wind speed (m s-1)
+                      103292.179687500,                   // atmosphere pressure (Pa)
+                      0.0                                 // total flux from ocean (W m-2)
                       );  
 }

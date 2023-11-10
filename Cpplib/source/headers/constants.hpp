@@ -74,8 +74,8 @@ namespace icethermo
         static constexpr NumType c_w =  3.99e3;
         static constexpr NumType c_pw =  4.17e3;
         static constexpr NumType rho_w =  1023.0;
-        static constexpr NumType c1_w =  17.27;
-        static constexpr NumType c2_w =  35.86;
+        static constexpr NumType c1_w =  21.87;
+        static constexpr NumType c2_w =  7.66;
     };
 
     template<typename NumType>

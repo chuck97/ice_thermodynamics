@@ -223,7 +223,7 @@ int main()
                       150.0*3600.0,        // summer duration (seconds) 
                       200.0*3600.0,        // autumn duration (seconds) 
                       -30.0,               // lowest atm temperature (deg C)
-                      10.0,                // highest atm temperature (deg C)
+                      20.0,                // highest atm temperature (deg C)
                       0.0,                 // lowest prec rate (m s-1)    
                       5e-8,                // highest prec rate (m s-1)
                       "ice_mesh",          // output ice prefix
