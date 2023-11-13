@@ -1012,7 +1012,7 @@ namespace icethermo
             // force the convergence of surface temperature
             surface_err = std::abs(T_is_new - T_is_prev)/(std::abs(T_is) + (NumType)0.1);
             
-            if (surface_err < prev_surface_err)
+            if (surface_err <= prev_surface_err)
             {
                 T_is_history.push_back(T_is_new);
             }
@@ -1286,12 +1286,11 @@ namespace icethermo
                                           false,
                                           true);
 
-            //std::cout << "iter " << pseudoit << ": surf temp = " << T_ss_new << std::endl;
 
             // force the convergence of snow surface temperature
             surface_err = std::abs(T_ss_new - T_ss_prev)/(std::abs(T_ss) + (NumType)0.1);
             
-            if (surface_err < prev_surface_err)
+            if (surface_err <= prev_surface_err)
             {
                 T_ss_history.push_back(T_ss_new);
             }

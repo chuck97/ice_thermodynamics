@@ -166,6 +166,11 @@ namespace icethermo
             if (((*(this->dzs_cells))[0] > (NumType)SNOW_THICKNESS_THRESHOLD) and 
                  (snow_thick_before < (NumType)SNOW_THICKNESS_THRESHOLD))
             {
+                if (this->mesh_ice == NULL)
+                {
+
+                }
+
                 *(this->Ts_s) = *(this->atm_temp);
                 *(this->Ts_b) = *(this->Ti_s);
                 (*(this->Ts_cells))[0] = (NumType)0.5*(*(this->Ts_s) + *(this->Ts_b));

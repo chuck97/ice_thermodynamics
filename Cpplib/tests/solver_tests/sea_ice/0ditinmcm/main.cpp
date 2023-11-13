@@ -59,7 +59,7 @@ void run_model(NumType time_step,
     SeaIce0D_Snow0D_Solver<NumType> thermo_solver(ice_mesh,
                                                   snow_mesh,
                                                   time_step,
-                                                  false,
+                                                  true,
                                                   true,
                                                   Kparam::BubblyBrine, 
                                                   Cparam::SeaIce,      
@@ -156,18 +156,18 @@ int main()
     // model launcher (you can choose float or double)
     run_model<double>(1800.0,                             // time step (seconds) 
                       1,                                  // number of steps 
-                      2.76812768470955, // initial ice thickness (meters) 
-                      0.205363345324322, // initial snow thickness (meters)
+                      2.76812768470955,                   // initial ice thickness (meters) 
+                      0.205363345324322,                  // initial snow thickness (meters)
                       -5.0,                               // initial ice-snow interface temperature (deg Cel) 
-                      -10,                          // initial snow surface temperature (deg Cel) 
-                      1.852127370040868E-009,                                // precipitation rate in water equivalent (m s-1)
+                      -10,                                // initial snow surface temperature (deg Cel) 
+                      1.852127370040868E-009,             // precipitation rate in water equivalent (m s-1)
                       28.8696956634521,                   // ocean salinity (psu)
                       0.0,                                // short-wave radiation from atm (W m-2)
                       160.093663854041,                   // long-wave radiation from atm (W m-2)
                       -38.1966667175293,                  // atmosphere temperature (deg Cel)
-                      9.191176650347188E-002,                  // atmosphere specific humidity (g kg-1)
-                      1.249765278771520E-003,               // sensible heat tranport coefficient (-)
-                      1.249765278771520E-003,               // latent heat tranport coefficient (-)
+                      9.191176650347188E-002,             // atmosphere specific humidity (g kg-1)
+                      1.249765278771520E-003,             // sensible heat tranport coefficient (-)
+                      1.249765278771520E-003,             // latent heat tranport coefficient (-)
                       2.37398432193731,                   // abs wind speed (m s-1)
                       100510.515625000,                   // atmosphere pressure (Pa)
                       0.0                                 // total flux from ocean (W m-2)

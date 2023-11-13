@@ -20,7 +20,8 @@ program itinmcm0d_example
                           GetSnowThickness, &
                           GetIsIce, &
                           GetIsSnow, &
-                          Evaluate
+                          Evaluate, &
+                          SetComputationMarker
 
     ! iso_c_binding module for types
     use, intrinsic :: iso_c_binding, only : c_int, c_double, c_bool
@@ -32,7 +33,7 @@ program itinmcm0d_example
     logical(c_bool), parameter :: is_verbose = .false.
     real(c_double), dimension(:,:), allocatable :: init_ice_surf_temp, init_ice_base_temp, init_snow_surf_temp
     real(c_double), dimension(:,:), allocatable :: init_ice_thick, init_snow_thick
-    logical(c_bool), dimension(:,:), allocatable :: water_marker
+    logical(c_bool), dimension(:,:), allocatable :: water_marker, do_compute
     real(c_double), dimension(:,:), allocatable :: atm_temp, atm_press, prec_rate, atm_humid, wind_speed, &
                                                    sw_rad, lw_rad, sh_coeff, lh_coeff, ocean_flux, ocean_sal
 
@@ -44,16 +45,16 @@ program itinmcm0d_example
     real(c_double), dimension(:,:), allocatable :: a
 
     ! parameters for experiment
-    real(c_double), parameter :: prec_rate_value =  -4.729855467084298E-007
-    real(c_double), parameter :: ocean_sal_value =  12.9635429382324
-    real(c_double), parameter :: sw_value =  0.000000000000000E+000
-    real(c_double), parameter :: lw_value =  169.440445547989
-    real(c_double), parameter :: atm_temp_value =  -36.3920440673828
-    real(c_double), parameter :: spec_humid_value =  5.438818334368989E-003
-    real(c_double), parameter :: sh_coeff_value =  1.112553058192134E-003
-    real(c_double), parameter :: lh_coeff_value =  1.112553058192134E-003
-    real(c_double), parameter :: abs_wind_speed_value =  3.67417045010245
-    real(c_double), parameter :: atm_pressure_value =  101291.031250000
+    real(c_double), parameter :: prec_rate_value =  1.852127370040868E-009
+    real(c_double), parameter :: ocean_sal_value =  28.8696956634521
+    real(c_double), parameter :: sw_value =  0.0
+    real(c_double), parameter :: lw_value =  160.093663854041
+    real(c_double), parameter :: atm_temp_value =  -38.1966667175293
+    real(c_double), parameter :: spec_humid_value =  9.191176650347188E-002
+    real(c_double), parameter :: sh_coeff_value =  1.249765278771520E-003
+    real(c_double), parameter :: lh_coeff_value =  1.249765278771520E-003
+    real(c_double), parameter :: abs_wind_speed_value =  2.37398432193731
+    real(c_double), parameter :: atm_pressure_value = 100510.515625000
     real(c_double), parameter :: ocean_flux_value =  0.0
 
     
@@ -64,6 +65,7 @@ program itinmcm0d_example
     allocate(init_ice_thick(1:nlon, 1:nlat))
     allocate(init_snow_thick(1:nlon, 1:nlat))
     allocate(water_marker(1:nlon, 1:nlat))
+    allocate(do_compute(1:nlon, 1:nlat))
     allocate(ice_presence(1:nlon, 1:nlat))
     allocate(snow_presence(1:nlon, 1:nlat))
 
@@ -71,9 +73,10 @@ program itinmcm0d_example
     init_ice_surf_temp = -5.0
     init_ice_base_temp = 0.0
     init_snow_surf_temp = -10.0
-    init_ice_thick = 1.16312337182931
-    init_snow_thick = 0.145257069201982
+    init_ice_thick = 2.76812768470955
+    init_snow_thick = 0.205363345324322
     water_marker = .true.
+    do_compute = .true.
 
 
     print *,  "Initialization of arrays done!" 
@@ -96,6 +99,12 @@ program itinmcm0d_example
     print *,  "Initialization of library done!" 
     print * 
     
+    ! update atmosphere temperature
+    call SetComputationMarker(do_compute, 1, nlon, 1, nlat)
+
+    print *,  "Set computation marker done!" 
+    print * 
+
     ! update atmosphere temperature
     allocate(atm_temp(1:nlon, 1:nlat))
     atm_temp = atm_temp_value
