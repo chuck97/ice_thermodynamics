@@ -22,7 +22,8 @@ namespace icethermo
                                                 Kparam ice_k_param_,
                                                 Cparam ice_c_eff_param_,
                                                 Eparam ice_E_param_,
-                                                Lparam ice_L_param_):
+                                                Lparam ice_L_param_,
+                                                Aparam ice_albedo_param_):
         ThermoSolver<NumType>(mesh_ice_,
                               NULL,
                               time_step_,
@@ -33,7 +34,8 @@ namespace icethermo
                               ice_k_param_,
                               ice_c_eff_param_,
                               ice_E_param_,
-                              ice_L_param_)
+                              ice_L_param_,
+                              ice_albedo_param_)
     {
         // store input mesh
         this->UpdateMesh(mesh_ice_);

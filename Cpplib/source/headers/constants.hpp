@@ -45,6 +45,15 @@ namespace icethermo
         FreshSnow
     };
 
+    // albedo parameterizations
+    enum class Aparam
+    {
+        ConstantIce,
+        ConstantSnow,
+        MeltingFreezingIce,
+        MeltingFreezingSnow
+    };
+
     template<typename NumType>
     struct GenConsts
     {
@@ -90,6 +99,8 @@ namespace icethermo
         static constexpr NumType c1_i = 21.87;
         static constexpr NumType c2_i = 7.66;
         static constexpr NumType k0_i = 2.03;
+        static constexpr NumType albedo_dry_i = 0.8;
+        static constexpr NumType albedo_wet_i = 0.65;
     };
 
     template<typename NumType>
@@ -102,6 +113,8 @@ namespace icethermo
         static constexpr NumType kappa_s = 10;
         static constexpr NumType albedo_s = 0.8;
         static constexpr NumType i0_s = 0.08;
+        static constexpr NumType albedo_dry_s = 0.8;
+        static constexpr NumType albedo_wet_s = 0.65;
     };
 
     template<typename NumType>
@@ -112,5 +125,6 @@ namespace icethermo
         static NumType Enthalpy(Eparam param, NumType T, NumType S);
         static NumType FusionHeat(Lparam param, NumType T, NumType S);
         static NumType Conductivity(Kparam param, NumType T, NumType S, NumType rho);
+        static NumType Albedo(Aparam param, NumType T, NumType h, NumType Tfsurf);
     };
 }

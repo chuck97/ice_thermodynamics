@@ -184,6 +184,27 @@ module itinmcm0d
        end subroutine
     end interface
 
+    ! update air pressure
+    interface 
+       subroutine UpdateAirDensity_(obj ,        & ! pointer to allocated Cpp class
+                                    rho_values,  & ! 2D-array of air desity
+                                    min_lon_ind, & ! minimal longitude index
+                                    max_lon_ind, & ! maximal longitude index
+                                    min_lat_ind, & ! minimal latitude index
+                                    max_lat_ind) & ! maximal latitude index
+                                    bind(C, name="UpdateAirDensity")
+          import:: c_int, c_double, c_ptr
+          implicit none
+          
+          ! Argument list
+          type(c_ptr), intent(in), value :: obj
+          real(c_double), intent(in), dimension(*) :: rho_values
+          integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+          integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+
+       end subroutine
+    end interface
+
     ! update air specific humidity
     interface 
        subroutine UpdateAirSpecificHumidity_(obj ,        & ! pointer to allocated Cpp class
@@ -520,6 +541,7 @@ module itinmcm0d
     public :: UpdateAirTemperature
     public :: UpdatePrecipitationRate
     public :: UpdateAirPressure
+    public :: UpdateAirDensity
     public :: UpdateAirSpecificHumidity
     public :: UpdateAbsWindSpeed
     public :: UpdateShCoeff
@@ -754,6 +776,32 @@ module itinmcm0d
                                     max_lon_ind, &      
                                     min_lat_ind, &      
                                     max_lat_ind)
+        end if
+
+    end subroutine 
+
+    ! update 2D atmosphere density
+    subroutine UpdateAirDensity(rho_values,  & ! 2D-array of atmosphere density (kg m-3)
+                                min_lon_ind, & ! minimal longitude index (inclusively)
+                                max_lon_ind, & ! maximal longitude index (inclusively)
+                                min_lat_ind, & ! minimal latitude index (inclusively)
+                                max_lat_ind)   ! maximal latitude index (inclusively)
+        
+        implicit none
+
+        ! Argument list
+        real(c_double), intent(in), dimension(*) :: rho_values
+        integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+        integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+
+        ! Body
+        if (c_associated(obj)) then
+            call UpdateAirDensity_(obj, &
+                                   rho_values, &  
+                                   min_lon_ind, &      
+                                   max_lon_ind, &      
+                                   min_lat_ind, &      
+                                   max_lat_ind)
         end if
 
     end subroutine 

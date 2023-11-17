@@ -123,7 +123,7 @@ ThermoModelsSet0D::ThermoModelsSet0D(double time_step_,
             (*initial_ice_base_temp) = current_ice_base_temp;
             (*initial_ice_temp_cells)[0] = 0.5*(current_ice_base_temp + current_ice_surf_temp);
             (*initial_ice_dens_cells)[0] = IceConsts<double>::rho_i;
-            (*initial_ice_sal_cells)[0] = 2.5;
+            (*initial_ice_sal_cells)[0] = 0.0;
             (*initial_ice_surf_temp) = current_ice_surf_temp;
 
             (*initial_snow_temp_cells)[0] = 0.5*(current_ice_surf_temp + current_snow_surf_temp);
@@ -157,7 +157,14 @@ ThermoModelsSet0D::ThermoModelsSet0D(double time_step_,
                                                     local_snow_mesh,
                                                     time_step,
                                                     false,
-                                                    false)
+                                                    false,
+                                                    Kparam::FreshIce,
+                                                    Lparam::FreshIce,
+                                                    Aparam::MeltingFreezingIce,
+                                                    Kparam::FreshSnow,
+                                                    Lparam::FreshSnow,
+                                                    Aparam::MeltingFreezingSnow
+                                                    )
             );
         }
         solvers.push_back(current_lat_solvers);
@@ -461,6 +468,55 @@ void ThermoModelsSet0D::UpdateAirPressure(double* ap_values,
     if (is_verbose)
     {
         std::cout << "Updated 2d atm pressure array!\n";
+    }
+}
+
+void ThermoModelsSet0D::UpdateAirDensity(double* rho_values,
+                                         int min_lon_ind_,        
+                                         int max_lon_ind_,        
+                                         int min_lat_ind_,        
+                                         int max_lat_ind_)
+{
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateAirDensity error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateAirDensity error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateAirDensity error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateAirDensity error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
+    for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
+    {
+        int local_lat_ind = lat_ind - min_lat_ind_;
+
+        for (int lon_ind = min_lon_ind_; lon_ind < max_lon_ind_ + 1; ++lon_ind)
+        {
+            int local_lon_ind = lon_ind - min_lon_ind_;
+
+            double current_rho_value = rho_values[local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) + local_lon_ind];
+
+            solvers[local_lat_ind][local_lon_ind]->UpdateAirDensity
+            (
+               current_rho_value
+            );
+        }
+    }
+
+    if (is_verbose)
+    {
+        std::cout << "Updated 2d atm density array!\n";
     }
 }
 
@@ -1391,6 +1447,21 @@ void UpdateAirPressure(void* obj,
                            max_lon_ind,
                            min_lat_ind,
                            max_lat_ind);
+}
+
+void UpdateAirDensity(void* obj,
+                      double* rho_values,
+                      int min_lon_ind,        
+                      int max_lon_ind,        
+                      int min_lat_ind,        
+                      int max_lat_ind)
+{
+    ThermoModelsSet0D* ptr = (ThermoModelsSet0D*)obj;
+    ptr->UpdateAirDensity(rho_values,
+                          min_lon_ind,
+                          max_lon_ind,
+                          min_lat_ind,
+                          max_lat_ind);
 }
 
 void UpdateAirSpecificHumidity(void* obj,

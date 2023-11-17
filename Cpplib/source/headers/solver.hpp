@@ -43,10 +43,12 @@ namespace icethermo
                      Cparam ice_c_eff_param_ = Cparam::FreshIce,
                      Eparam ice_E_param_ = Eparam::FreshIce,
                      Lparam ice_L_param_ = Lparam::FreshIce,
+                     Aparam ice_albedo_param_ = Aparam::ConstantIce,
                      Kparam snow_k_param_ = Kparam::FreshSnow,
                      Cparam snow_c_eff_param_ = Cparam::FreshSnow,
                      Eparam snow_E_param_ = Eparam::FreshSnow,
                      Lparam snow_L_param_ = Lparam::FreshSnow,
+                     Aparam snow_albedo_param_ = Aparam::ConstantSnow,
                      SnowIceTransition si_transition_mode_ = SnowIceTransition::None);
 
         // destructor
@@ -98,6 +100,7 @@ namespace icethermo
         std::shared_ptr<NumType> sh_trans_coeff = NULL; // -
         std::shared_ptr<NumType> lh_trans_coeff = NULL; // -
         std::shared_ptr<NumType> So = NULL;             // psu
+        std::shared_ptr<NumType> atm_dens = NULL;       // kg/m^3
 
         // mandatory ice prognostic variables
         std::shared_ptr<std::vector<NumType>> Ti_cells = NULL;
@@ -119,11 +122,13 @@ namespace icethermo
         Cparam ice_c_eff_param;
         Eparam ice_E_param;
         Lparam ice_L_param;
+        Aparam ice_albedo_param;
 
         Kparam snow_k_param;
         Cparam snow_c_eff_param;
         Eparam snow_E_param;
         Lparam snow_L_param;
+        Aparam snow_albedo_param;
 
         // switchers for radiation and sublimation
         bool is_radiation;
@@ -198,6 +203,9 @@ namespace icethermo
 
         // update latent heat transfer coefficient (-)
         void UpdateLhTransCoeff(NumType lh_coeff_);
+
+        // update atmosphere density
+        void UpdateAirDensity(NumType atm_dens_);
         
         // update mesh
         virtual void UpdateMesh(Mesh<NumType>* mesh_ice_,
@@ -517,7 +525,8 @@ namespace icethermo
                         Kparam ice_k_param_ = Kparam::FreshIce,
                         Cparam ice_c_eff_param_ = Cparam::FreshIce,
                         Eparam ice_E_param_ = Eparam::FreshIce,
-                        Lparam ice_L_param_ = Lparam::FreshIce);
+                        Lparam ice_L_param_ = Lparam::FreshIce,
+                        Aparam ice_albedo_param_ = Aparam::ConstantIce);
 
         // update ocean salinity
         void UpdateOceanSalinity(NumType ocn_sal_);
@@ -553,8 +562,10 @@ namespace icethermo
                                Cparam ice_c_eff_param_ = Cparam::FreshIce,
                                Eparam ice_E_param_ = Eparam::FreshIce,
                                Lparam ice_L_param_ = Lparam::FreshIce,
+                               Aparam ice_albedo_param_ = Aparam::ConstantIce,
                                Kparam snow_k_param_ = Kparam::FreshSnow,
                                Lparam snow_L_param_ = Lparam::FreshSnow,
+                               Aparam snow_albedo_param_ = Aparam::ConstantSnow,
                                SnowIceTransition si_transition_mode_ = SnowIceTransition::None);
 
         // update ocean salinity
@@ -586,11 +597,11 @@ namespace icethermo
                                bool is_sublimation_ = false,
                                bool is_verbose_ = true,
                                Kparam ice_k_param_ = Kparam::FreshIce,
-                               Cparam ice_c_eff_param_ = Cparam::FreshIce,
-                               Eparam ice_E_param_ = Eparam::FreshIce,
                                Lparam ice_L_param_ = Lparam::FreshIce,
+                               Aparam ice_albedo_param_ = Aparam::ConstantIce,
                                Kparam snow_k_param_ = Kparam::FreshSnow,
                                Lparam snow_L_param_ = Lparam::FreshSnow,
+                               Aparam snow_albedo_param_ = Aparam::ConstantSnow,
                                SnowIceTransition si_transition_mode_ = SnowIceTransition::None);
 
         // update ocean salinity
@@ -627,7 +638,8 @@ namespace icethermo
                          Kparam ice_k_param_ = Kparam::FreshIce,
                          Cparam ice_c_eff_param_ = Cparam::FreshIce,
                          Eparam ice_E_param_ = Eparam::FreshIce,
-                         Lparam ice_L_param_ = Lparam::FreshIce);
+                         Lparam ice_L_param_ = Lparam::FreshIce,
+                         Aparam ice_albedo_param_ = Aparam::ConstantIce);
 
         // one evaluation step
         void Evaluate() override;

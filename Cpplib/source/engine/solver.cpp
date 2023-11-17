@@ -14,10 +14,12 @@ namespace icethermo
                                         Cparam ice_c_eff_param_,
                                         Eparam ice_E_param_,
                                         Lparam ice_L_param_,
+                                        Aparam ice_albedo_param_,
                                         Kparam snow_k_param_,
                                         Cparam snow_c_eff_param_,
                                         Eparam snow_E_param_,
                                         Lparam snow_L_param_,
+                                        Aparam snow_albedo_param_,
                                         SnowIceTransition si_transition_mode_)
     {
         this->mesh_ice = mesh_ice_;
@@ -28,10 +30,12 @@ namespace icethermo
         this->ice_c_eff_param = ice_c_eff_param_;
         this->ice_E_param = ice_E_param_;
         this->ice_L_param = ice_L_param_;
+        this->ice_albedo_param = ice_albedo_param_;
         this->snow_k_param = snow_k_param_;
         this->snow_c_eff_param = snow_c_eff_param_;
         this->snow_E_param = snow_E_param_;
         this->snow_L_param = snow_L_param_;
+        this->snow_albedo_param = snow_albedo_param_;
         this->prec_rate = std::make_shared<NumType>(0.0);
         this->atm_temp = std::make_shared<NumType>(0.0);
         this->atm_press = std::make_shared<NumType>(101325.0); // Pa
@@ -40,6 +44,7 @@ namespace icethermo
         this->sh_trans_coeff = std::make_shared<NumType>(GenConsts<NumType>::C_sh);
         this->lh_trans_coeff = std::make_shared<NumType>(GenConsts<NumType>::C_lh);
         this->So = std::make_shared<NumType>(30.0);
+        this->atm_dens = std::make_shared<NumType>(AirConsts<NumType>::rho_a);
         this->is_radiation = is_radiation_;
         this->is_sublimation = is_sublimation_;
         this->si_transition_mode = si_transition_mode_;
@@ -91,8 +96,9 @@ namespace icethermo
             this->UpdateEmittingHeatFlux();
 
             NumType em_s = GenConsts<NumType>::emissivity;
-            NumType alb_s = SnowConsts<NumType>::albedo_s;
             NumType i0_s = SnowConsts<NumType>::i0_s;
+            auto al_param = this->snow_albedo_param;
+            NumType hs = sum_vec<NumType>(*(this->dzs_cells));
 
             FuncPtr<NumType> F_lws = this->F_lw;
             FuncPtr<NumType> F_lwis = this->F_lwi;
@@ -109,9 +115,14 @@ namespace icethermo
             //std::cout << "F_lhs:" << F_lhs(Tss) << std::endl;
             //std::cout << "F_Ps:" << F_Ps(Tss) << std::endl;
 
+            FuncPtr<NumType> alb_s = [al_param, hs] (NumType T)
+            {
+                return Params<NumType>::Albedo(al_param, T, hs, 0.0);
+            };
+
             this->F_up = [em_s,
-                          alb_s,
                           i0_s,
+                          alb_s,
                           F_lws,
                           F_lwis,
                           F_sws,
@@ -122,7 +133,7 @@ namespace icethermo
             {
                 return    em_s*F_lws(T)
                         - em_s*F_lwis(T)
-                        + (1.0 - alb_s)*(1.0 - i0_s)*F_sws(T)
+                        + (1.0 - alb_s(T))*(1.0 - i0_s)*F_sws(T)
                         + F_shs(T)  
                         + F_lhs(T) 
                         + F_Ps(T)
@@ -138,7 +149,8 @@ namespace icethermo
             this->UpdateEmittingHeatFlux();
 
             NumType em_i = GenConsts<NumType>::emissivity;
-            NumType alb_i = IceConsts<NumType>::albedo_i;
+            
+            IceConsts<NumType>::albedo_i;
             NumType i0_i = IceConsts<NumType>::i0_i;
 
             FuncPtr<NumType> F_lwi = this->F_lw;
@@ -147,6 +159,15 @@ namespace icethermo
             FuncPtr<NumType> F_shi = this->F_sh;
             FuncPtr<NumType> F_lhi = this->F_lh;
             FuncPtr<NumType> F_Pi = this->F_P;
+
+            auto al_param = this->ice_albedo_param;
+            NumType hi = sum_vec<NumType>(*(this->dzi_cells));
+            NumType Tfi = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+
+            FuncPtr<NumType> alb_i = [al_param, hi, Tfi] (NumType T)
+            {
+                return Params<NumType>::Albedo(al_param, T, hi, Tfi);
+            };
 
             //std::cout << "F_lwi:" << F_lwi(0.0) << std::endl;
             //std::cout << "F_lwii:" << F_lwii(0.0) << std::endl;
@@ -168,7 +189,7 @@ namespace icethermo
             {
                 return    em_i*F_lwi(T)
                         - em_i*F_lwii(T) 
-                        + (1.0 - alb_i)*(1.0 - i0_i)*F_swi(T) 
+                        + (1.0 - alb_i(T))*(1.0 - i0_i)*F_swi(T) 
                        + F_shi(T)   
                        + F_lhi(T) 
                        + F_Pi(T)
@@ -212,19 +233,19 @@ namespace icethermo
         auto ws = this->abs_wind_speed;
         auto ah = this->atm_humid;
         auto Clh = this->lh_trans_coeff;
+        auto ra = this->atm_dens;
 
         NumType c1 = IceConsts<NumType>::c1_i;
         NumType c2 = IceConsts<NumType>::c2_i;
         NumType T_0 = GenConsts<NumType>::T0;
-        NumType ra = AirConsts<NumType>::rho_a;
         NumType Ls = GenConsts<NumType>::L_s;
 
-        this->F_lh = [c1, c2, T_0, ra, Ls, press, ws, ah, Clh](NumType T)
+        this->F_lh = [c1, c2, T_0, Ls, press, ws, ah, Clh, ra](NumType T)
         {   
             NumType es = (NumType)(6.11*exp(c1*T/(T + T_0 - c2)));
             NumType q_surf = 0.622*es/((*press)*1e-2 - 0.378*es);
              
-            return ra*Ls*(*Clh)*(*ws)*((*ah)*1e-3 - q_surf);
+            return (*ra)*Ls*(*Clh)*(*ws)*((*ah)*1e-3 - q_surf);
         };
     }
 
@@ -237,16 +258,16 @@ namespace icethermo
     template<typename NumType>
     void ThermoSolver<NumType>::UpdateSensibleHeatFlux()
     {
-        NumType ra = AirConsts<NumType>::rho_a;
         NumType cpa = AirConsts<NumType>::cp_a;
 
         auto ws = this->abs_wind_speed;
         auto at = this->atm_temp;
         auto Csh = this->sh_trans_coeff;
+        auto ra = this->atm_dens;
 
-        this->F_sh = [ra, cpa, ws, at, Csh](NumType T)
+        this->F_sh = [cpa, ws, at, Csh, ra](NumType T)
         {
-            return ra*cpa*(*Csh)*(*ws)*((*at) - T);
+            return (*ra)*cpa*(*Csh)*(*ws)*((*at) - T);
         };
     }
 
@@ -329,6 +350,12 @@ namespace icethermo
     void ThermoSolver<NumType>::UpdateLhTransCoeff(NumType lh_coeff_)
     {
         *(this->lh_trans_coeff) = lh_coeff_;
+    }
+
+    template<typename NumType>
+    void ThermoSolver<NumType>::UpdateAirDensity(NumType atm_dens_)
+    {
+        *(this->atm_dens) = atm_dens_;
     }
 
     template<typename NumType>

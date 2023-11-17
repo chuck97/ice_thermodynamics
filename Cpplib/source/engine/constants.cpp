@@ -156,6 +156,45 @@ namespace icethermo
         }
     }
 
+    template<typename NumType>
+    NumType Params<NumType>::Albedo(Aparam param, NumType T, NumType h, NumType Tfsurf)
+    {
+        if (param == Aparam::ConstantIce)
+        {
+            return IceConsts<NumType>::albedo_i;
+        }
+        else if (param == Aparam::ConstantSnow)
+        {
+            return SnowConsts<NumType>::albedo_s;
+        }
+        else if (param == Aparam::MeltingFreezingIce)
+        {
+            if (T >= Tfsurf)
+            {
+                return IceConsts<NumType>::albedo_wet_i;
+            }
+            else
+            {
+                return IceConsts<NumType>::albedo_dry_i;
+            }
+        }
+        else if (param == Aparam::MeltingFreezingSnow)
+        {
+            if (T >= Tfsurf)
+            {
+                return SnowConsts<NumType>::albedo_wet_s;
+            }
+            else
+            {
+                return SnowConsts<NumType>::albedo_dry_s;
+            }
+        }
+        else
+        {
+            THERMO_ERR("Available Albedo parametrizations: ConstantIce, ConstantSnow, MeltingFreezingIce, MeltingFreezingSnow!");
+        }
+    }
+
     // explicit instantiation
     template struct GenConsts<float>;
     template struct GenConsts<double>;

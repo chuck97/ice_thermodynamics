@@ -83,6 +83,13 @@ public:
                                    int min_lat_ind_,        
                                    int max_lat_ind_);
     
+    // update air density
+    void UpdateAirDensity(double* rho_values,
+                          int min_lon_ind_,        
+                          int max_lon_ind_,        
+                          int min_lat_ind_,        
+                          int max_lat_ind_);
+    
     // update air specific humidity
     void UpdateAbsWindSpeed(double* ws_values,
                             int min_lon_ind_,        
@@ -288,6 +295,14 @@ extern "C"
                            int min_lat_ind,        
                            int max_lat_ind
                            );
+
+    // update 2d air density
+    void UpdateAirDensity(void* obj,
+                          double* rho_values,
+                          int min_lon_ind,        
+                          int max_lon_ind,        
+                          int min_lat_ind,        
+                          int max_lat_ind);
 
     // update 2d air specific humidity
     void UpdateAirSpecificHumidity(void* obj,
