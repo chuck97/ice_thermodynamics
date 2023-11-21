@@ -107,14 +107,6 @@ namespace icethermo
             FuncPtr<NumType> F_lhs = this->F_lh;
             FuncPtr<NumType> F_Ps = this->F_P;
 
-            //NumType Tss = *(this->Ts_s);
-            //std::cout << "F_lws:" << F_lws(Tss) << std::endl;
-            //std::cout << "F_lwis:" << F_lwis(Tss) << std::endl;
-            //std::cout << "F_sws:" << F_sws(Tss) << std::endl;
-            //std::cout << "F_shs:" << F_shs(Tss) << std::endl;
-            //std::cout << "F_lhs:" << F_lhs(Tss) << std::endl;
-            //std::cout << "F_Ps:" << F_Ps(Tss) << std::endl;
-
             FuncPtr<NumType> alb_s = [al_param, hs] (NumType T)
             {
                 return Params<NumType>::Albedo(al_param, T, hs, 0.0);
@@ -242,8 +234,12 @@ namespace icethermo
 
         this->F_lh = [c1, c2, T_0, Ls, press, ws, ah, Clh, ra](NumType T)
         {   
-            NumType es = (NumType)(6.11*exp(c1*T/(T + T_0 - c2)));
-            NumType q_surf = 0.622*es/((*press)*1e-2 - 0.378*es);
+            //NumType es = (NumType)(6.11*exp(c1*T/(T + T_0 - c2)));
+            //NumType q_surf = 0.622*es/((*press)*1e-2 - 0.378*es);
+
+            NumType pb = 21.85/(T + GenConsts<NumType>::T0 - 7.65);
+            NumType qmax_dup = 3.80042e-3*exp(pb*T)/((*press)*1e-5);
+            NumType q_surf = qmax_dup*0.98;
              
             return (*ra)*Ls*(*Clh)*(*ws)*((*ah)*1e-3 - q_surf);
         };
@@ -1315,7 +1311,7 @@ namespace icethermo
 
 
             // force the convergence of snow surface temperature
-            surface_err = std::abs(T_ss_new - T_ss_prev)/(std::abs(T_ss) + (NumType)0.1);
+            surface_err = std::abs(T_ss_new - T_ss_prev);//std::abs(T_ss_new - T_ss_prev);///(std::abs(T_ss) + (NumType)0.1);
             
             //if (surface_err <= prev_surface_err)
             //{

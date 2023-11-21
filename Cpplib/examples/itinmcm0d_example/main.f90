@@ -45,16 +45,16 @@ program itinmcm0d_example
     real(c_double), dimension(:,:), allocatable :: a
 
     ! parameters for experiment
-    real(c_double), parameter :: prec_rate_value =  5.235659610960671E-009
-    real(c_double), parameter :: ocean_sal_value = 30.0382061004639
-    real(c_double), parameter :: sw_value =  0.0
-    real(c_double), parameter :: lw_value =  193.323524807374
-    real(c_double), parameter :: atm_temp_value =  -36.7469253540039
-    real(c_double), parameter :: spec_humid_value =  1.995431739487685E-002
-    real(c_double), parameter :: sh_coeff_value =  1.189734437502921E-003
-    real(c_double), parameter :: lh_coeff_value =  1.189734437502921E-003
-    real(c_double), parameter :: abs_wind_speed_value = 2.78687097042342
-    real(c_double), parameter :: atm_pressure_value = 103278.687500000
+    real(c_double), parameter :: prec_rate_value =  7.827909878525390E-009
+    real(c_double), parameter :: ocean_sal_value = 33.8533362150192
+    real(c_double), parameter :: sw_value =  205.623087891572
+    real(c_double), parameter :: lw_value =  301.529608071887
+    real(c_double), parameter :: atm_temp_value =   -5.43543910980225
+    real(c_double), parameter :: spec_humid_value =  2.74289678782225
+    real(c_double), parameter :: sh_coeff_value =  1.064937910996377E-003
+    real(c_double), parameter :: lh_coeff_value =  1.064937910996377E-003
+    real(c_double), parameter :: abs_wind_speed_value = 6.90703597842821
+    real(c_double), parameter :: atm_pressure_value = 98613.5390625000
     real(c_double), parameter :: ocean_flux_value =  0.0
 
     
@@ -73,8 +73,8 @@ program itinmcm0d_example
     init_ice_surf_temp = -5.0
     init_ice_base_temp = 0.0
     init_snow_surf_temp = -10.0
-    init_ice_thick = 4.24790578884097
-    init_snow_thick = 0.196908870110462
+    init_ice_thick =  2.43186655330956
+    init_snow_thick = 1.099681948877529E-002
     water_marker = .true.
     do_compute = .true.
 

@@ -59,13 +59,13 @@ namespace icethermo
     {
         inline static NumType TempFusion(double S) {return -mu*S;}; 
 
-        static constexpr NumType mu = 0.054;
+        static constexpr NumType mu = 0.0575;
         static constexpr NumType sigma = 5.67e-8;
-        static constexpr NumType T0 = 273.16;
+        static constexpr NumType T0 = 273.15;
         static constexpr NumType emissivity = 0.99;
         static constexpr NumType C_sh = 1e-3;
         static constexpr NumType C_lh = 1e-3;
-        static constexpr NumType L_s = 2.83e6;
+        static constexpr NumType L_s = 2.834e6;
         static constexpr NumType si_trans_time_scale = 1e7;
     };
 
@@ -73,7 +73,7 @@ namespace icethermo
     struct AirConsts
     {
         static constexpr NumType rho_a = 1.28;
-        static constexpr NumType cp_a = 1.01e3;
+        static constexpr NumType cp_a = 1.004e3;
         static constexpr NumType P_surf = 1013.25;
     };
 
@@ -95,10 +95,10 @@ namespace icethermo
         static constexpr NumType L0_i = 3.34e5;
         static constexpr NumType kappa_i = 1.5;
         static constexpr NumType albedo_i = 0.6;
-        static constexpr NumType i0_i = 0.15;
+        static constexpr NumType i0_i = 0.17;
         static constexpr NumType c1_i = 21.87;
         static constexpr NumType c2_i = 7.66;
-        static constexpr NumType k0_i = 2.03;
+        static constexpr NumType k0_i = 2.04;
         static constexpr NumType albedo_dry_i = 0.8;
         static constexpr NumType albedo_wet_i = 0.65;
     };
@@ -112,7 +112,7 @@ namespace icethermo
         static constexpr NumType L_f0 = 3.33e5;
         static constexpr NumType kappa_s = 10;
         static constexpr NumType albedo_s = 0.8;
-        static constexpr NumType i0_s = 0.08;
+        static constexpr NumType i0_s = 0.0;
         static constexpr NumType albedo_dry_s = 0.8;
         static constexpr NumType albedo_wet_s = 0.65;
     };
