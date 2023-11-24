@@ -157,7 +157,7 @@ ThermoModelsSet0D::ThermoModelsSet0D(double time_step_,
                                                     local_snow_mesh,
                                                     time_step,
                                                     false,
-                                                    true,
+                                                    false,
                                                     Kparam::FreshIce,
                                                     Lparam::FreshIce,
                                                     Aparam::MeltingFreezingIce,
@@ -953,6 +953,56 @@ void ThermoModelsSet0D::UpdateSnowThickness(double* thick_values,
     }
 }
 
+void ThermoModelsSet0D::AddPrecipitation(int min_lon_ind_,        
+                                         int max_lon_ind_,        
+                                         int min_lat_ind_,        
+                                         int max_lat_ind_
+                                         )
+{
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"AddPrecipitation error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"AddPrecipitation error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"AddPrecipitation error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"AddPrecipitation error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
+    // to do
+    for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
+    {
+        int local_lat_ind = lat_ind - min_lat_ind_;
+
+        for (int lon_ind = min_lon_ind_; lon_ind < max_lon_ind_ + 1; ++lon_ind)
+        {
+            int local_lon_ind = lon_ind - min_lon_ind_;
+
+            double current_ice_thick = ice_meshes[local_lat_ind][local_lon_ind]->GetTotalThickness();
+
+            if (is_water[local_lat_ind][local_lon_ind] and do_compute[local_lat_ind][local_lon_ind] and (current_ice_thick > min_ice_thick))
+            {
+                solvers[local_lat_ind][local_lon_ind]->AddPrecipitation();
+            }
+        }
+    }
+
+    if (is_verbose)
+    {
+        std::cout << "Added precipitation to snow thickness!\n";
+    }
+}
+
 
 void ThermoModelsSet0D::Evaluate(int min_lon_ind_,        
                                  int max_lon_ind_,        
@@ -1596,6 +1646,19 @@ void UpdateSnowThickness(void* obj,
                              max_lon_ind,
                              min_lat_ind,
                              max_lat_ind);
+}
+
+void AddPrecipitation(void* obj,
+                      int min_lon_ind,        
+                      int max_lon_ind,        
+                      int min_lat_ind,        
+                      int max_lat_ind)
+{
+    ThermoModelsSet0D* ptr = (ThermoModelsSet0D*)obj;
+    ptr->AddPrecipitation(min_lon_ind,
+                          max_lon_ind,
+                          min_lat_ind,
+                          max_lat_ind);
 }
 
 void Evaluate(void* obj,

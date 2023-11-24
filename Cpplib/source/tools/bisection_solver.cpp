@@ -27,13 +27,13 @@ namespace icethermo
             {
                 x_LEFT = x_MIDDLE;
             }
-            std::cout << x_MIDDLE << " " << f_MIDDLE << std::endl;
+            //std::cout << x_MIDDLE << " " << f_MIDDLE << std::endl;
             if (std::abs(x_RIGHT - x_LEFT) < tol)
             {
                 break;
             }
         }
-        std::cout << "result:" << x_MIDDLE << std::endl;
+        //std::cout << "result:" << x_MIDDLE << std::endl;
         return {x_MIDDLE, f_MIDDLE, iteration, (iteration != max_it) ? true: false};
     }
     

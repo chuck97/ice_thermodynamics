@@ -114,10 +114,10 @@ namespace icethermo
             //std::cout << "F_shs:" << F_shs(*(this->Ts_s)) << std::endl;
             //std::cout << "F_lhs:" << F_lhs(*(this->Ts_s)) << std::endl;
             //std::cout << "F_Ps:" << F_Ps(*(this->Ts_s)) << std::endl;
-
             FuncPtr<NumType> alb_s = [al_param, hs] (NumType T)
             {
-                return Params<NumType>::Albedo(al_param, T, hs, 0.0);
+                return SnowConsts<NumType>::albedo_wet_s;
+                //return Params<NumType>::Albedo(al_param, T, hs, 0.0);
             };
 
             this->F_up = [em_s,
@@ -136,7 +136,7 @@ namespace icethermo
                         + (1.0 - alb_s(T))*(1.0 - i0_s)*F_sws(T)
                         + F_shs(T)  
                         + F_lhs(T) 
-                        + F_Ps(T)
+                        //+ F_Ps(T)
                         ;
             };
         }
@@ -193,7 +193,7 @@ namespace icethermo
                         + (1.0 - alb_i(T))*(1.0 - i0_i)*F_swi(T) 
                        + F_shi(T)   
                        + F_lhi(T) 
-                       + F_Pi(T)
+                       //+ F_Pi(T)
                        ;
             };
         }
@@ -1375,16 +1375,16 @@ namespace icethermo
             FuncPtr<NumType> F_Ps = this->F_P;
             FuncPtr<NumType> F_total = this->F_up;
 
-            std::cout << "snow temp:" << T_ss_new << std::endl; 
-            std::cout << "F_cond:" <<-SnowConsts<NumType>::k0_s*(T_ss_new - T_is_new)/thickness_s_new << std::endl;
-            std::cout << "F_lws:" << GenConsts<NumType>::emissivity*F_lws(T_ss_new) << std::endl;
-            std::cout << "F_lwis:" << -GenConsts<NumType>::emissivity*F_lwis(T_ss_new) << std::endl;
-            std::cout << "F_sws:" << (1- SnowConsts<NumType>::albedo_dry_s)*F_sws(T_ss_new) << std::endl;
-            std::cout << "F_shs:" << F_shs(T_ss_new) << std::endl;
-            std::cout << "F_lhs:" << F_lhs(T_ss_new) << std::endl;
-            std::cout << "F_Ps:" << F_Ps(T_ss_new) << std::endl;
-            std::cout << "F_total:" << F_total(T_ss_new) << std::endl;
-            std::cout << std::endl;
+            //std::cout << "snow temp:" << T_ss_new << std::endl; 
+            //std::cout << "F_cond:" <<-SnowConsts<NumType>::k0_s*(T_ss_new - T_is_new)/thickness_s_new << std::endl;
+            //std::cout << "F_lws:" << GenConsts<NumType>::emissivity*F_lws(T_ss_new) << std::endl;
+            //std::cout << "F_lwis:" << -GenConsts<NumType>::emissivity*F_lwis(T_ss_new) << std::endl;
+            //std::cout << "F_sws:" << (1- SnowConsts<NumType>::albedo_dry_s)*F_sws(T_ss_new) << std::endl;
+            //std::cout << "F_shs:" << F_shs(T_ss_new) << std::endl;
+            //std::cout << "F_lhs:" << F_lhs(T_ss_new) << std::endl;
+            //std::cout << "F_Ps:" << F_Ps(T_ss_new) << std::endl;
+            //std::cout << "F_total:" << F_total(T_ss_new) << std::endl;
+            //std::cout << std::endl;
         }
 
         if (this->is_verbose)
@@ -1426,8 +1426,6 @@ namespace icethermo
 
         NumType current_err = std::numeric_limits<NumType>::max();
 
-        NumType omega_ss_precip = (atm_temperature < 0.0) ? -precipitation_rate*WaterConsts<NumType>::rho_w/rho_s : 0.0;
-
         int npseudo = 0;
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
@@ -1437,13 +1435,26 @@ namespace icethermo
             T_is_prev = T_is_new;
             thickness_s_prev = thickness_s_new;
             thickness_i_prev = thickness_i_new;
+            
+            // recalculate conductivity of snow
+            NumType k_s = SnowConsts<NumType>::k0_s;
 
             // recalculate conductivity of ice
             NumType k_i = Params<NumType>::Conductivity(this->ice_k_param, salinity_i, 0.5*(T_ib + T_is_prev), rho_i);
 
+            // recalculate function for interface temperature
+            FuncPtr<NumType> int_temp = [thickness_s_prev, thickness_i_prev, T_ib, k_i, k_s](NumType T)
+                                        {
+                                            NumType c1 = k_s/thickness_s_prev;
+                                            NumType c2 = k_i/thickness_i_prev;
+                                            return (NumType)((c1*T + c2*T_ib)/(c1 + c2));
+                                        };
+            
+            T_is_new = int_temp(T_ss);
+
             // compute new value of omega at the ice base
             omega_ib = this->W_from_BC_0D(T_ib,
-                                          T_is_prev,
+                                          T_is_new,
                                           thickness_i_prev,
                                           k_i,
                                           salinity_i,
@@ -1451,12 +1462,11 @@ namespace icethermo
                                           true,
                                           false);
 
-            // recalculate conductivity of snow
-            NumType k_s = SnowConsts<NumType>::k0_s;
+            
 
             // compute new value of omega at snow surface
             omega_ss = this->W_from_BC_0D(T_ss,
-                                          T_is_prev,
+                                          T_is_new,
                                           thickness_s_prev,
                                           k_s,
                                           0.0,
@@ -1473,10 +1483,6 @@ namespace icethermo
             thickness_s_new = this->Update_dz_0D(thickness_s_old,
                                                  0.0,
                                                  omega_ss);
-
-            // recalculate interface temperature
-            NumType ratio = (k_i*thickness_s_new)/(k_s*thickness_i_new);
-            T_is_new  = (NumType)((1.0/(ratio + 1.0))*T_ss + ((ratio)/(ratio + 1.0))*T_ib);
 
             // evaluate the error
             std::vector<NumType> prev_temps = {T_is_prev};

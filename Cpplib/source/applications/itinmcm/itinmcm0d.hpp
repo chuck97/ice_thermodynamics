@@ -148,6 +148,13 @@ public:
                              int min_lat_ind_,        
                              int max_lat_ind_
                              );
+    
+    // add thickness to snow due to precipitation
+    void AddPrecipitation(int min_lon_ind_,        
+                          int max_lon_ind_,        
+                          int min_lat_ind_,        
+                          int max_lat_ind_
+                          );
 
     // single-step evaluation (computation of temps and thicks)
     void Evaluate(int min_lon_ind_,        
@@ -379,6 +386,13 @@ extern "C"
                              int min_lat_ind_,        
                              int max_lat_ind_
                              );
+    
+    // add precipitations to snow thickness
+    void AddPrecipitation(void* obj,
+                          int min_lon_ind_,        
+                          int max_lon_ind_,        
+                          int min_lat_ind_,        
+                          int max_lat_ind_);
     
     // single-step evaluation (computation of temps and thicks)
     void Evaluate(void* obj,

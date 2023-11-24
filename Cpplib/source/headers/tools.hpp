@@ -26,13 +26,13 @@ namespace icethermo
     template <typename NumType>
     std::tuple<NumType, NumType, int, bool> secant_solver(FuncPtr<NumType> func,
                                                           NumType x_left, NumType x_right,
-                                                          NumType tol = REAL_MIN_VAL(NumType), int max_it = MAX_1D_SOLVER_ITS);
+                                                          NumType tol = NONLIN_SOLVER_ACCUR, int max_it = MAX_1D_SOLVER_ITS);
     
     // 1-D bisection solver
     template <typename NumType>
     std::tuple<NumType, NumType, int, bool> bisection_solver(FuncPtr<NumType> func,
                                                              NumType x_left, NumType x_right,
-                                                             NumType tol = 1e-10, int max_it = MAX_1D_SOLVER_ITS);
+                                                             NumType tol = NONLIN_SOLVER_ACCUR, int max_it = MAX_1D_SOLVER_ITS);
 
     // SLAE Thomas solver
     template <typename NumType>

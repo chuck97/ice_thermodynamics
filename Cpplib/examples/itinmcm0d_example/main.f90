@@ -20,6 +20,7 @@ program itinmcm0d_example
                           GetSnowThickness, &
                           GetIsIce, &
                           GetIsSnow, &
+                          AddPrecipitation, &
                           Evaluate, &
                           SetComputationMarker
 
@@ -185,6 +186,11 @@ program itinmcm0d_example
     print *,  "Update of latent heat coefficient done!" 
     print * 
 
+    ! add snow precipitations
+    call AddPrecipitation(1, nlon, 1, nlat)
+    print *,  "Adding precipitations to snow thickness done!" 
+    print * 
+
     ! assemble total atmosphere flux
     call AssembleTotalAtmFlux(1, nlon, 1, nlat)
 
@@ -296,20 +302,21 @@ program itinmcm0d_example
     !end do
 
     ! get is_snow array
-    !call GetIsSnow(array = snow_presence, &
-    !               min_lon_ind = 1, &
-    !               max_lon_ind = nlon, &
-    !               min_lat_ind = 1, &                    
-    !               max_lat_ind = nlat)
-    !
+    call GetIsSnow(array = snow_presence, &
+                   min_lon_ind = 1, &
+                   max_lon_ind = nlon, &
+                   min_lat_ind = 1, &                    
+                   max_lat_ind = nlat)
+    
+
     !print *, "Output snow presence: "
 !
-    !do j = 5, 10
-    !    do i = 5, 10
-    !        write(*, fmt='(L, 1X)', advance="no") snow_presence(i, j)
-    !    end do
-    !    print *
-    !end do
+    do j = 1, 1
+        do i = 1, 1
+            write(*, fmt='(L, 1X)', advance="no") snow_presence(i, j)
+        end do
+        print *
+    end do
 
  
     ! finalization of thermodynamics solver at the end of the program (freeing the memory)

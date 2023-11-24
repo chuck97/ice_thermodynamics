@@ -392,6 +392,26 @@ module itinmcm0d
        end subroutine
     end interface
 
+    ! added snow thickness due to precipitation
+    interface
+        subroutine AddPrecipitation_(obj, &           ! pointer to allocated Cpp class
+                                     min_lon_ind, &   ! minimal longitude index
+                                     max_lon_ind, &   ! maximal longitude index
+                                     min_lat_ind, &   ! minimal latitude index
+                                     max_lat_ind) &   ! maximal latitude index
+                                     bind(C, name="AddPrecipitation")
+            
+            import:: c_int, c_ptr
+            implicit none
+
+            ! Argument list
+            type(c_ptr), intent(in), value :: obj
+            integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+            integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+            
+        end subroutine
+    end interface
+
     ! single-step evaluation
     interface
         subroutine Evaluate_(obj, &           ! pointer to allocated Cpp class
@@ -551,6 +571,7 @@ module itinmcm0d
     public :: UpdateOceanFlux
     public :: UpdateIceThickness
     public :: UpdateSnowThickness
+    public :: AddPrecipitation
     public :: Evaluate
     public :: GetSurfaceTemperature
     public :: GetSnowThickness
@@ -1033,6 +1054,29 @@ module itinmcm0d
                                       max_lon_ind, &      
                                       min_lat_ind, &      
                                       max_lat_ind)
+        end if
+
+    end subroutine
+
+    ! 2D adding the snow thickness due to precipitation
+    subroutine AddPrecipitation(min_lon_ind,  & ! minimal longitude index (inclusively)
+                                max_lon_ind,  & ! maximal longitude index (inclusively)
+                                min_lat_ind,  & ! minimal latitude index (inclusively)
+                                max_lat_ind)    ! maximal latitude index (inclusively)
+        
+        implicit none
+
+        ! Argument list
+        integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+        integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+
+        ! Body
+        if (c_associated(obj)) then
+            call AddPrecipitation_(obj, &
+                                   min_lon_ind, &      
+                                   max_lon_ind, &      
+                                   min_lat_ind, &      
+                                   max_lat_ind)
         end if
 
     end subroutine

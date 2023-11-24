@@ -144,14 +144,9 @@ namespace icethermo
         }
     }
 
-    // 1D ice with 0D snow solver evaluation
-    template <typename NumType>
-    void SeaIce0D_Snow0D_Solver<NumType>::Evaluate()
+    template<typename NumType>
+    void SeaIce0D_Snow0D_Solver<NumType>::AddPrecipitation()
     {
-        // force base temperature to freezing point
-
-        *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
-
         // if there are precipitations with less than zero atm temp add snow
         if (*(this->atm_temp) < (NumType)0.0)
         {
@@ -173,6 +168,14 @@ namespace icethermo
                 (*(this->Ts_cells))[0] = (NumType)0.5*(*(this->Ts_s) + *(this->Ts_b));
             }
         }
+    }
+
+    // 1D ice with 0D snow solver evaluation
+    template <typename NumType>
+    void SeaIce0D_Snow0D_Solver<NumType>::Evaluate()
+    {
+        // force base temperature to freezing point
+        *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
 
         // check if snow exists
         if ((*(this->dzs_cells))[0] < (NumType)SNOW_THICKNESS_THRESHOLD)
@@ -281,6 +284,8 @@ namespace icethermo
                                                                     *(this->prec_rate),
                                                                     *(this->atm_temp),
                                                                     1);
+                std::cout << "AAAAAAAAAAAAAA" << std::endl;
+                
                 auto melting_ice = melting_values.first;
                 auto melting_snow = melting_values.second;
 

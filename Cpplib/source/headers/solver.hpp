@@ -178,11 +178,6 @@ namespace icethermo
         void UpdateEmittingHeatFlux(FuncPtr<NumType> F_lwi_);
         void UpdateEmittingHeatFlux(); // assign default surface emitting heat flux parameterization
 
-
-
-
-
-        
         // update precipitation rate (m s-1)
         void UpdatePrecipitationRate(NumType prec_rate_mm_sm1_);
 
@@ -206,6 +201,9 @@ namespace icethermo
 
         // update atmosphere density
         void UpdateAirDensity(NumType atm_dens_);
+
+        // add precipitation
+        virtual void AddPrecipitation() = 0;
         
         // update mesh
         virtual void UpdateMesh(Mesh<NumType>* mesh_ice_,
@@ -541,6 +539,8 @@ namespace icethermo
     public:
         void UpdateMesh(Mesh<NumType>* mesh_ice_,
                         Mesh<NumType>* mesh_snow_ = NULL) override;
+        
+        void AddPrecipitation() override;
     };
 
 
@@ -581,6 +581,8 @@ namespace icethermo
     public:
         void UpdateMesh(Mesh<NumType>* mesh_ice_,
                         Mesh<NumType>* mesh_snow_) override;
+        
+        void AddPrecipitation() override;
     };
 
     //   ######################################################
@@ -617,6 +619,8 @@ namespace icethermo
     public:
         void UpdateMesh(Mesh<NumType>* mesh_ice_,
                         Mesh<NumType>* mesh_snow_) override;
+
+        void AddPrecipitation() override;
     };
 
     //   ######################################################
@@ -651,6 +655,8 @@ namespace icethermo
     public:
         void UpdateMesh(Mesh<NumType>* mesh_ice_,
                         Mesh<NumType>* mesh_snow_ = NULL) override;
+        
+        void AddPrecipitation() override;
     };
  
 }
