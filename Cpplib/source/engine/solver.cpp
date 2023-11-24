@@ -107,6 +107,14 @@ namespace icethermo
             FuncPtr<NumType> F_lhs = this->F_lh;
             FuncPtr<NumType> F_Ps = this->F_P;
 
+            //std::cout << "snow temp:" << *(this->Ts_s) << std::endl;
+            //std::cout << "F_lws:" << F_lws(*(this->Ts_s)) << std::endl;
+            //std::cout << "F_lwis:" << F_lwis(*(this->Ts_s)) << std::endl;
+            //std::cout << "F_sws:" << F_sws(*(this->Ts_s)) << std::endl;
+            //std::cout << "F_shs:" << F_shs(*(this->Ts_s)) << std::endl;
+            //std::cout << "F_lhs:" << F_lhs(*(this->Ts_s)) << std::endl;
+            //std::cout << "F_Ps:" << F_Ps(*(this->Ts_s)) << std::endl;
+
             FuncPtr<NumType> alb_s = [al_param, hs] (NumType T)
             {
                 return Params<NumType>::Albedo(al_param, T, hs, 0.0);
@@ -161,12 +169,13 @@ namespace icethermo
                 return Params<NumType>::Albedo(al_param, T, hi, Tfi);
             };
 
-            //std::cout << "F_lwi:" << F_lwi(0.0) << std::endl;
-            //std::cout << "F_lwii:" << F_lwii(0.0) << std::endl;
-            //std::cout << "F_swi:" << F_swi(0.0) << std::endl;
-            //std::cout << "F_shi:" << F_shi(0.0) << std::endl;
-            //std::cout << "F_lhi:" << F_lhi(0.0) << std::endl;
-            //std::cout << "F_Pi:" << F_Pi(0.0) << std::endl;
+            //std::cout << "ice temp:" << *(this->Ti_s) << std::endl;
+            //std::cout << "F_lwi:" << F_lwi(*(this->Ti_s)) << std::endl;
+            //std::cout << "F_lwii:" << F_lwii(*(this->Ti_s)) << std::endl;
+            //std::cout << "F_swi:" << F_swi(*(this->Ti_s)) << std::endl;
+            //std::cout << "F_shi:" << F_shi(*(this->Ti_s)) << std::endl;
+            //std::cout << "F_lhi:" << F_lhi(*(this->Ti_s)) << std::endl;
+            //std::cout << "F_Pi:" << F_Pi(*(this->Ti_s)) << std::endl;
 
             this->F_up = [em_i,
                           alb_i,
@@ -284,7 +293,8 @@ namespace icethermo
 
         this->F_P = [rw, cpw, pr, at](NumType T)
         {
-            return (((*at) - T) > 0.0) ? (*pr)*rw*cpw*((*at) - T) : 0.0;
+            return 0.0;
+            //return (((*at) - T) > 0.0) ? (*pr)*rw*cpw*((*at) - T) : 0.0;
         };
     }
 
@@ -411,7 +421,7 @@ namespace icethermo
             FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return rho_cells.back()*L(T)*omega_value + this->F_up(T) - k(T)*grad(T);};
             
             // solve nonlinear 1D equation
-            auto secant_res = secant_solver<NumType>(nonlin_func, T_cells.back() - (NumType)10.0, GenConsts<NumType>::TempFusion(salinity_cells.back() + (NumType)10.0));
+            auto secant_res = bisection_solver<NumType>(nonlin_func, T_cells.back() - (NumType)10.0, GenConsts<NumType>::TempFusion(salinity_cells.back() + (NumType)10.0));
 
            return std::get<0>(secant_res);
         }
@@ -443,14 +453,14 @@ namespace icethermo
             FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return rho_cells[0]*L(T)*omega_value + this->F_down(T) - k(T)*grad(T);};
             
             // solve nonlinear 1D equation
-            auto secant_res = secant_solver<NumType>(nonlin_func, T_cells[0] - (NumType)10.0, GenConsts<NumType>::TempFusion(salinity_cells[0]) + (NumType)10.0);
+            auto secant_res = bisection_solver<NumType>(nonlin_func, T_cells[0] - (NumType)10.0, GenConsts<NumType>::TempFusion(salinity_cells[0]) + (NumType)10.0);
             
             return std::get<0>(secant_res);
         }   
     }
 
     template<typename NumType>
-    NumType ThermoSolver<NumType>::T_from_BC_0D(NumType T_op_interface,
+    NumType ThermoSolver<NumType>::T_from_BC_0D(FuncPtr<NumType> T_op_interface,
                                                 NumType thickness,
                                                 NumType k_value,
                                                 NumType sal_value,
@@ -465,27 +475,27 @@ namespace icethermo
 
         if (is_surface)
         {
-            grad = [&T_op_interface, &thickness](NumType T) {return (T - T_op_interface)/thickness;};
+            grad = [T_op_interface, &thickness](NumType T) {return (T - T_op_interface(T))/thickness;};
 
             // assemble nonlinear function for 1D solver
-            FuncPtr<NumType> nonlin_func = [&rho_value, omega_value, this, &k_value, &grad, &L](NumType T){return rho_value*L(T)*omega_value + this->F_up(T) - k_value*grad(T);};
+            FuncPtr<NumType> nonlin_func = [&rho_value, omega_value, this, &k_value, &grad, &L](NumType T){return this->F_up(T) - k_value*grad(T);};
 
             // solve nonlinear 1D equation
-            auto secant_res = secant_solver<NumType>(nonlin_func, (NumType)-100.0, (NumType)5.0);
+            auto res = bisection_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0);
 
-            return std::get<0>(secant_res);
+            return std::get<0>(res);
         }
         else
         {
-            grad = [&T_op_interface, &thickness](NumType T) {return (T_op_interface - T)/thickness;};
+            grad = [T_op_interface, &thickness](NumType T) {return (T_op_interface(T) - T)/thickness;};
 
             // assemble nonlinear function for 1D solver
-            FuncPtr<NumType> nonlin_func = [&rho_value, omega_value, this, &k_value, &grad, &L](NumType T){return rho_value*L(T)*omega_value + this->F_down(T) - k_value*grad(T);};
+            FuncPtr<NumType> nonlin_func = [&rho_value, omega_value, this, &k_value, &grad, &L](NumType T){return this->F_down(T) - k_value*grad(T);};
 
             // solve nonlinear 1D equation
-            auto secant_res = secant_solver<NumType>(nonlin_func, (NumType)-100.0, (NumType)5.0);
+            auto res = bisection_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0);
 
-            return std::get<0>(secant_res);
+            return std::get<0>(res);
         }
     }
 
@@ -995,6 +1005,7 @@ namespace icethermo
         NumType surface_err = std::numeric_limits<NumType>::max();
 
         NumType prev_surface_err = surface_err; 
+        
 
         int npseudo = 0;
 
@@ -1023,7 +1034,7 @@ namespace icethermo
             omega_is = (NumType)0.0;
             
             // compute new value of ice surface temperature
-            T_is_new = this->T_from_BC_0D(T_ib,
+            T_is_new = this->T_from_BC_0D([T_ib](NumType T){return T_ib;},
                                           thickness_prev,
                                           k_i,
                                           salinity_i,
@@ -1272,6 +1283,8 @@ namespace icethermo
         NumType current_err = std::numeric_limits<NumType>::max();
         NumType prev_surface_err = surface_err; 
 
+        // setup interface temperature as a function of snow surface temperature
+
 
         int npseudo = 0;
 
@@ -1285,22 +1298,20 @@ namespace icethermo
             thickness_i_prev = thickness_i_new;
             prev_surface_err = surface_err;
 
-            // recalculate conductivity of ice
+            // recalculate conductivity of ice and snow
             NumType k_i = Params<NumType>::Conductivity(this->ice_k_param, salinity_i, 0.5*(T_ib + T_is_prev), rho_i);
-
-            // compute new value of omega at the base
-            omega_ib = this->W_from_BC_0D(T_ib,
-                                          T_is_prev,
-                                          thickness_i_prev,
-                                          k_i,
-                                          salinity_i,
-                                          rho_i,
-                                          true,
-                                          false);
-            
-            // compute new value of snow surface temperature
             NumType k_s = SnowConsts<NumType>::k0_s;
-            T_ss_new = this->T_from_BC_0D(T_is_prev,
+
+            // recalculate interface temperature as function of surface temperature
+            FuncPtr<NumType> int_temp = [thickness_s_prev, thickness_i_prev, T_ib, k_i, k_s](NumType T)
+                                        {
+                                            NumType c1 = k_s/thickness_s_prev;
+                                            NumType c2 = k_i/thickness_i_prev;
+                                            return (NumType)((c1*T + c2*T_ib)/(c1 + c2));
+                                        };
+
+            // compute new value of snow surface temperature
+            T_ss_new = this->T_from_BC_0D(int_temp,
                                           thickness_s_prev,
                                           k_s,
                                           0.0,
@@ -1309,9 +1320,26 @@ namespace icethermo
                                           false,
                                           true);
 
+            // recalculate interface temperature
+            T_is_new  = int_temp(T_ss_new);
+
+            // compute new value of omega at the base
+            omega_ib = this->W_from_BC_0D(T_ib,
+                                          T_is_new,
+                                          thickness_i_prev,
+                                          k_i,
+                                          salinity_i,
+                                          rho_i,
+                                          true,
+                                          false);
+            
+            
+
 
             // force the convergence of snow surface temperature
-            surface_err = std::abs(T_ss_new - T_ss_prev);//std::abs(T_ss_new - T_ss_prev);///(std::abs(T_ss) + (NumType)0.1);
+            surface_err = std::abs(T_ss_new - T_ss_prev);
+            
+            //std::abs(T_ss_new - T_ss_prev);///(std::abs(T_ss) + (NumType)0.1);
             
             //if (surface_err <= prev_surface_err)
             //{
@@ -1333,15 +1361,30 @@ namespace icethermo
                                                  0.0);
 
 
-            // recalculate interface temperature
-            NumType ratio = (k_i*thickness_s_new)/(k_s*thickness_i_new);
-            T_is_new  = (NumType)((1.0/(ratio + 1.0))*T_ss_new + ((ratio)/(ratio + 1.0))*T_ib);
-
             // evaluate the error
             std::vector<NumType> prev_temps = {T_is_prev, T_ss_prev};
             std::vector<NumType> new_temps = {T_is_new, T_ss_new};
 
             current_err = L2_norm(new_temps - prev_temps)/(L2_norm(std::vector<NumType>{T_is, T_ss}) + (NumType)0.1);
+
+            FuncPtr<NumType> F_lws = this->F_lw;
+            FuncPtr<NumType> F_lwis = this->F_lwi;
+            FuncPtr<NumType> F_sws = this->F_sw;
+            FuncPtr<NumType> F_shs = this->F_sh;
+            FuncPtr<NumType> F_lhs = this->F_lh;
+            FuncPtr<NumType> F_Ps = this->F_P;
+            FuncPtr<NumType> F_total = this->F_up;
+
+            std::cout << "snow temp:" << T_ss_new << std::endl; 
+            std::cout << "F_cond:" <<-SnowConsts<NumType>::k0_s*(T_ss_new - T_is_new)/thickness_s_new << std::endl;
+            std::cout << "F_lws:" << GenConsts<NumType>::emissivity*F_lws(T_ss_new) << std::endl;
+            std::cout << "F_lwis:" << -GenConsts<NumType>::emissivity*F_lwis(T_ss_new) << std::endl;
+            std::cout << "F_sws:" << (1- SnowConsts<NumType>::albedo_dry_s)*F_sws(T_ss_new) << std::endl;
+            std::cout << "F_shs:" << F_shs(T_ss_new) << std::endl;
+            std::cout << "F_lhs:" << F_lhs(T_ss_new) << std::endl;
+            std::cout << "F_Ps:" << F_Ps(T_ss_new) << std::endl;
+            std::cout << "F_total:" << F_total(T_ss_new) << std::endl;
+            std::cout << std::endl;
         }
 
         if (this->is_verbose)
@@ -1525,7 +1568,7 @@ namespace icethermo
                 (NumType)0.0;
 
             // compute new value of snow surface temperature
-            T_ss_new = this->T_from_BC_0D(T_is_prev,
+            T_ss_new = this->T_from_BC_0D([T_is_prev](NumType T){return T_is_prev;},
                                           h_s_new,
                                           k_s,
                                           (NumType)0.0,

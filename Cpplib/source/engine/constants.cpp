@@ -169,7 +169,7 @@ namespace icethermo
         }
         else if (param == Aparam::MeltingFreezingIce)
         {
-            if (T >= Tfsurf)
+            if (std::abs(T - Tfsurf) <= REAL_MIN_VAL(NumType))
             {
                 return IceConsts<NumType>::albedo_wet_i;
             }
@@ -180,7 +180,7 @@ namespace icethermo
         }
         else if (param == Aparam::MeltingFreezingSnow)
         {
-            if (T >= Tfsurf)
+            if (std::abs(T - Tfsurf) <= REAL_MIN_VAL(NumType))
             {
                 return SnowConsts<NumType>::albedo_wet_s;
             }

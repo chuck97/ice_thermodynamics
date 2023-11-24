@@ -10,4 +10,6 @@ namespace icethermo
     #define SNOW_THICKNESS_THRESHOLD 1e-3
     #define NAN_TEMP_VALUE -1000000.0
     #define NAN_THICK_VALUE -1000000.0
+    #define MAX_1D_SOLVER_ITS 16
+    #define MAX_RELAXATION_ITS 10
 }

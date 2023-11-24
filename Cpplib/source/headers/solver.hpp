@@ -235,7 +235,7 @@ namespace icethermo
                           bool is_surface);
 
         // find temperature consistent with boundary conditions (0D)
-        NumType T_from_BC_0D(NumType T_op_interface,
+        NumType T_from_BC_0D(FuncPtr<NumType> T_op_interface,
                              NumType thickness,
                              NumType k_value,
                              NumType sal_value,
@@ -308,7 +308,7 @@ namespace icethermo
                                              const std::vector<NumType>& dz_cells,
                                              const std::vector<NumType>& salinity_cells,
                                              const std::vector<NumType>& rho_cells,
-                                             int max_n_its = 20,
+                                             int max_n_its = MAX_RELAXATION_ITS,
                                              NumType tol = 1e-6);
         
         
@@ -327,7 +327,7 @@ namespace icethermo
                                           const std::vector<NumType>& dz_cells,
                                           const std::vector<NumType>& salinity_cells,
                                           const std::vector<NumType>& rho_cells,
-                                          int max_n_its = 20,
+                                          int max_n_its = MAX_RELAXATION_ITS,
                                           NumType tol = 1e-6);
 
         // !! sea-ice freezing mode with snow (for 1d-ice and 0d-snow profile) !!
@@ -354,7 +354,7 @@ namespace icethermo
                                                                                  NumType rho_s,
                                                                                  NumType precipitation_rate,
                                                                                  NumType atm_temperature,
-                                                                                 int max_n_its = 20,
+                                                                                 int max_n_its = MAX_RELAXATION_ITS,
                                                                                  NumType tol = 1e-6);
         
         // !! snow melting mode with sea-ice (for 1d-ice and 0d-snow profile) !!
@@ -380,7 +380,7 @@ namespace icethermo
                                                                        NumType rho_s,
                                                                        NumType precipitation_rate,
                                                                        NumType atm_temperature,
-                                                                       int max_n_its = 20,
+                                                                       int max_n_its = MAX_RELAXATION_ITS,
                                                                        NumType tol = 1e-6);
 
         // !! sea-ice freezing mode with snow (for 0d-ice and 0d-snow profile) !!
@@ -405,7 +405,7 @@ namespace icethermo
                                                                                                      NumType rho_s,
                                                                                                      NumType precipitation_rate,
                                                                                                      NumType atm_temperature,
-                                                                                                     int max_n_its = 20,
+                                                                                                     int max_n_its = MAX_RELAXATION_ITS,
                                                                                                      NumType tol = 1e-6);
         
         
@@ -430,7 +430,7 @@ namespace icethermo
                                                                                 NumType rho_s,
                                                                                 NumType precipitation_rate,
                                                                                 NumType atm_temperature,
-                                                                                int max_n_its = 20,
+                                                                                int max_n_its = MAX_RELAXATION_ITS,
                                                                                 NumType tol = 1e-6);
 
         // !! seaice freezing mode (for 0d profile) !!
@@ -447,7 +447,7 @@ namespace icethermo
                                                       NumType thickness_i,
                                                       NumType salinity_i,
                                                       NumType rho_i,
-                                                      int max_n_its = 20,
+                                                      int max_n_its = MAX_RELAXATION_ITS,
                                                       NumType tol = 1e-6);
 
         // !! seaice melting mode (for 0d profile) !!
@@ -462,7 +462,7 @@ namespace icethermo
                                  NumType thickness_i,
                                  NumType salinity_i,
                                  NumType rho_i,
-                                 int max_n_its = 20,
+                                 int max_n_its = MAX_RELAXATION_ITS,
                                  NumType tol = 1e-6);
         
         
@@ -482,7 +482,7 @@ namespace icethermo
                                              const std::vector<NumType>& dz_cells,
                                              const std::vector<NumType>& salinity_cells,
                                              const std::vector<NumType>& rho_cells,
-                                             int max_n_its = 20,
+                                             int max_n_its = MAX_RELAXATION_ITS,
                                              NumType tol = 1e-6);
 
         // !! galcier melting mode (for 1d profile) !!
@@ -501,7 +501,7 @@ namespace icethermo
                                              const std::vector<NumType>& dz_cells,
                                              const std::vector<NumType>& salinity_cells,
                                              const std::vector<NumType>& rho_cells,
-                                             int max_n_its = 20,
+                                             int max_n_its = MAX_RELAXATION_ITS,
                                              NumType tol = 1e-6);
 
     };

@@ -28,8 +28,8 @@ program itinmcm0d_example
  
     ! variables that are passed to the library should be c_type!
     real(c_double), parameter :: time_step = 1800.0
-    integer(c_int), parameter :: nlon = 12
-    integer(c_int), parameter :: nlat = 12
+    integer(c_int), parameter :: nlon = 1
+    integer(c_int), parameter :: nlat = 1
     logical(c_bool), parameter :: is_verbose = .false.
     real(c_double), dimension(:,:), allocatable :: init_ice_surf_temp, init_ice_base_temp, init_snow_surf_temp
     real(c_double), dimension(:,:), allocatable :: init_ice_thick, init_snow_thick
@@ -45,16 +45,16 @@ program itinmcm0d_example
     real(c_double), dimension(:,:), allocatable :: a
 
     ! parameters for experiment
-    real(c_double), parameter :: prec_rate_value =  7.827909878525390E-009
-    real(c_double), parameter :: ocean_sal_value = 33.8533362150192
-    real(c_double), parameter :: sw_value =  205.623087891572
-    real(c_double), parameter :: lw_value =  301.529608071887
-    real(c_double), parameter :: atm_temp_value =   -5.43543910980225
-    real(c_double), parameter :: spec_humid_value =  2.74289678782225
-    real(c_double), parameter :: sh_coeff_value =  1.064937910996377E-003
-    real(c_double), parameter :: lh_coeff_value =  1.064937910996377E-003
-    real(c_double), parameter :: abs_wind_speed_value = 6.90703597842821
-    real(c_double), parameter :: atm_pressure_value = 98613.5390625000
+    real(c_double), parameter :: prec_rate_value =  3.309196026755158E-009
+    real(c_double), parameter :: ocean_sal_value = 33.9400637149811
+    real(c_double), parameter :: sw_value =  291.891545114104
+    real(c_double), parameter :: lw_value =  277.498013180448
+    real(c_double), parameter :: atm_temp_value =   -0.624021708965302
+    real(c_double), parameter :: spec_humid_value =   3.46770137548447     
+    real(c_double), parameter :: sh_coeff_value =  5.835225456394255E-004
+    real(c_double), parameter :: lh_coeff_value =  5.835225456394255E-004
+    real(c_double), parameter :: abs_wind_speed_value = 5.73963060901394     
+    real(c_double), parameter :: atm_pressure_value = 99017.0468750000          
     real(c_double), parameter :: ocean_flux_value =  0.0
 
     
@@ -73,8 +73,8 @@ program itinmcm0d_example
     init_ice_surf_temp = -5.0
     init_ice_base_temp = 0.0
     init_snow_surf_temp = -10.0
-    init_ice_thick =  2.43186655330956
-    init_snow_thick = 1.099681948877529E-002
+    init_ice_thick =  0.674836563285368
+    init_snow_thick =  9.976625219509927E-004
     water_marker = .true.
     do_compute = .true.
 
@@ -210,7 +210,7 @@ program itinmcm0d_example
                                max_lat_ind = nlat)
     
     print *, "SURFACE TEMP before EVALUATE: "
-    call print_slice(surf_temp, nlon, nlat, 5, 10, 5, 10)
+    call print_slice(surf_temp, nlon, nlat, 1, 1, 1, 1)
     print *
 
     ! ice thickness
@@ -222,7 +222,7 @@ program itinmcm0d_example
                          max_lat_ind = nlat)
     
     print *, "ICE THICK before EVALUATE: "
-    call print_slice(ice_thick, nlon, nlat, 5, 10, 5, 10)
+    call print_slice(ice_thick, nlon, nlat, 1, 1, 1, 1)
     print *
 
     ! ice thickness
@@ -234,7 +234,7 @@ program itinmcm0d_example
                           max_lat_ind = nlat)
     
     print *, "SNOW THICK before EVALUATE: "
-    call print_slice(snow_thick, nlon, nlat, 5, 10, 5, 10)
+    call print_slice(snow_thick, nlon, nlat, 1, 1, 1, 1)
     print *
 
 
@@ -254,7 +254,7 @@ program itinmcm0d_example
                                max_lat_ind = nlat)
     
     print *, "SURFACE TEMP after EVALUATE: "
-    call print_slice(surf_temp, nlon, nlat, 5, 10, 5, 10)
+    call print_slice(surf_temp, nlon, nlat, 1, 1, 1, 1)
     print *
 
     ! ice thickness
@@ -265,7 +265,7 @@ program itinmcm0d_example
                          max_lat_ind = nlat)
     
     print *, "ICE THICK after EVALUATE: "
-    call print_slice(ice_thick, nlon, nlat, 5, 10, 5, 10)
+    call print_slice(ice_thick, nlon, nlat, 1, 1, 1, 1)
     print *
 
     ! ice thickness
@@ -276,7 +276,7 @@ program itinmcm0d_example
                           max_lat_ind = nlat)
     
     print *, "SNOW THICK after EVALUATE: "
-    call print_slice(snow_thick, nlon, nlat, 5, 10, 5, 10)
+    call print_slice(snow_thick, nlon, nlat, 1, 1, 1, 1)
     print *
 
     ! get is_ice array
@@ -332,7 +332,7 @@ program itinmcm0d_example
 
         do j = slice_start_y, slice_end_y
             do i = slice_start_x, slice_end_x
-                write(*, fmt='((F10.6))', advance="no") arr(i, j)
+                write(*, fmt='((F15.8))', advance="no") arr(i, j)
             end do
             print *
         end do

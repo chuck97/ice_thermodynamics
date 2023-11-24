@@ -82,7 +82,7 @@ namespace icethermo
     {
         static constexpr NumType c_w =  3.99e3;
         static constexpr NumType c_pw =  4.17e3;
-        static constexpr NumType rho_w =  1023.0;
+        static constexpr NumType rho_w =  1026.0;
         static constexpr NumType c1_w =  21.87;
         static constexpr NumType c2_w =  7.66;
     };
@@ -107,7 +107,7 @@ namespace icethermo
     struct SnowConsts
     {
         static constexpr NumType c0_s = 2.06e3;
-        static constexpr NumType rho_s = 330.0;
+        static constexpr NumType rho_s = 320.0;
         static constexpr NumType k0_s = 0.31;
         static constexpr NumType L_f0 = 3.33e5;
         static constexpr NumType kappa_s = 10;

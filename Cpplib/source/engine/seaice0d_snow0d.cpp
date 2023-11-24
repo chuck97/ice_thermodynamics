@@ -168,11 +168,6 @@ namespace icethermo
             if (((*(this->dzs_cells))[0] > (NumType)SNOW_THICKNESS_THRESHOLD) and 
                  (snow_thick_before < (NumType)SNOW_THICKNESS_THRESHOLD))
             {
-                if (this->mesh_ice == NULL)
-                {
-
-                }
-
                 *(this->Ts_s) = *(this->atm_temp);
                 *(this->Ts_b) = *(this->Ti_s);
                 (*(this->Ts_cells))[0] = (NumType)0.5*(*(this->Ts_s) + *(this->Ts_b));
@@ -189,7 +184,8 @@ namespace icethermo
                                                            *this->Ti_s,
                                                            (*this->dzi_cells)[0],
                                                            (*this->Si_cells)[0],
-                                                           (*this->rhoi_cells)[0]);
+                                                           (*this->rhoi_cells)[0],
+                                                           1);
 
             // force snow temperatures to be the same as ice surface temp
             *(this->Ts_b) = *(this->Ti_s);
@@ -216,7 +212,8 @@ namespace icethermo
                                                               surface_fusion_temp,
                                                              (*this->dzi_cells)[0],
                                                              (*this->Si_cells)[0],
-                                                             (*this->rhoi_cells)[0]);
+                                                             (*this->rhoi_cells)[0],
+                                                             1);
 
                 // update mesh values
                 *(this->Ti_cells) = std::vector<NumType>{(NumType)(0.5*(surface_fusion_temp + *(this->Ti_b)))};
@@ -254,12 +251,12 @@ namespace icethermo
                                                                   (*this->dzs_cells)[0],
                                                                   (*this->rhos_cells)[0],
                                                                   *(this->prec_rate),
-                                                                  *(this->atm_temp));
+                                                                  *(this->atm_temp),
+                                                                  1
+                                                                  );
 
             auto freezing_ice = freezing_values.first;
             auto freezing_snow = freezing_values.second;
-
-            
 
             // check if snow surface temperature exeeds melting point and recalculate in melting mode
             if (freezing_snow.first > (NumType)0.0)
@@ -282,7 +279,8 @@ namespace icethermo
                                                                     (*this->dzs_cells)[0],
                                                                     (*this->rhos_cells)[0],
                                                                     *(this->prec_rate),
-                                                                    *(this->atm_temp));
+                                                                    *(this->atm_temp),
+                                                                    1);
                 auto melting_ice = melting_values.first;
                 auto melting_snow = melting_values.second;
 
