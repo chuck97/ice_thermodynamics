@@ -12,6 +12,8 @@ program itinmcm0d_example
                           UpdateLwRadiation, &
                           UpdateShCoeff, &
                           UpdateLhCoeff, &
+                          UpdateSnowThickness, &
+                          UpdateIceThickness, &
                           AssembleTotalAtmFlux, &
                           UpdateOceanSalinity, &
                           UpdateOceanFlux, &
@@ -36,7 +38,8 @@ program itinmcm0d_example
     real(c_double), dimension(:,:), allocatable :: init_ice_thick, init_snow_thick
     logical(c_bool), dimension(:,:), allocatable :: water_marker, do_compute
     real(c_double), dimension(:,:), allocatable :: atm_temp, atm_press, prec_rate, atm_humid, wind_speed, &
-                                                   sw_rad, lw_rad, sh_coeff, lh_coeff, ocean_flux, ocean_sal
+                                                   sw_rad, lw_rad, sh_coeff, lh_coeff, ocean_flux, ocean_sal, &
+                                                   snoww_thick, icee_thick
 
     ! variables for output from library
     real(c_double), dimension(:,:), allocatable :: surf_temp
@@ -57,6 +60,9 @@ program itinmcm0d_example
     real(c_double), parameter :: abs_wind_speed_value = 5.73963060901394     
     real(c_double), parameter :: atm_pressure_value = 99017.0468750000          
     real(c_double), parameter :: ocean_flux_value =  0.0
+    real(c_double), parameter :: ssnow_thickness =  9.976625219509927E-004
+    real(c_double), parameter :: iice_thickness =  0.674836563285368
+
 
     
     ! allocate memory
@@ -69,15 +75,19 @@ program itinmcm0d_example
     allocate(do_compute(1:nlon, 1:nlat))
     allocate(ice_presence(1:nlon, 1:nlat))
     allocate(snow_presence(1:nlon, 1:nlat))
+    allocate(snoww_thick(1:nlon, 1:nlat))
+    allocate(icee_thick(1:nlon, 1:nlat))
 
     ! initialization of arrays
     init_ice_surf_temp = -5.0
     init_ice_base_temp = 0.0
     init_snow_surf_temp = -10.0
-    init_ice_thick =  0.674836563285368
-    init_snow_thick =  9.976625219509927E-004
+    init_ice_thick =  1.0
+    init_snow_thick =  1.0
     water_marker = .true.
     do_compute = .true.
+    snoww_thick = ssnow_thickness
+    icee_thick = iice_thickness
 
 
     print *,  "Initialization of arrays done!" 
@@ -184,6 +194,16 @@ program itinmcm0d_example
     call UpdateLhCoeff(lh_coeff, 1, nlon, 1, nlat)
 
     print *,  "Update of latent heat coefficient done!" 
+    print * 
+
+    ! update snow thickness
+    call UpdateSnowThickness(snoww_thick, 1, nlon, 1, nlat)
+    print *,  "Update of snow thickness done!" 
+    print * 
+
+    ! update ice thickness
+    call UpdateIceThickness(icee_thick, 1, nlon, 1, nlat)
+    print *,  "Update of ice thickness done!" 
     print * 
 
     ! add snow precipitations
