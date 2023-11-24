@@ -284,8 +284,7 @@ namespace icethermo
                                                                     *(this->prec_rate),
                                                                     *(this->atm_temp),
                                                                     1);
-                std::cout << "AAAAAAAAAAAAAA" << std::endl;
-                
+
                 auto melting_ice = melting_values.first;
                 auto melting_snow = melting_values.second;
 
