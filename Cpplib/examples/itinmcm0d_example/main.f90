@@ -49,19 +49,19 @@ program itinmcm0d_example
     real(c_double), dimension(:,:), allocatable :: a
 
     ! parameters for experiment
-    real(c_double), parameter :: prec_rate_value =  3.309196026755158E-009
-    real(c_double), parameter :: ocean_sal_value = 33.9400637149811
-    real(c_double), parameter :: sw_value =  291.891545114104
-    real(c_double), parameter :: lw_value =  277.498013180448
-    real(c_double), parameter :: atm_temp_value =   -0.624021708965302
-    real(c_double), parameter :: spec_humid_value =   3.46770137548447     
-    real(c_double), parameter :: sh_coeff_value =  5.835225456394255E-004
-    real(c_double), parameter :: lh_coeff_value =  5.835225456394255E-004
-    real(c_double), parameter :: abs_wind_speed_value = 5.73963060901394     
-    real(c_double), parameter :: atm_pressure_value = 99017.0468750000          
+    real(c_double), parameter :: prec_rate_value = 9.017957395560672E-009 !7.609942598442472E-009
+    real(c_double), parameter :: ocean_sal_value = 33.5475176572800!33.5915298461914
+    real(c_double), parameter :: sw_value =  268.917262772884 !266.281200147678
+    real(c_double), parameter :: lw_value =  259.998277974255 !259.256152939006
+    real(c_double), parameter :: atm_temp_value =  -1.01591825485229 !-2.14904260635376
+    real(c_double), parameter :: spec_humid_value =  3.53804067708552 !3.30236856825650     
+    real(c_double), parameter :: sh_coeff_value =  1.154831377789378E-003!1.162560540251434E-003
+    real(c_double), parameter :: lh_coeff_value =  1.154831377789378E-003!1.162560540251434E-003
+    real(c_double), parameter :: abs_wind_speed_value = 3.11274223999510!3.03282555476966     
+    real(c_double), parameter :: atm_pressure_value = 97961.0781250000!97984.3593750000          
     real(c_double), parameter :: ocean_flux_value =  0.0
-    real(c_double), parameter :: ssnow_thickness =  9.976625219509927E-004
-    real(c_double), parameter :: iice_thickness =  0.674836563285368
+    real(c_double), parameter :: ssnow_thickness =  1.403410794509705E-004!1.218353482670631E-003
+    real(c_double), parameter :: iice_thickness =  8.824488442588851E-002!0.599594827601429
 
 
     

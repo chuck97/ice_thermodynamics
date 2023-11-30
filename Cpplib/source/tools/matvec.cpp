@@ -163,7 +163,7 @@ namespace icethermo
     template <typename NumType>
     NumType L2_norm(const std::vector<NumType>& vec)
     {                              
-        NumType res;
+        NumType res = 0;
 
         for (int i = 0; i < vec.size(); i++)
         {
