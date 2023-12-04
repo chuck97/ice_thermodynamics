@@ -9,7 +9,7 @@ add_executable(itinmcm0d_example main.f90)
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
 	message(STATUS "Compiling itinmcm0d example with Intel")
-	target_link_options(itinmcm0d_example PRIVATE -fPIC -nostartfiles)
+	set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_Fortran_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 	target_link_libraries(itinmcm0d_example PRIVATE icethermo -lstdc++)
 else()
 	message(STATUS"Compiling itinmcm example with GNU")
