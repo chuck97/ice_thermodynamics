@@ -41,10 +41,18 @@ namespace icethermo
         this->atm_press = std::make_shared<NumType>(101325.0); // Pa
         this->atm_humid = std::make_shared<NumType>(0.0); // g/kg
         this->abs_wind_speed = std::make_shared<NumType>(5.0);
-        this->sh_trans_coeff = std::make_shared<NumType>(GenConsts<NumType>::C_sh);
-        this->lh_trans_coeff = std::make_shared<NumType>(GenConsts<NumType>::C_lh);
+
+        NumType C_sh = GenConsts<NumType>::C_sh;
+        this->sh_trans_coeff = std::make_shared<NumType>(C_sh);
+
+        NumType C_lh = GenConsts<NumType>::C_lh;
+        this->lh_trans_coeff = std::make_shared<NumType>(C_lh);
+
         this->So = std::make_shared<NumType>(30.0);
-        this->atm_dens = std::make_shared<NumType>(AirConsts<NumType>::rho_a);
+
+        NumType atm_dens = AirConsts<NumType>::rho_a;
+        this->atm_dens = std::make_shared<NumType>(atm_dens);
+
         this->is_radiation = is_radiation_;
         this->is_sublimation = is_sublimation_;
         this->si_transition_mode = si_transition_mode_;
@@ -114,6 +122,7 @@ namespace icethermo
             //std::cout << "F_shs:" << F_shs(*(this->Ts_s)) << std::endl;
             //std::cout << "F_lhs:" << F_lhs(*(this->Ts_s)) << std::endl;
             //std::cout << "F_Ps:" << F_Ps(*(this->Ts_s)) << std::endl;
+
             FuncPtr<NumType> alb_s = [al_param, hs] (NumType T)
             {
                 return SnowConsts<NumType>::albedo_wet_s;
@@ -245,6 +254,7 @@ namespace icethermo
         {   
             //NumType es = (NumType)(6.11*exp(c1*T/(T + T_0 - c2)));
             //NumType q_surf = 0.622*es/((*press)*1e-2 - 0.378*es);
+
 
             NumType pb = 21.85/(T + GenConsts<NumType>::T0 - 7.65);
             NumType qmax_dup = 3.80042e-3*exp(pb*T)/((*press)*1e-5);

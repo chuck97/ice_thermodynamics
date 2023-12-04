@@ -33,7 +33,7 @@ program itinmcm0d_example
     real(c_double), parameter :: time_step = 1800.0
     integer(c_int), parameter :: nlon = 1
     integer(c_int), parameter :: nlat = 1
-    logical(c_bool), parameter :: is_verbose = .false.
+    logical(c_bool), parameter :: is_verbose = .true.
     real(c_double), dimension(:,:), allocatable :: init_ice_surf_temp, init_ice_base_temp, init_snow_surf_temp
     real(c_double), dimension(:,:), allocatable :: init_ice_thick, init_snow_thick
     logical(c_bool), dimension(:,:), allocatable :: water_marker, do_compute

@@ -1,4 +1,6 @@
 build/
+build_intel/
+build_gnu/
 json/
 .vscode/
 CMakeLists.txt.user
