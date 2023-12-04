@@ -125,8 +125,8 @@ namespace icethermo
 
             FuncPtr<NumType> alb_s = [al_param, hs] (NumType T)
             {
-                return SnowConsts<NumType>::albedo_wet_s;
-                //return Params<NumType>::Albedo(al_param, T, hs, 0.0);
+                //return SnowConsts<NumType>::albedo_wet_s;
+                return Params<NumType>::Albedo(al_param, T, hs, 0.0);
             };
 
             this->F_up = [em_s,
@@ -1385,15 +1385,21 @@ namespace icethermo
             FuncPtr<NumType> F_Ps = this->F_P;
             FuncPtr<NumType> F_total = this->F_up;
 
-            //std::cout << "snow temp:" << T_ss_new << std::endl; 
-            //std::cout << "F_cond:" <<-SnowConsts<NumType>::k0_s*(T_ss_new - T_is_new)/thickness_s_new << std::endl;
-            //std::cout << "F_lws:" << GenConsts<NumType>::emissivity*F_lws(T_ss_new) << std::endl;
-            //std::cout << "F_lwis:" << -GenConsts<NumType>::emissivity*F_lwis(T_ss_new) << std::endl;
-            //std::cout << "F_sws:" << (1- SnowConsts<NumType>::albedo_dry_s)*F_sws(T_ss_new) << std::endl;
-            //std::cout << "F_shs:" << F_shs(T_ss_new) << std::endl;
-            //std::cout << "F_lhs:" << F_lhs(T_ss_new) << std::endl;
-            //std::cout << "F_Ps:" << F_Ps(T_ss_new) << std::endl;
-            //std::cout << "F_total:" << F_total(T_ss_new) << std::endl;
+            NumType T_ss_neww = -24.5;
+
+            //std::cout << "snow temp:" << T_ss_neww << std::endl; 
+            //std::cout << "T_ib:" << T_ib << std::endl;
+            //std::cout << "C1:" << k_s/thickness_s_new << std::endl;
+            //std::cout << "C2:" << k_i/thickness_i_new << std::endl;
+            //std::cout << "T_is_new:" << T_is_new << std::endl;
+            //std::cout << "F_cond:" <<-SnowConsts<NumType>::k0_s*(T_ss_neww - int_temp(T_ss_neww))/thickness_s_new << std::endl;
+            //std::cout << "F_lws:" << GenConsts<NumType>::emissivity*F_lws(T_ss_neww) << std::endl;
+            //std::cout << "F_lwis:" << -GenConsts<NumType>::emissivity*F_lwis(T_ss_neww) << std::endl;
+            //std::cout << "F_sws:" << (1- SnowConsts<NumType>::albedo_dry_s)*F_sws(T_ss_neww) << std::endl;
+            //std::cout << "F_shs:" << F_shs(T_ss_neww) << std::endl;
+            //std::cout << "F_lhs:" << F_lhs(T_ss_neww) << std::endl;
+            //std::cout << "F_Ps:" << F_Ps(T_ss_neww) << std::endl;
+            //std::cout << "F_total:" << F_total(T_ss_neww) << std::endl;
             //std::cout << std::endl;
         }
 
