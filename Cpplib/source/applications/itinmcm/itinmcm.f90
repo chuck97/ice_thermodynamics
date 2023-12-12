@@ -6,23 +6,23 @@ module itinmcm0d
  
     private
  
-    ! initialization of thermodynamics solver 
+    ! initialization of 0d thermodynamics solver 
     interface
-        function InitThermodynamics_(time_step,           &  ! time step (seconds)
-                                     min_ice_thick,       &  ! minimal ice thickness (meters)
-                                     min_lon_ind,         &  ! minimal longitude index
-                                     max_lon_ind,         &  ! maximal longitude index
-                                     min_lat_ind,         &  ! minimal latitude index
-                                     max_lat_ind,         &  ! maximal latitude index
-                                     init_ice_base_temp,  &  ! 2D-array of initial ice base temp (deg Cel) 
-                                     init_ice_surf_temp,  &  ! 2D-array of initial ice surface temp (deg Cel)
-                                     init_snow_surf_temp, &  ! 2D-array of initial snow surface temp (deg Cel)
-                                     init_ice_thick,      &  ! 2D-array of initial ice thickness (meters)
-                                     init_snow_thick,     &  ! 2D-array of initial snow thickness (meters)
-                                     water_marker,        &  ! 2D-boolean-array for water marker
-                                     is_verbose)          &  ! single bool value for detailed output     
-                                     result(obj)          &  ! pointer to allocated Cpp class
-                                     bind(C, name="InitThermodynamics")
+        function InitThermodynamics0d_(time_step,           &  ! time step (seconds)
+                                       min_ice_thick,       &  ! minimal ice thickness (meters)
+                                       min_lon_ind,         &  ! minimal longitude index
+                                       max_lon_ind,         &  ! maximal longitude index
+                                       min_lat_ind,         &  ! minimal latitude index
+                                       max_lat_ind,         &  ! maximal latitude index
+                                       init_ice_base_temp,  &  ! 2D-array of initial ice base temp (deg Cel) 
+                                       init_ice_surf_temp,  &  ! 2D-array of initial ice surface temp (deg Cel)
+                                       init_snow_surf_temp, &  ! 2D-array of initial snow surface temp (deg Cel)
+                                       init_ice_thick,      &  ! 2D-array of initial ice thickness (meters)
+                                       init_snow_thick,     &  ! 2D-array of initial snow thickness (meters)
+                                       water_marker,        &  ! 2D-boolean-array for water marker
+                                       is_verbose)          &  ! single bool value for detailed output     
+                                       result(obj)          &  ! pointer to allocated Cpp class
+                                       bind(C, name="InitThermodynamics0d")
              
             import :: c_int, c_double, c_ptr, c_bool       
             implicit none   
@@ -43,11 +43,69 @@ module itinmcm0d
 
         end function
     end interface
-       
-    ! finalization of thermodynamics solver
+
+    ! initialization of 1d thermodynamics solver 
     interface
-       subroutine FinalizeThermodynamics_(obj) & ! pointer to allocated Cpp class
-                                          bind(C, name="FinalizeThermodynamics")
+        function InitThermodynamics1d_(time_step,            &  ! time step (seconds)
+                                       num_ice_layers,       &  ! number of unit ice layers
+                                       min_ice_thick,        &  ! minimal ice thickness (meters)
+                                       min_lon_ind,          &  ! minimal longitude index
+                                       max_lon_ind,          &  ! maximal longitude index
+                                       min_lat_ind,          &  ! minimal latitude index
+                                       max_lat_ind,          &  ! maximal latitude index
+                                       init_ice_base_temp,   &  ! 2D-array of initial ice base temp (deg Cel) 
+                                       init_ice_surf_temp,   &  ! 2D-array of initial ice surface temp (deg Cel)
+                                       init_snow_surf_temp,  &  ! 2D-array of initial snow surface temp (deg Cel)
+                                       init_ice_thick,       &  ! 2D-array of initial ice thickness (meters)
+                                       init_snow_thick,      &  ! 2D-array of initial snow thickness (meters)
+                                       init_ice_base_sal,    &  ! 2D-array of ice base salinity (psu)
+                                       init_ice_surface_sal, &  ! 2D-array of ice surface salinity (psu)
+                                       water_marker,         &  ! 2D-boolean-array for water marker
+                                       is_verbose)           &  ! single bool value for detailed output     
+                                       result(obj)           &  ! pointer to allocated Cpp class
+                                       bind(C, name="InitThermodynamics1d")
+             
+            import :: c_int, c_double, c_ptr, c_bool       
+            implicit none   
+
+            ! Argument list
+            real(c_double), intent(in), value :: time_step
+            integer(c_int), intent(in), value :: num_ice_layers
+            real(c_double), intent(in), value :: min_ice_thick
+            integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+            integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+            real(c_double), intent(in), dimension(*) :: init_ice_base_temp
+            real(c_double), intent(in), dimension(*) :: init_ice_surf_temp
+            real(c_double), intent(in), dimension(*) :: init_snow_surf_temp
+            real(c_double), intent(in), dimension(*) :: init_ice_thick
+            real(c_double), intent(in), dimension(*) :: init_snow_thick
+            real(c_double), intent(in), dimension(*) :: init_ice_base_sal
+            real(c_double), intent(in), dimension(*) :: init_ice_surface_sal
+            logical(c_bool), intent(in), dimension(*) :: water_marker
+            logical(c_bool), intent(in), value :: is_verbose
+            type(c_ptr) :: obj
+
+        end function
+    end interface
+       
+    ! finalization of 0d thermodynamics solver
+    interface
+       subroutine FinalizeThermodynamics0d_(obj) & ! pointer to allocated Cpp class
+                                            bind(C, name="FinalizeThermodynamics0d")
+        
+        import :: c_ptr
+        implicit none
+
+        ! Argument list
+        type(c_ptr), intent(in), value :: obj
+
+       end subroutine
+    end interface
+
+    ! finalization of 1d thermodynamics solver
+    interface
+       subroutine FinalizeThermodynamics1d_(obj) & ! pointer to allocated Cpp class
+                                            bind(C, name="FinalizeThermodynamics1d")
         
         import :: c_ptr
         implicit none
@@ -184,27 +242,6 @@ module itinmcm0d
        end subroutine
     end interface
 
-    ! update air pressure
-    interface 
-       subroutine UpdateAirDensity_(obj ,        & ! pointer to allocated Cpp class
-                                    rho_values,  & ! 2D-array of air desity
-                                    min_lon_ind, & ! minimal longitude index
-                                    max_lon_ind, & ! maximal longitude index
-                                    min_lat_ind, & ! minimal latitude index
-                                    max_lat_ind) & ! maximal latitude index
-                                    bind(C, name="UpdateAirDensity")
-          import:: c_int, c_double, c_ptr
-          implicit none
-          
-          ! Argument list
-          type(c_ptr), intent(in), value :: obj
-          real(c_double), intent(in), dimension(*) :: rho_values
-          integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
-          integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
-
-       end subroutine
-    end interface
-
     ! update air specific humidity
     interface 
        subroutine UpdateAirSpecificHumidity_(obj ,        & ! pointer to allocated Cpp class
@@ -220,6 +257,27 @@ module itinmcm0d
           ! Argument list
           type(c_ptr), intent(in), value :: obj
           real(c_double), intent(in), dimension(*) :: sh_values
+          integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+          integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+
+       end subroutine
+    end interface
+
+    ! update air pressure
+    interface 
+       subroutine UpdateAirDensity_(obj ,        & ! pointer to allocated Cpp class
+                                    rho_values,  & ! 2D-array of air desity
+                                    min_lon_ind, & ! minimal longitude index
+                                    max_lon_ind, & ! maximal longitude index
+                                    min_lat_ind, & ! minimal latitude index
+                                    max_lat_ind) & ! maximal latitude index
+                                    bind(C, name="UpdateAirDensity")
+          import:: c_int, c_double, c_ptr
+          implicit none
+          
+          ! Argument list
+          type(c_ptr), intent(in), value :: obj
+          real(c_double), intent(in), dimension(*) :: rho_values
           integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
           integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
 
@@ -350,15 +408,15 @@ module itinmcm0d
        end subroutine
     end interface
 
-    ! update ice thickness
+    ! update snow thickness
     interface 
-       subroutine UpdateIceThickness_(obj ,         & ! pointer to allocated Cpp class
-                                      thick_values, & ! 2D-array of ice thickness
-                                      min_lon_ind,  & ! minimal longitude index
-                                      max_lon_ind,  & ! maximal longitude index
-                                      min_lat_ind,  & ! minimal latitude index
-                                      max_lat_ind)  & ! maximal latitude index
-                                      bind(C, name="UpdateIceThickness")
+       subroutine UpdateSnowThickness_(obj ,         & ! pointer to allocated Cpp class
+                                       thick_values, & ! 2D-array of snow thickness
+                                       min_lon_ind,  & ! minimal longitude index
+                                       max_lon_ind,  & ! maximal longitude index
+                                       min_lat_ind,  & ! minimal latitude index
+                                       max_lat_ind)  & ! maximal latitude index
+                                       bind(C, name="UpdateSnowThickness")
           import:: c_int, c_double, c_ptr
           implicit none
           
@@ -371,15 +429,15 @@ module itinmcm0d
        end subroutine
     end interface
 
-    ! update snow thickness
+    ! update ice thickness
     interface 
-       subroutine UpdateSnowThickness_(obj ,         & ! pointer to allocated Cpp class
-                                       thick_values, & ! 2D-array of snow thickness
-                                       min_lon_ind,  & ! minimal longitude index
-                                       max_lon_ind,  & ! maximal longitude index
-                                       min_lat_ind,  & ! minimal latitude index
-                                       max_lat_ind)  & ! maximal latitude index
-                                       bind(C, name="UpdateSnowThickness")
+       subroutine UpdateIceThickness_(obj ,         & ! pointer to allocated Cpp class
+                                      thick_values, & ! 2D-array of ice thickness
+                                      min_lon_ind,  & ! minimal longitude index
+                                      max_lon_ind,  & ! maximal longitude index
+                                      min_lat_ind,  & ! minimal latitude index
+                                      max_lat_ind)  & ! maximal latitude index
+                                      bind(C, name="UpdateIceThickness")
           import:: c_int, c_double, c_ptr
           implicit none
           
@@ -543,6 +601,50 @@ module itinmcm0d
         end subroutine
     end interface
 
+    ! update 3d temperature profiles
+    interface
+        subroutine UpdateTemperatureProfile_(obj, &           ! pointer to allocated Cpp class
+                                             array, &         ! 3d-array of ice cells and snow surface temperatures (deg Cel)
+                                             min_lon_ind, &   ! minimal longitude index
+                                             max_lon_ind, &   ! maximal longitude index
+                                             min_lat_ind, &   ! minimal latitude index
+                                             max_lat_ind) &   ! maximal latitude index
+                                             bind(C, name="UpdateTemperatureProfile")
+            
+            import:: c_int, c_double, c_ptr
+            implicit none
+
+            ! Argument list
+            type(c_ptr), intent(in), value :: obj
+            real(c_double), intent(in), dimension(*) :: array
+            integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+            integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+            
+        end subroutine
+    end interface
+
+    ! update 3d temperature profiles
+    interface
+        subroutine GetTemperatureProfile_(obj, &           ! pointer to allocated Cpp class
+                                          array, &         ! 3d-array of ice cells and snow surface temperatures (deg Cel) - output
+                                          min_lon_ind, &   ! minimal longitude index
+                                          max_lon_ind, &   ! maximal longitude index
+                                          min_lat_ind, &   ! minimal latitude index
+                                          max_lat_ind) &   ! maximal latitude index
+                                          bind(C, name="GetTemperatureProfile")
+            
+            import:: c_int, c_double, c_ptr
+            implicit none
+
+            ! Argument list
+            type(c_ptr), intent(in), value :: obj
+            real(c_double), intent(out), dimension(*) :: array
+            integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+            integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+            
+        end subroutine
+    end interface
+
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!! HOLD CPP CLASS !!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -553,8 +655,10 @@ module itinmcm0d
     !!!!!!!  INTERFACE FUNCTIONS  !!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    public :: InitThermodynamics
-    public :: FinalizeThermodynamics
+    public :: InitThermodynamics0d
+    public :: InitThermodynamics1d
+    public :: FinalizeThermodynamics0d
+    public :: FinalizeThermodynamics1d
     public :: SetComputationMarker
     public :: UpdateSwRadiation
     public :: UpdateLwRadiation
@@ -578,24 +682,26 @@ module itinmcm0d
     public :: GetIceThickness
     public :: GetIsSnow
     public :: GetIsIce
+    public :: UpdateTemperatureProfile
+    public :: GetTemperatureProfile
 
  
  contains
  
     ! initialization of thermodynamics solver 
-    subroutine InitThermodynamics(time_step,           &  ! time step (seconds)
-                                  min_ice_thick,       &  ! minimal ice thickness (meters)
-                                  min_lon_ind,         &  ! minimal longitude index (inclusively)
-                                  max_lon_ind,         &  ! maximal longitude index (inclusively)
-                                  min_lat_ind,         &  ! minimal latitude index (inclusively)
-                                  max_lat_ind,         &  ! maximal latitude index (inclusively)
-                                  init_ice_base_temp,  &  ! 2D-array of initial ice base temp (deg Cel) 
-                                  init_ice_surf_temp,  &  ! 2D-array of initial ice surface temp (deg Cel)
-                                  init_snow_surf_temp, &  ! 2D-array of initial snow surface temp (deg Cel)
-                                  init_ice_thick,      &  ! 2D-array of initial ice thickness (meters)
-                                  init_snow_thick,     &  ! 2D-array of initial snow thickness (meters)
-                                  water_marker,        &  ! 2D-boolean-array for water marker
-                                  is_verbose)             ! single bool value for detailed output     
+    subroutine InitThermodynamics0d(time_step,           &  ! time step (seconds)
+                                    min_ice_thick,       &  ! minimal ice thickness (meters)
+                                    min_lon_ind,         &  ! minimal longitude index (inclusively)
+                                    max_lon_ind,         &  ! maximal longitude index (inclusively)
+                                    min_lat_ind,         &  ! minimal latitude index (inclusively)
+                                    max_lat_ind,         &  ! maximal latitude index (inclusively)
+                                    init_ice_base_temp,  &  ! 2D-array of initial ice base temp (deg Cel) 
+                                    init_ice_surf_temp,  &  ! 2D-array of initial ice surface temp (deg Cel)
+                                    init_snow_surf_temp, &  ! 2D-array of initial snow surface temp (deg Cel)
+                                    init_ice_thick,      &  ! 2D-array of initial ice thickness (meters)
+                                    init_snow_thick,     &  ! 2D-array of initial snow thickness (meters)
+                                    water_marker,        &  ! 2D-boolean-array for water marker
+                                    is_verbose)             ! single bool value for detailed output     
 
         implicit none   
         
@@ -614,32 +720,104 @@ module itinmcm0d
         
         ! Body
         if (c_associated(obj)) then
-            call FinalizeThermodynamics_(obj)
+            call FinalizeThermodynamics0d_(obj)
         end if
    
-        obj = InitThermodynamics_(time_step, &                    
-                                  min_ice_thick, &         
-                                  min_lon_ind, &           
-                                  max_lon_ind, &           
-                                  min_lat_ind, &           
-                                  max_lat_ind, &  
-                                  init_ice_base_temp, &
-                                  init_ice_surf_temp, &
-                                  init_snow_surf_temp, &
-                                  init_ice_thick, &
-                                  init_snow_thick, &
-                                  water_marker, &
-                                  is_verbose)
+        obj = InitThermodynamics0d_(time_step, &                    
+                                    min_ice_thick, &         
+                                    min_lon_ind, &           
+                                    max_lon_ind, &           
+                                    min_lat_ind, &           
+                                    max_lat_ind, &  
+                                    init_ice_base_temp, &
+                                    init_ice_surf_temp, &
+                                    init_snow_surf_temp, &
+                                    init_ice_thick, &
+                                    init_snow_thick, &
+                                    water_marker, &
+                                    is_verbose)
     end subroutine
 
-    ! finalization of thermodynamics solver
-    subroutine FinalizeThermodynamics()
+    ! initialization of 0d thermodynamics solver 
+    subroutine InitThermodynamics1d(time_step,            &  ! time step (seconds)
+                                    num_ice_layers,       &  ! number of ice layers (should be greater than 2)
+                                    min_ice_thick,        &  ! minimal ice thickness (meters)
+                                    min_lon_ind,          &  ! minimal longitude index (inclusively)
+                                    max_lon_ind,          &  ! maximal longitude index (inclusively)
+                                    min_lat_ind,          &  ! minimal latitude index (inclusively)
+                                    max_lat_ind,          &  ! maximal latitude index (inclusively)
+                                    init_ice_base_temp,   &  ! 2D-array of initial ice base temp (deg Cel) 
+                                    init_ice_surf_temp,   &  ! 2D-array of initial ice surface temp (deg Cel)
+                                    init_snow_surf_temp,  &  ! 2D-array of initial snow surface temp (deg Cel)
+                                    init_ice_thick,       &  ! 2D-array of initial ice thickness (meters)
+                                    init_snow_thick,      &  ! 2D-array of initial snow thickness (meters)
+                                    init_ice_base_sal,    &  ! 2D-array of ice base salinity (psu)
+                                    init_ice_surface_sal, &  ! 2D-array of ice surface salinity (psu)
+                                    water_marker,         &  ! 2D-boolean-array for water marker
+                                    is_verbose)              ! single bool value for detailed output     
+
+        implicit none   
+
+        ! Argument list
+        real(c_double), intent(in), value :: time_step
+        integer(c_int), intent(in), value :: num_ice_layers
+        real(c_double), intent(in), value :: min_ice_thick
+        integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+        integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+        real(c_double), intent(in), dimension(*) :: init_ice_base_temp
+        real(c_double), intent(in), dimension(*) :: init_ice_surf_temp
+        real(c_double), intent(in), dimension(*) :: init_snow_surf_temp
+        real(c_double), intent(in), dimension(*) :: init_ice_thick
+        real(c_double), intent(in), dimension(*) :: init_snow_thick
+        real(c_double), intent(in), dimension(*) :: init_ice_base_sal
+        real(c_double), intent(in), dimension(*) :: init_ice_surface_sal
+        logical(c_bool), intent(in), dimension(*) :: water_marker
+        logical(c_bool), intent(in), value :: is_verbose
+
+        ! Body
+        if (c_associated(obj)) then
+        call FinalizeThermodynamics1d_(obj)
+        end if
+
+        obj = InitThermodynamics1d_(time_step, &     
+                                    num_ice_layers, &             
+                                    min_ice_thick, &         
+                                    min_lon_ind, &           
+                                    max_lon_ind, &           
+                                    min_lat_ind, &           
+                                    max_lat_ind, &  
+                                    init_ice_base_temp, &
+                                    init_ice_surf_temp, &
+                                    init_snow_surf_temp, &
+                                    init_ice_thick, &
+                                    init_snow_thick, &
+                                    init_ice_base_sal, &
+                                    init_ice_surface_sal, &
+                                    water_marker, &
+                                    is_verbose)
+    end subroutine
+
+    ! finalization of 0d thermodynamics solver
+    subroutine FinalizeThermodynamics0d()
 
         implicit none
 
         ! Body
         if (c_associated(obj)) then
-            call FinalizeThermodynamics_(obj)
+            call FinalizeThermodynamics0d_(obj)
+            obj = c_null_ptr
+        end if
+
+    end subroutine
+
+    ! finalization of 1d thermodynamics solver
+    subroutine FinalizeThermodynamics1d()
+
+        implicit none
+
+        ! Body
+        if (c_associated(obj)) then
+            call FinalizeThermodynamics1d_(obj)
             obj = c_null_ptr
         end if
 
@@ -1230,6 +1408,56 @@ module itinmcm0d
                            max_lon_ind, &      
                            min_lat_ind, &      
                            max_lat_ind)
+        end if
+
+    end subroutine
+
+    ! update 3d temperature profiles
+    subroutine UpdateTemperatureProfile(array, &         ! 3d-array of ice cells and snow surface temperatures (deg Cel)
+                                        min_lon_ind, &   ! minimal longitude index
+                                        max_lon_ind, &   ! maximal longitude index
+                                        min_lat_ind, &   ! minimal latitude index
+                                        max_lat_ind)     ! maximal latitude index
+        implicit none
+
+        ! Argument list
+        real(c_double), intent(in), dimension(*) :: array
+        integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+        integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+
+        ! Body
+        if (c_associated(obj)) then
+            call UpdateTemperatureProfile_(obj, &
+                                           array, &  
+                                           min_lon_ind, &      
+                                           max_lon_ind, &      
+                                           min_lat_ind, &      
+                                           max_lat_ind)
+        end if
+            
+    end subroutine
+
+    ! update 3d temperature profiles
+    subroutine GetTemperatureProfile(array, &         ! 3d-array of ice cells and snow surface temperatures (deg Cel) - out
+                                     min_lon_ind, &   ! minimal longitude index
+                                     max_lon_ind, &   ! maximal longitude index
+                                     min_lat_ind, &   ! minimal latitude index
+                                     max_lat_ind)     ! maximal latitude index
+        implicit none
+
+        ! Argument list
+        real(c_double), intent(out), dimension(*) :: array
+        integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+        integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+
+        ! Body
+        if (c_associated(obj)) then
+            call GetTemperatureProfile_(obj, &
+                                        array, &  
+                                        min_lon_ind, &      
+                                        max_lon_ind, &      
+                                        min_lat_ind, &      
+                                        max_lat_ind)
         end if
 
     end subroutine

@@ -15,18 +15,18 @@ namespace icethermo
                                               Eparam ice_E_param_,
                                               Lparam ice_L_param_,
                                               Aparam ice_albedo_param_):
-        ThermoSolver<NumType>(mesh_ice_,
-                              NULL,
-                              time_step_,
-                              grad_approx_order_,
-                              is_radiation_,
-                              is_sublimation_,
-                              is_verbose_,
-                              ice_k_param_,
-                              ice_c_eff_param_,
-                              ice_E_param_,
-                              ice_L_param_,
-                              ice_albedo_param_)
+        SeaIce_Solver<NumType>(mesh_ice_,
+                               NULL,
+                               time_step_,
+                               grad_approx_order_,
+                               is_radiation_,
+                               is_sublimation_,
+                               is_verbose_,
+                               ice_k_param_,
+                               ice_c_eff_param_,
+                               ice_E_param_,
+                               ice_L_param_,
+                               ice_albedo_param_)
     {
         // store input mesh
         this->UpdateMesh(mesh_ice_);
@@ -37,13 +37,6 @@ namespace icethermo
             std::cout << "1D sea-ice solver class constructed!" << std::endl;
         }
     } 
-
-    // update ocean salinity
-    template<typename NumType>
-    void SeaIce1D_Solver<NumType>::UpdateOceanSalinity(NumType ocn_sal_)
-    {
-        *(this->So) = ocn_sal_;
-    }
 
     // 1D ice solver evaluation
     template <typename NumType>

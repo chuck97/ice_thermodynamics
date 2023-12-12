@@ -19,23 +19,23 @@ namespace icethermo
                                                             Lparam snow_L_param_,
                                                             Aparam snow_albedo_param_,
                                                             SnowIceTransition si_transition_mode_):
-        ThermoSolver<NumType>(mesh_ice_,
-                              mesh_snow_,
-                              time_step_,
-                              ApproxOrder::first,
-                              is_radiation_,
-                              is_sublimation_,
-                              is_verbose_,
-                              ice_k_param_,
-                              ice_c_eff_param_,
-                              ice_E_param_,
-                              ice_L_param_,
-                              ice_albedo_param_,
-                              snow_k_param_,
-                              Cparam::FreshSnow,
-                              Eparam::FreshSnow,
-                              snow_L_param_,
-                              snow_albedo_param_)
+        SeaIce_Solver<NumType>(mesh_ice_,
+                               mesh_snow_,
+                               time_step_,
+                               ApproxOrder::first,
+                               is_radiation_,
+                               is_sublimation_,
+                               is_verbose_,
+                               ice_k_param_,
+                               ice_c_eff_param_,
+                               ice_E_param_,
+                               ice_L_param_,
+                               ice_albedo_param_,
+                               snow_k_param_,
+                               Cparam::FreshSnow,
+                               Eparam::FreshSnow,
+                               snow_L_param_,
+                               snow_albedo_param_)
     {
         // store snow->ice transition mode
         this->si_transition_mode = si_transition_mode_;
@@ -50,14 +50,6 @@ namespace icethermo
             std::cout << "1D sea-ice with 0D snow solver class constructed!" << std::endl;
         }
     } 
-
-    // Update ocean salinity
-    template<typename NumType>
-    void SeaIce1D_Snow0D_Solver<NumType>::UpdateOceanSalinity(NumType ocn_sal_)
-    {
-        *(this->So) = ocn_sal_;
-    }
-
 
     // 1D ice with 0D snow solver evaluation
     template <typename NumType>

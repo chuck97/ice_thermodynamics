@@ -1,8 +1,8 @@
 program itinmcm0d_example
  
     ! itslav module
-    use itinmcm0d, only : InitThermodynamics, &
-                          FinalizeThermodynamics, &
+    use itinmcm0d, only : InitThermodynamics0d, &
+                          FinalizeThermodynamics0d, &
                           UpdateAirTemperature, &
                           UpdateAirPressure, &
                           UpdatePrecipitationRate, &
@@ -93,19 +93,19 @@ program itinmcm0d_example
     print *,  "Initialization of arrays done!" 
 
     ! initialization of thermodynamics solver
-    call InitThermodynamics(time_step = time_step, &              
-                            min_ice_thick = 1d-2, &               
-                            min_lon_ind = 1, &                    
-                            max_lon_ind = nlon, &                 
-                            min_lat_ind = 1, &                    
-                            max_lat_ind = nlat, &                 
-                            init_ice_base_temp = init_ice_base_temp, &    
-                            init_ice_surf_temp = init_ice_surf_temp, &   
-                            init_snow_surf_temp = init_snow_surf_temp, &
-                            init_ice_thick = init_ice_thick, &
-                            init_snow_thick = init_snow_thick, &
-                            water_marker = water_marker, &
-                            is_verbose = is_verbose)       
+    call InitThermodynamics0d(time_step = time_step, &              
+                              min_ice_thick = 1d-2, &               
+                              min_lon_ind = 1, &                    
+                              max_lon_ind = nlon, &                 
+                              min_lat_ind = 1, &                    
+                              max_lat_ind = nlat, &                 
+                              init_ice_base_temp = init_ice_base_temp, &    
+                              init_ice_surf_temp = init_ice_surf_temp, &   
+                              init_snow_surf_temp = init_snow_surf_temp, &
+                              init_ice_thick = init_ice_thick, &
+                              init_snow_thick = init_snow_thick, &
+                              water_marker = water_marker, &
+                              is_verbose = is_verbose)       
     
     print *,  "Initialization of library done!" 
     print * 
@@ -340,7 +340,7 @@ program itinmcm0d_example
 
  
     ! finalization of thermodynamics solver at the end of the program (freeing the memory)
-    call FinalizeThermodynamics()
+    call FinalizeThermodynamics0d()
     print *,  "Finalization of library done!"
 
     contains

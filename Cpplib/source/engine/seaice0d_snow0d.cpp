@@ -16,23 +16,23 @@ namespace icethermo
                                                             Lparam snow_L_param_,
                                                             Aparam snow_albedo_param_,
                                                             SnowIceTransition si_transition_mode_):
-        ThermoSolver<NumType>(mesh_ice_,
-                              mesh_snow_,
-                              time_step_,
-                              ApproxOrder::first,
-                              false,
-                              is_sublimation_,
-                              is_verbose_,
-                              ice_k_param_,
-                              Cparam::FreshIce,
-                              Eparam::FreshIce,
-                              ice_L_param_,
-                              ice_albedo_param_,
-                              snow_k_param_,
-                              Cparam::FreshSnow,
-                              Eparam::FreshSnow,
-                              snow_L_param_,
-                              snow_albedo_param_)
+        SeaIce_Solver<NumType>(mesh_ice_,
+                               mesh_snow_,
+                               time_step_,
+                               ApproxOrder::first,
+                               false,
+                               is_sublimation_,
+                               is_verbose_,
+                               ice_k_param_,
+                               Cparam::FreshIce,
+                               Eparam::FreshIce,
+                               ice_L_param_,
+                               ice_albedo_param_,
+                               snow_k_param_,
+                               Cparam::FreshSnow,
+                               Eparam::FreshSnow,
+                               snow_L_param_,
+                               snow_albedo_param_)
     {
         // store snow->ice transition mode
         this->si_transition_mode = si_transition_mode_;
@@ -47,13 +47,6 @@ namespace icethermo
             std::cout << "0D sea-ice with 0D snow solver class constructed!" << std::endl;
         }
     } 
-
-    // Update ocean salinity
-    template<typename NumType>
-    void SeaIce0D_Snow0D_Solver<NumType>::UpdateOceanSalinity(NumType ocn_sal_)
-    {
-        *(this->So) = ocn_sal_;
-    }
 
     template <typename NumType>
     void SeaIce0D_Snow0D_Solver<NumType>::CheckMeshConsistency(Mesh<NumType>* ice_mesh,
@@ -140,32 +133,6 @@ namespace icethermo
             else
             {
                 this->Ts_b = this->mesh_snow->GetSingleData("down_temperature");
-            }
-        }
-    }
-
-    template<typename NumType>
-    void SeaIce0D_Snow0D_Solver<NumType>::AddPrecipitation()
-    {
-        // if there are precipitations with less than zero atm temp add snow
-        if (*(this->atm_temp) < (NumType)0.0)
-        {
-            NumType snow_thick_before = (*(this->dzs_cells))[0];
-
-            // update snow thickness according to precipitation rate
-            (*(this->dzs_cells))[0] = this->Update_dz_0D((*(this->dzs_cells))[0],
-                                                          (NumType)0.0, 
-                                                          -(*(this->prec_rate))*
-                                                          WaterConsts<NumType>::rho_w/
-                                                          SnowConsts<NumType>::rho_s);
-                
-            // if snow appeared initialize snow temperatures
-            if (((*(this->dzs_cells))[0] > (NumType)SNOW_THICKNESS_THRESHOLD) and 
-                 (snow_thick_before < (NumType)SNOW_THICKNESS_THRESHOLD))
-            {
-                *(this->Ts_s) = *(this->atm_temp);
-                *(this->Ts_b) = *(this->Ti_s);
-                (*(this->Ts_cells))[0] = (NumType)0.5*(*(this->Ts_s) + *(this->Ts_b));
             }
         }
     }

@@ -99,7 +99,6 @@ namespace icethermo
         std::shared_ptr<NumType> abs_wind_speed = NULL; // m/s
         std::shared_ptr<NumType> sh_trans_coeff = NULL; // -
         std::shared_ptr<NumType> lh_trans_coeff = NULL; // -
-        std::shared_ptr<NumType> So = NULL;             // psu
         std::shared_ptr<NumType> atm_dens = NULL;       // kg/m^3
 
         // mandatory ice prognostic variables
@@ -203,7 +202,7 @@ namespace icethermo
         void UpdateAirDensity(NumType atm_dens_);
 
         // add precipitation
-        virtual void AddPrecipitation() = 0;
+        virtual void AddPrecipitation();
         
         // update mesh
         virtual void UpdateMesh(Mesh<NumType>* mesh_ice_,
@@ -291,6 +290,84 @@ namespace icethermo
                                                                                       NumType kappa_snow = 0.0,
                                                                                       const std::vector<NumType>& dz_cells_snow = std::vector<NumType>{0.0});
         
+        
+        // !! glacier freezing mode (for 1d profile) !!
+        /* 
+            output - 1d-ice values
+            
+            1d-ice values:
+                new ice base temperature
+                vector of new ice cells temperatures
+                new ice surface temperature
+                vector of new ice cells thicknesses
+        */
+        FourVecs<NumType> glacier1d_freezing(NumType T_ib,
+                                             const std::vector<NumType>& T_cells,
+                                             NumType T_is,
+                                             const std::vector<NumType>& dz_cells,
+                                             const std::vector<NumType>& salinity_cells,
+                                             const std::vector<NumType>& rho_cells,
+                                             int max_n_its = MAX_RELAXATION_ITS,
+                                             NumType tol = 1e-6);
+
+        // !! galcier melting mode (for 1d profile) !!
+        /* 
+            output - 1d-ice values
+            
+            1d-ice values:
+                the ice base temperature
+                vector of new ice cells temperatures
+                vector of new ice cells thicknesses
+        */
+        ThreeVecs<NumType> glacier1d_melting(NumType T_ib,
+                                             NumType T_is,
+                                             const std::vector<NumType>& T_cells,
+                                             NumType T_is_old,
+                                             const std::vector<NumType>& dz_cells,
+                                             const std::vector<NumType>& salinity_cells,
+                                             const std::vector<NumType>& rho_cells,
+                                             int max_n_its = MAX_RELAXATION_ITS,
+                                             NumType tol = 1e-6);
+
+    };
+
+    //   ########################################################
+    //   ############# SEA ICE THERMO SOLVER  CLASS #############
+    //   ########################################################
+    template<typename NumType>
+    class SeaIce_Solver : public ThermoSolver<NumType>
+    {
+    public:
+        // constructor
+        SeaIce_Solver(Mesh<NumType>* mesh_ice_,
+                      Mesh<NumType>* mesh_snow_,
+                      NumType time_step_,
+                      ApproxOrder grad_approx_order_ = ApproxOrder::first,
+                      bool is_radiation = true,
+                      bool is_sublimation_ = true,
+                      bool is_verbose_ = true,
+                      Kparam ice_k_param_ = Kparam::FreshIce,
+                      Cparam ice_c_eff_param_ = Cparam::FreshIce,
+                      Eparam ice_E_param_ = Eparam::FreshIce,
+                      Lparam ice_L_param_ = Lparam::FreshIce,
+                      Aparam ice_albedo_param_ = Aparam::ConstantIce,
+                      Kparam snow_k_param_ = Kparam::FreshSnow,
+                      Cparam snow_c_eff_param_ = Cparam::FreshSnow,
+                      Eparam snow_E_param_ = Eparam::FreshSnow,
+                      Lparam snow_L_param_ = Lparam::FreshSnow,
+                      Aparam snow_albedo_param_ = Aparam::ConstantSnow,
+                      SnowIceTransition si_transition_mode_ = SnowIceTransition::None);
+    
+        // virtual Evaluation function
+        virtual void Evaluate() = 0; 
+    
+    protected:
+        std::shared_ptr<NumType> So = NULL; // psu
+
+    public:
+        // update ocean salinity
+        void UpdateOceanSalinity(NumType ocn_sal_);
+
         // !! sea-ice freezing mode (for 1d profile) !!
         /* 
             output - 1d-ice values
@@ -462,47 +539,10 @@ namespace icethermo
                                  NumType rho_i,
                                  int max_n_its = MAX_RELAXATION_ITS,
                                  NumType tol = 1e-6);
-        
-        
-        // !! glacier freezing mode (for 1d profile) !!
-        /* 
-            output - 1d-ice values
-            
-            1d-ice values:
-                new ice base temperature
-                vector of new ice cells temperatures
-                new ice surface temperature
-                vector of new ice cells thicknesses
-        */
-        FourVecs<NumType> glacier1d_freezing(NumType T_ib,
-                                             const std::vector<NumType>& T_cells,
-                                             NumType T_is,
-                                             const std::vector<NumType>& dz_cells,
-                                             const std::vector<NumType>& salinity_cells,
-                                             const std::vector<NumType>& rho_cells,
-                                             int max_n_its = MAX_RELAXATION_ITS,
-                                             NumType tol = 1e-6);
 
-        // !! galcier melting mode (for 1d profile) !!
-        /* 
-            output - 1d-ice values
-            
-            1d-ice values:
-                the ice base temperature
-                vector of new ice cells temperatures
-                vector of new ice cells thicknesses
-        */
-        ThreeVecs<NumType> glacier1d_melting(NumType T_ib,
-                                             NumType T_is,
-                                             const std::vector<NumType>& T_cells,
-                                             NumType T_is_old,
-                                             const std::vector<NumType>& dz_cells,
-                                             const std::vector<NumType>& salinity_cells,
-                                             const std::vector<NumType>& rho_cells,
-                                             int max_n_its = MAX_RELAXATION_ITS,
-                                             NumType tol = 1e-6);
 
     };
+
 
 
     //   #############################################
@@ -510,7 +550,7 @@ namespace icethermo
     //   #############################################
 
     template<typename NumType>
-    class SeaIce1D_Solver : public ThermoSolver<NumType>
+    class SeaIce1D_Solver : public SeaIce_Solver<NumType>
     {
     public:
         // constructor
@@ -526,9 +566,6 @@ namespace icethermo
                         Lparam ice_L_param_ = Lparam::FreshIce,
                         Aparam ice_albedo_param_ = Aparam::ConstantIce);
 
-        // update ocean salinity
-        void UpdateOceanSalinity(NumType ocn_sal_);
-
         // one-step evaluation
         void Evaluate() override;
 
@@ -539,8 +576,7 @@ namespace icethermo
     public:
         void UpdateMesh(Mesh<NumType>* mesh_ice_,
                         Mesh<NumType>* mesh_snow_ = NULL) override;
-        
-        void AddPrecipitation() override;
+
     };
 
 
@@ -549,7 +585,7 @@ namespace icethermo
     //   ######################################################
 
     template<typename NumType>
-    class SeaIce1D_Snow0D_Solver : public ThermoSolver<NumType>
+    class SeaIce1D_Snow0D_Solver : public SeaIce_Solver<NumType>
     {
     public:
         SeaIce1D_Snow0D_Solver(Mesh<NumType>* mesh_ice_,
@@ -567,9 +603,6 @@ namespace icethermo
                                Lparam snow_L_param_ = Lparam::FreshSnow,
                                Aparam snow_albedo_param_ = Aparam::ConstantSnow,
                                SnowIceTransition si_transition_mode_ = SnowIceTransition::None);
-
-        // update ocean salinity
-        void UpdateOceanSalinity(NumType ocn_sal_);
         
         // one-step evaluation
         void Evaluate() override;
@@ -581,8 +614,7 @@ namespace icethermo
     public:
         void UpdateMesh(Mesh<NumType>* mesh_ice_,
                         Mesh<NumType>* mesh_snow_) override;
-        
-        void AddPrecipitation() override;
+
     };
 
     //   ######################################################
@@ -590,7 +622,7 @@ namespace icethermo
     //   ######################################################
 
     template<typename NumType>
-    class SeaIce0D_Snow0D_Solver : public ThermoSolver<NumType>
+    class SeaIce0D_Snow0D_Solver : public SeaIce_Solver<NumType>
     {
     public:
         SeaIce0D_Snow0D_Solver(Mesh<NumType>* mesh_ice_,
@@ -605,9 +637,6 @@ namespace icethermo
                                Lparam snow_L_param_ = Lparam::FreshSnow,
                                Aparam snow_albedo_param_ = Aparam::ConstantSnow,
                                SnowIceTransition si_transition_mode_ = SnowIceTransition::None);
-
-        // update ocean salinity
-        void UpdateOceanSalinity(NumType ocn_sal_);
         
         // one-step evaluation
         void Evaluate() override;
@@ -620,7 +649,6 @@ namespace icethermo
         void UpdateMesh(Mesh<NumType>* mesh_ice_,
                         Mesh<NumType>* mesh_snow_) override;
 
-        void AddPrecipitation() override;
     };
 
     //   ######################################################
@@ -655,8 +683,7 @@ namespace icethermo
     public:
         void UpdateMesh(Mesh<NumType>* mesh_ice_,
                         Mesh<NumType>* mesh_snow_ = NULL) override;
-        
-        void AddPrecipitation() override;
+                        
     };
  
 }
