@@ -1,4 +1,4 @@
-module itinmcm0d
+module itinmcm
 
     use, intrinsic :: iso_c_binding, only : c_int, c_double, c_bool, c_ptr, c_null_ptr, c_associated
  
@@ -1462,4 +1462,4 @@ module itinmcm0d
 
     end subroutine
    
-end module itinmcm0d
+end module itinmcm

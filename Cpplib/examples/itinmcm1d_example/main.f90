@@ -1,8 +1,8 @@
-program itinmcm0d_example
+program itinmcm1d_example
  
     ! itslav module
-    use itinmcm, only : InitThermodynamics0d, &
-                        FinalizeThermodynamics0d, &
+    use itinmcm, only : InitThermodynamics1d, &
+                        FinalizeThermodynamics1d, &
                         UpdateAirTemperature, &
                         UpdateAirPressure, &
                         UpdatePrecipitationRate, &
@@ -33,13 +33,14 @@ program itinmcm0d_example
     real(c_double), parameter :: time_step = 1800.0
     integer(c_int), parameter :: nlon = 1
     integer(c_int), parameter :: nlat = 1
-    logical(c_bool), parameter :: is_verbose = .true.
+    integer(c_int), parameter :: n_ice_layers = 5
+    logical(c_bool), parameter :: is_verbose = .false.
     real(c_double), dimension(:,:), allocatable :: init_ice_surf_temp, init_ice_base_temp, init_snow_surf_temp
     real(c_double), dimension(:,:), allocatable :: init_ice_thick, init_snow_thick
     logical(c_bool), dimension(:,:), allocatable :: water_marker, do_compute
     real(c_double), dimension(:,:), allocatable :: atm_temp, atm_press, prec_rate, atm_humid, wind_speed, &
                                                    sw_rad, lw_rad, sh_coeff, lh_coeff, ocean_flux, ocean_sal, &
-                                                   snoww_thick, icee_thick
+                                                   snoww_thick, icee_thick, base_sal, surf_sal
 
     ! variables for output from library
     real(c_double), dimension(:,:), allocatable :: surf_temp
@@ -60,8 +61,10 @@ program itinmcm0d_example
     real(c_double), parameter :: abs_wind_speed_value = 3.03282555476966     
     real(c_double), parameter :: atm_pressure_value = 97984.3593750000          
     real(c_double), parameter :: ocean_flux_value =  0.0
-    real(c_double), parameter :: ssnow_thickness =  1.218353482670631E-003
+    real(c_double), parameter :: ssnow_thickness =  0.00001
     real(c_double), parameter :: iice_thickness =  0.599594827601429
+    real(c_double), parameter :: bbase_sal = 4.0
+    real(c_double), parameter :: ssurf_sal = 1.0
 
 
     
@@ -77,6 +80,8 @@ program itinmcm0d_example
     allocate(snow_presence(1:nlon, 1:nlat))
     allocate(snoww_thick(1:nlon, 1:nlat))
     allocate(icee_thick(1:nlon, 1:nlat))
+    allocate(base_sal(1:nlon, 1:nlat))
+    allocate(surf_sal(1:nlon, 1:nlat))
 
     ! initialization of arrays
     init_ice_surf_temp = -5.0
@@ -88,12 +93,15 @@ program itinmcm0d_example
     do_compute = .true.
     snoww_thick = ssnow_thickness
     icee_thick = iice_thickness
+    base_sal = bbase_sal
+    surf_sal = ssurf_sal
 
 
     print *,  "Initialization of arrays done!" 
 
     ! initialization of thermodynamics solver
-    call InitThermodynamics0d(time_step = time_step, &              
+    call InitThermodynamics1d(time_step = time_step, &  
+                              num_ice_layers = n_ice_layers, &   
                               min_ice_thick = 1d-2, &               
                               min_lon_ind = 1, &                    
                               max_lon_ind = nlon, &                 
@@ -104,6 +112,8 @@ program itinmcm0d_example
                               init_snow_surf_temp = init_snow_surf_temp, &
                               init_ice_thick = init_ice_thick, &
                               init_snow_thick = init_snow_thick, &
+                              init_ice_base_sal = base_sal, &
+                              init_ice_surface_sal = surf_sal, &
                               water_marker = water_marker, &
                               is_verbose = is_verbose)       
     
@@ -265,7 +275,7 @@ program itinmcm0d_example
 
 
     ! single-step evaluation
-    call Evaluate(1, nlon, 1, nlat)
+    !call Evaluate(1, nlon, 1, nlat)
 
     print *,  "Single step evaluation done!" 
     print *
@@ -340,7 +350,7 @@ program itinmcm0d_example
 
  
     ! finalization of thermodynamics solver at the end of the program (freeing the memory)
-    call FinalizeThermodynamics0d()
+    call FinalizeThermodynamics1d()
     print *,  "Finalization of library done!"
 
     contains
