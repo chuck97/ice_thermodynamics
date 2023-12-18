@@ -363,6 +363,7 @@ namespace icethermo
     
     protected:
         std::shared_ptr<NumType> So = NULL; // psu
+        std::shared_ptr<NumType> omega_ib_expl_mass = NULL; // m s-1
 
     public:
         // update ocean salinity
@@ -387,7 +388,7 @@ namespace icethermo
                                              const std::vector<NumType>& salinity_cells,
                                              const std::vector<NumType>& rho_cells,
                                              int max_n_its = MAX_RELAXATION_ITS,
-                                             NumType tol = 1e-6);
+                                             NumType tol = RELAXATION_SOLVER_ACCUR);
         
         
         // !! sea-ice melting mode (for 1d profile) !!
@@ -406,7 +407,7 @@ namespace icethermo
                                           const std::vector<NumType>& salinity_cells,
                                           const std::vector<NumType>& rho_cells,
                                           int max_n_its = MAX_RELAXATION_ITS,
-                                          NumType tol = 1e-6);
+                                          NumType tol = RELAXATION_SOLVER_ACCUR);
 
         // !! sea-ice freezing mode with snow (for 1d-ice and 0d-snow profile) !!
         /* 
@@ -433,7 +434,7 @@ namespace icethermo
                                                                                  NumType precipitation_rate,
                                                                                  NumType atm_temperature,
                                                                                  int max_n_its = MAX_RELAXATION_ITS,
-                                                                                 NumType tol = 1e-6);
+                                                                                 NumType tol = RELAXATION_SOLVER_ACCUR);
         
         // !! snow melting mode with sea-ice (for 1d-ice and 0d-snow profile) !!
         /* 
@@ -459,7 +460,7 @@ namespace icethermo
                                                                        NumType precipitation_rate,
                                                                        NumType atm_temperature,
                                                                        int max_n_its = MAX_RELAXATION_ITS,
-                                                                       NumType tol = 1e-6);
+                                                                       NumType tol = RELAXATION_SOLVER_ACCUR);
 
         // !! sea-ice freezing mode with snow (for 0d-ice and 0d-snow profile) !!
         /* 
@@ -542,9 +543,6 @@ namespace icethermo
                                  NumType rho_i,
                                  int max_n_its = MAX_RELAXATION_ITS,
                                  NumType tol = 1e-6);
-    
-    protected:
-        std::shared_ptr<NumType> omega_ib_expl_mass = NULL;
     };
 
 

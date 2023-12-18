@@ -13,4 +13,5 @@ namespace icethermo
     #define MAX_1D_SOLVER_ITS 40
     #define MAX_RELAXATION_ITS 10
     #define NONLIN_SOLVER_ACCUR 1e-6
+    #define RELAXATION_SOLVER_ACCUR 1e-4
 }

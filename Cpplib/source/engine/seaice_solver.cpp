@@ -120,32 +120,40 @@ namespace icethermo
                                        dz_cells_new,
                                        salinity_cells,
                                        rho_cells,
-                                       omega_is,
+                                       0.0,
                                        true,
                                        true);
 
             // force the convergence of surface temperature
-            surface_err = std::abs(T_is_new - T_is_prev)/(std::abs(T_is) + (NumType)0.1);
+            //surface_err = std::abs(T_is_new - T_is_prev)/(std::abs(T_is) + (NumType)0.1);
             
-            if (surface_err < prev_surface_err)
-            {
-                T_is_history.push_back(T_is_new);
-            }
-            else
-            {
-                T_is_new = sum_vec<NumType>(T_is_history)/T_is_history.size();
-            }
+            //if (surface_err < prev_surface_err)
+            //{
+            //    T_is_history.push_back(T_is_new);
+            //}
+            //else
+            //{
+            //    T_is_new = sum_vec<NumType>(T_is_history)/T_is_history.size();
+            //}
 
             // recalculate ice thickness
             dz_cells_new = this->Update_dz(dz_cells,
-                                           omega_ib,
+                                           omega_ib + (*(this->omega_ib_expl_mass)),
                                            omega_is);
             
             // recalculate radiation
             if (this->is_radiation)
             {
+                NumType h_i = sum_vec<NumType>(dz_cells_new);
+                NumType Tfi = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+                auto albedo_param = this->ice_albedo_param;
+                FuncPtr<NumType> alb_i = [albedo_param, h_i, Tfi] (NumType T)
+                {
+                    return Params<NumType>::Albedo(albedo_param, T, h_i, Tfi);
+                };
+
                 radiation_nodes = this->Compute_radiation_nodes(this->F_sw(T_is_new),
-                                                                IceConsts<NumType>::albedo_i,
+                                                                alb_i(T_is_new),
                                                                 IceConsts<NumType>::i0_i,
                                                                 IceConsts<NumType>::kappa_i,
                                                                 dz_cells_new).first;
@@ -175,8 +183,8 @@ namespace icethermo
 
             current_err = L2_norm(full_temp_vec - prev_temp_vec)/(L2_norm(old_temp_vec) + (NumType)0.1);
 
-            if (current_err < tol)
-                break;
+            //if (current_err < tol)
+            //    break;
         }
 
         if (this->is_verbose)
@@ -341,14 +349,22 @@ namespace icethermo
 
             // recalculate ice thickness
             dz_cells_new = this->Update_dz(dz_cells,
-                                           omega_ib,
+                                           omega_ib + (*(this->omega_ib_expl_mass)),
                                            omega_is + omega_is_sublim);
             
             // recalculate radiation
             if (this->is_radiation)
             {
+                NumType h_i = sum_vec<NumType>(dz_cells_new);
+                NumType Tfi = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+                auto albedo_param = this->ice_albedo_param;
+                FuncPtr<NumType> alb_i = [albedo_param, h_i, Tfi] (NumType T)
+                {
+                    return Params<NumType>::Albedo(albedo_param, T, h_i, Tfi);
+                };
+
                 radiation_nodes = this->Compute_radiation_nodes(this->F_sw(T_is),
-                                                                IceConsts<NumType>::albedo_i,
+                                                                alb_i(T_is),
                                                                 IceConsts<NumType>::i0_i,
                                                                 IceConsts<NumType>::kappa_i,
                                                                 dz_cells_new).first;
@@ -374,8 +390,8 @@ namespace icethermo
             // evaluate the error
             current_err = L2_norm(T_cells_new - T_cells_prev)/(L2_norm(T_cells) + (NumType)0.1);
 
-            if (current_err < tol)
-                break;
+            //if (current_err < tol)
+            //    break;
         }
         if (this->is_verbose)
         {
@@ -787,27 +803,37 @@ namespace icethermo
                 -this->F_lh(T_ss_new)/(rho_s*GenConsts<NumType>::L_s) :
                 (NumType)0.0;
 
+            NumType k_i = Params<NumType>::Conductivity(this->ice_k_param, salinity_i_cells.back(), T_is_new, rho_i_cells.back());
+
+            // recalculate interface temperature as function of surface temperature
+            FuncPtr<NumType> int_temp = [h_s_new, dz_i_cells_new, T_i_cells_new, k_i, k_s](NumType T)
+                                        {
+                                            NumType c1 = k_s/h_s_new;
+                                            NumType c2 = k_i/(0.5*dz_i_cells_new.back());
+                                            return (NumType)((c1*T + c2*T_i_cells_new.back())/(c1 + c2));
+                                        };
+
             // compute new value of snow surface temperature
-            T_ss_new = this->T_from_BC_0D([T_is_prev](NumType T){return T_is_prev;},
+            T_ss_new = this->T_from_BC_0D([int_temp](NumType T){return int_temp(T);},
                                           h_s_new,
                                           k_s,
                                           (NumType)0.0,
-                                          omega_ss + omega_ss_sublim,
+                                          0.0,
                                           rho_s,
                                           false,
                                           true);
 
             // force the convergence of surface temperature
-            surface_err = std::abs(T_ss_new - T_ss_prev)/std::abs(T_ss + (NumType)0.1);
+            //surface_err = std::abs(T_ss_new - T_ss_prev)/std::abs(T_ss + (NumType)0.1);
             
-            if (surface_err < prev_surface_err)
-            {
-                T_ss_history.push_back(T_ss_new);
-            }
-            else
-            {
-                T_ss_new = sum_vec<NumType>(T_ss_history)/T_ss_history.size();
-            }
+            //if (surface_err < prev_surface_err)
+            //{
+            //    T_ss_history.push_back(T_ss_new);
+            //}
+            //else
+            //{
+            //    T_ss_new = sum_vec<NumType>(T_ss_history)/T_ss_history.size();
+            //}
 
             // compute ice-snow interface omega value
             if (this->si_transition_mode == SnowIceTransition::SnowAging)
@@ -817,7 +843,7 @@ namespace icethermo
 
             // recalculate ice thickness
             dz_i_cells_new = this->Update_dz(dz_i_cells,
-                                             omega_ib,
+                                             omega_ib + (*(this->omega_ib_expl_mass)),
                                              omega_interface);
 
             // recalculate snow thickness
@@ -828,12 +854,28 @@ namespace icethermo
             // recalculate ice radiation
             if (this->is_radiation)
             {
+
+                NumType h_i = sum_vec<NumType>(dz_i_cells_new);
+                NumType Tfi = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+                auto ice_albedo_param = this->ice_albedo_param;
+                FuncPtr<NumType> alb_i = [ice_albedo_param, h_i, Tfi] (NumType T)
+                {
+                    return Params<NumType>::Albedo(ice_albedo_param, T, h_i, Tfi);
+                };
+
+                
+                auto snow_albedo_param = this->snow_albedo_param;
+                FuncPtr<NumType> alb_s = [snow_albedo_param, h_s_new, h_i, Tfi] (NumType T)
+                {
+                    return Params<NumType>::Albedo(snow_albedo_param, T, h_s_new, 0.0);
+                };
+
                 radiation_nodes_ice = this->Compute_radiation_nodes(this->F_sw(T_ss_new),
-                                                                    IceConsts<NumType>::albedo_i,
+                                                                    alb_i(T_is_new),
                                                                     IceConsts<NumType>::i0_i,
                                                                     IceConsts<NumType>::kappa_i,
                                                                     dz_i_cells_new,
-                                                                    SnowConsts<NumType>::albedo_s,
+                                                                    alb_s(T_ss_new),
                                                                     SnowConsts<NumType>::i0_s,
                                                                     SnowConsts<NumType>::kappa_s,
                                                                     std::vector<NumType>{h_s_new}).first;
@@ -870,8 +912,8 @@ namespace icethermo
 
             current_err = L2_norm(full_temp_vec - prev_temp_vec)/(L2_norm(old_temp_vec) + (NumType)0.1);
 
-            if (current_err < tol)
-                break;
+            //if (current_err < tol)
+            //    break;
         }
 
         if (this->is_verbose)
@@ -970,7 +1012,7 @@ namespace icethermo
 
             // recalculate ice thickness
             dz_i_cells_new = this->Update_dz(dz_i_cells,
-                                             omega_ib,
+                                             omega_ib + (*(this->omega_ib_expl_mass)),
                                              omega_interface);
 
             // recalculate snow thickness
@@ -981,12 +1023,27 @@ namespace icethermo
             // recalculate ice radiation
             if (this->is_radiation)
             {
+                NumType h_i = sum_vec<NumType>(dz_i_cells_new);
+                NumType Tfi = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+                auto ice_albedo_param = this->ice_albedo_param;
+                FuncPtr<NumType> alb_i = [ice_albedo_param, h_i, Tfi] (NumType T)
+                {
+                    return Params<NumType>::Albedo(ice_albedo_param, T, h_i, Tfi);
+                };
+
+                
+                auto snow_albedo_param = this->snow_albedo_param;
+                FuncPtr<NumType> alb_s = [snow_albedo_param, h_s_new, h_i, Tfi] (NumType T)
+                {
+                    return Params<NumType>::Albedo(snow_albedo_param, T, h_s_new, 0.0);
+                };
+
                 radiation_nodes_ice = this->Compute_radiation_nodes(this->F_sw((NumType)0.0),
-                                                                    IceConsts<NumType>::albedo_i,
+                                                                    alb_i(T_is_new),
                                                                     IceConsts<NumType>::i0_i,
                                                                     IceConsts<NumType>::kappa_i,
                                                                     dz_i_cells_new,
-                                                                    SnowConsts<NumType>::albedo_s,
+                                                                    alb_s(0.0),
                                                                     SnowConsts<NumType>::i0_s,
                                                                     SnowConsts<NumType>::kappa_s,
                                                                     std::vector<NumType>{h_s_new}).first;
@@ -1023,8 +1080,8 @@ namespace icethermo
 
             current_err = L2_norm(full_temp_vec - prev_temp_vec)/(L2_norm(old_temp_vec) + (NumType)0.1);
 
-            if (current_err < tol)
-                break;
+            //if (current_err < tol)
+            //    break;
         }
 
         if (this->is_verbose)
