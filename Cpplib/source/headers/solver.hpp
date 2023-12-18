@@ -368,6 +368,9 @@ namespace icethermo
         // update ocean salinity
         void UpdateOceanSalinity(NumType ocn_sal_);
 
+        // update explicit mass flux from ocean to ice
+        void UpdateOceanIceMassFlux(NumType mass_flux_);
+
         // !! sea-ice freezing mode (for 1d profile) !!
         /* 
             output - 1d-ice values
@@ -539,8 +542,9 @@ namespace icethermo
                                  NumType rho_i,
                                  int max_n_its = MAX_RELAXATION_ITS,
                                  NumType tol = 1e-6);
-
-
+    
+    protected:
+        std::shared_ptr<NumType> omega_ib_expl_mass = NULL;
     };
 
 

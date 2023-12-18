@@ -271,6 +271,13 @@ public:
                                bool* water_marker,                // marker of water array (2d)
                                bool is_verbose_ = true            // verbose output? (default = true)
                                );
+
+    // update 2d explicit mass flux from ocean to ice
+    void UpdateOceanIceMassFlux(double* flux_values,
+                                int min_lon_ind_,        
+                                int max_lon_ind_,        
+                                int min_lat_ind_,        
+                                int max_lat_ind_);
     
     // update 3d temperature profile
     void UpdateTemperatureProfile(double* temp_values,
@@ -540,6 +547,14 @@ extern "C"
                   int min_lat_ind_,        
                   int max_lat_ind_
                   );
+
+    void UpdateOceanIceMassFlux(void* obj,
+                                double* flux_values,
+                                int min_lon_ind_,        
+                                int max_lon_ind_,        
+                                int min_lat_ind_,        
+                                int max_lat_ind_
+                                );
     
     void UpdateTemperatureProfile(void* obj,
                                   double* array,

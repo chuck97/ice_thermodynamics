@@ -601,6 +601,28 @@ module itinmcm
         end subroutine
     end interface
 
+    ! update 2d ocean mass flux 
+    interface
+        subroutine UpdateOceanIceMassFlux_(obj, &           ! pointer to allocated Cpp class
+                                           array, &         ! 2D-boolean-array of ice presence - output
+                                           min_lon_ind, &   ! minimal longitude index
+                                           max_lon_ind, &   ! maximal longitude index
+                                           min_lat_ind, &   ! minimal latitude index
+                                           max_lat_ind) &   ! maximal latitude index
+                                           bind(C, name="UpdateOceanIceMassFlux")
+            
+            import:: c_int, c_double, c_ptr
+            implicit none
+
+            ! Argument list
+            type(c_ptr), intent(in), value :: obj
+            real(c_double), intent(in), dimension(*) :: array
+            integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+            integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+            
+        end subroutine
+    end interface
+
     ! update 3d temperature profiles
     interface
         subroutine UpdateTemperatureProfile_(obj, &           ! pointer to allocated Cpp class
@@ -682,6 +704,7 @@ module itinmcm
     public :: GetIceThickness
     public :: GetIsSnow
     public :: GetIsIce
+    public :: UpdateOceanIceMassFlux
     public :: UpdateTemperatureProfile
     public :: GetTemperatureProfile
 
@@ -1410,6 +1433,31 @@ module itinmcm
                            max_lat_ind)
         end if
 
+    end subroutine
+
+    ! update 2d ocean->ice mass fluxes
+    subroutine UpdateOceanIceMassFlux(array, &         ! 2d-array of ocean->ice explicit mass flux (m s-1)
+                                      min_lon_ind, &   ! minimal longitude index
+                                      max_lon_ind, &   ! maximal longitude index
+                                      min_lat_ind, &   ! minimal latitude index
+                                      max_lat_ind)     ! maximal latitude index
+        implicit none
+
+        ! Argument list
+        real(c_double), intent(in), dimension(*) :: array
+        integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
+        integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
+
+        ! Body
+        if (c_associated(obj)) then
+            call UpdateOceanIceMassFlux_(obj, &
+                                         array, &  
+                                         min_lon_ind, &      
+                                         max_lon_ind, &      
+                                         min_lat_ind, &      
+                                         max_lat_ind)
+        end if
+            
     end subroutine
 
     ! update 3d temperature profiles

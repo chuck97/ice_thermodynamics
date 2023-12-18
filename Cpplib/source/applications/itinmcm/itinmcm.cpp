@@ -1598,6 +1598,57 @@ void ThermoModelsSet::GetIsSnow(bool* array,
     }
 }
 
+void ThermoModelsSetIce1dSnow0d::UpdateOceanIceMassFlux(double* flux_values,
+                                                        int min_lon_ind_,        
+                                                        int max_lon_ind_,        
+                                                        int min_lat_ind_,        
+                                                        int max_lat_ind_)
+{
+    if (min_lon_ind_ < min_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateOceanIceMassFlux error: minimal longitude index is less than minimal mesh longitude index!");
+    }
+
+    if (max_lon_ind_ > max_lon_ind)
+    {
+        THERMO_ERR((std::string)"UpdateOceanIceMassFlux error: maximal longitude index is greater than maximal mesh longitude index!");
+    }
+
+    if (min_lat_ind_ < min_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateOceanIceMassFlux error: minimal latitude index is less than minimal mesh latitude index!");
+    }
+
+    if (max_lat_ind_ > max_lat_ind)
+    {
+        THERMO_ERR((std::string)"UpdateOceanIceMassFlux error: maximal latitude index is greater than maximal mesh latitude index!");
+    }
+
+    for (int lat_ind = min_lat_ind_; lat_ind < max_lat_ind_ + 1; ++lat_ind)
+    {
+        int local_lat_ind = lat_ind - min_lat_ind_;
+        int global_lat_ind = lat_ind - min_lat_ind;
+
+        for (int lon_ind = min_lon_ind_; lon_ind < max_lon_ind_ + 1; ++lon_ind)
+        {
+            int local_lon_ind = lon_ind - min_lon_ind_;
+            int global_lon_ind = lon_ind - min_lon_ind;
+
+            if (is_water[global_lat_ind][global_lon_ind])
+            {
+                double current_mass_flux = flux_values[local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) + local_lon_ind];
+                solvers[global_lat_ind][global_lon_ind]->UpdateOceanIceMassFlux(current_mass_flux);
+            }
+        }
+    }
+
+    if (is_verbose)
+    {
+        std::cout << "Update of 2d ocean->ice mass flux array!\n";
+    }
+
+}
+
 void ThermoModelsSetIce1dSnow0d::UpdateTemperatureProfile(double* temp_values,
                                                           int min_lon_ind_,        
                                                           int max_lon_ind_,        
@@ -2242,6 +2293,21 @@ void GetIsIce(void* obj,
                   max_lon_ind,        
                   min_lat_ind,        
                   max_lat_ind);
+}
+
+void UpdateOceanIceMassFlux(void* obj,
+                            double* flux_values,
+                            int min_lon_ind_,        
+                            int max_lon_ind_,        
+                            int min_lat_ind_,        
+                            int max_lat_ind_)
+{
+    ThermoModelsSetIce1dSnow0d* ptr = (ThermoModelsSetIce1dSnow0d*)obj;
+    ptr->UpdateOceanIceMassFlux(flux_values,
+                                min_lon_ind_,
+                                max_lon_ind_,
+                                min_lat_ind_,
+                                max_lat_ind_);
 }
 
 void UpdateTemperatureProfile(void* obj,

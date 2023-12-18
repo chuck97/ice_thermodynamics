@@ -41,6 +41,7 @@ namespace icethermo
                               si_transition_mode_)
     {
         this->So = std::make_shared<NumType>(30.0); // psu
+        this->omega_ib_expl_mass = std::make_shared<NumType>(0.0); // m s-1
     }
 
     // Update ocean salinity
@@ -48,6 +49,13 @@ namespace icethermo
     void SeaIce_Solver<NumType>::UpdateOceanSalinity(NumType ocn_sal_)
     {
         *(this->So) = ocn_sal_;
+    }
+
+    // Update ocean salinity
+    template<typename NumType>
+    void SeaIce_Solver<NumType>::UpdateOceanIceMassFlux(NumType mass_flux_)
+    {
+        *(this->omega_ib_expl_mass) = mass_flux_;
     }
 
     // 1d sea-ice freezing mode
