@@ -79,8 +79,10 @@ void run_model(NumType time_step,
                Cparam eff_capacity_ice_parameterization,
                Eparam enthalpy_ice_parameterization,
                Lparam fusion_heat_ice_parameterization,
+               Aparam albedo_ice_perameterization,
                Kparam conductivity_snow_parameterization,
-               Lparam fusion_heat_snow_parameterization)
+               Lparam fusion_heat_snow_parameterization,
+               Aparam albedo_snow_parameterization)
 {
     // create uniform sigma-mesh for 1d ice
     Mesh<NumType>* ice_mesh = new(Mesh<NumType>)(num_cells, initial_ice_thickness);
@@ -128,8 +130,10 @@ void run_model(NumType time_step,
                                                   eff_capacity_ice_parameterization,
                                                   enthalpy_ice_parameterization,
                                                   fusion_heat_ice_parameterization,
+                                                  albedo_ice_perameterization,
                                                   conductivity_snow_parameterization,
-                                                  fusion_heat_snow_parameterization);
+                                                  fusion_heat_snow_parameterization,
+                                                  albedo_snow_parameterization);
 
     // save initial state to file
 #ifdef USE_JSON_OUTPUT
@@ -191,28 +195,30 @@ void run_model(NumType time_step,
 int main()
 {
     // model launcher (you can choose float or double)
-    run_model<double>(3600.0,              // time step (seconds) 
-                      2000,                // number of time steps 
-                      1,                   // output frequency N (every N-th step would be written to file) 
-                      20,                  // number of uniform sigma-cells in ice 
-                      2.0,                 // initial ice thickness (meters) 
-                      0.1,                 // initial snow thickness (meters)
-                      -15.0,               // initial ice-snow interface temperature (deg Cel) 
-                      -20.0,               // initial snow surface temperature (deg Cel) 
-                      350.0*3600.0,        // winter duration (seconds)
-                      200.0*3600.0,        // spring duration (seconds) 
-                      150.0*3600.0,        // summer duration (seconds) 
-                      200.0*3600.0,        // autumn duration (seconds) 
-                      -30.0,               // lowest atm temperature (deg C)
-                      10.0,                // highest atm temperature (deg C)    
-                      0.0,                 // lowest prec rate (m s-1)
-                      1e-8,                // highest prec rate (m s-1)
-                      "ice_mesh",          // output ice prefix
-                      "snow_mesh",         // output snow prefix
-                      Kparam::BubblyBrine, // ice conductivity parameterization
-                      Cparam::SeaIce,      // ice effective capacity parameterization
-                      Eparam::SeaIce,      // ice enthalpy parameterization
-                      Lparam::SeaIce,      // ice heat of fusion parameterization
-                      Kparam::FreshSnow,   // snow conductivity parameterization
-                      Lparam::FreshSnow);  // snow heat of fusion parameterization
+    run_model<double>(3600.0,                        // time step (seconds) 
+                      2000,                          // number of time steps 
+                      1,                             // output frequency N (every N-th step would be written to file) 
+                      5,                             // number of uniform sigma-cells in ice 
+                      2.0,                           // initial ice thickness (meters) 
+                      0.1,                           // initial snow thickness (meters)
+                      -15.0,                         // initial ice-snow interface temperature (deg Cel) 
+                      -20.0,                         // initial snow surface temperature (deg Cel) 
+                      350.0*3600.0,                  // winter duration (seconds)
+                      200.0*3600.0,                  // spring duration (seconds) 
+                      150.0*3600.0,                  // summer duration (seconds) 
+                      200.0*3600.0,                  // autumn duration (seconds) 
+                      -30.0,                         // lowest atm temperature (deg C)
+                      10.0,                          // highest atm temperature (deg C)    
+                      0.0,                           // lowest prec rate (m s-1)
+                      5e-8,                          // highest prec rate (m s-1)
+                      "ice_mesh",                    // output ice prefix
+                      "snow_mesh",                   // output snow prefix
+                      Kparam::BubblyBrine,           // ice conductivity parameterization
+                      Cparam::SeaIce,                // ice effective capacity parameterization
+                      Eparam::SeaIce,                // ice enthalpy parameterization
+                      Lparam::SeaIce,                // ice heat of fusion parameterization
+                      Aparam::MeltingFreezingIce,    // ice albedo parameterization
+                      Kparam::FreshSnow,             // snow conductivity parameterization
+                      Lparam::FreshSnow,             // snow heat of fusion parameterization
+                      Aparam::MeltingFreezingSnow);  // snow albedo parameterization
 }
