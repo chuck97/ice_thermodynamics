@@ -141,6 +141,8 @@ namespace icethermo
         {
             // computations with snow
 
+            std::cout << (*(this->Ti_cells)).size() << std::endl;
+
             // recalculate temperatures in ice freezing with snow mode
             auto freezing_values = this->seaice1d_snow0d_freezing(*(this->Ti_b),
                                                                   *(this->Ti_cells),
@@ -265,11 +267,19 @@ namespace icethermo
                 this->So = this->mesh_ice->CreateSingleData("ocean_salinity", false);
                 *(this->So) = (NumType)30.0;
             }
+            else
+            {
+                this->So =  this->mesh_ice->GetSingleData("ocean_salinity");
+            }
 
             if (!this->mesh_ice->CheckSingleDataExistency("down_temperature"))
             {
                 this->Ti_b = this->mesh_ice->CreateSingleData("down_temperature");
                 *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
+            }
+            else
+            {
+                this->Ti_b = this->mesh_ice->GetSingleData("down_temperature");
             }
         }
 
@@ -286,6 +296,10 @@ namespace icethermo
             if (!this->mesh_snow->CheckSingleDataExistency("down_temperature"))
             {
                 this->Ts_b = this->mesh_snow->CreateSingleData("down_temperature");
+            }
+            else
+            {
+                this->Ts_b = this->mesh_snow->GetSingleData("down_temperature");
             }
         }
     }

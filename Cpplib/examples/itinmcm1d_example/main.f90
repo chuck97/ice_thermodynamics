@@ -61,8 +61,8 @@ program itinmcm1d_example
     real(c_double), parameter :: abs_wind_speed_value = 3.03282555476966     
     real(c_double), parameter :: atm_pressure_value = 97984.3593750000          
     real(c_double), parameter :: ocean_flux_value =  0.0
-    real(c_double), parameter :: ssnow_thickness =  0.00001
-    real(c_double), parameter :: iice_thickness =  0.599594827601429
+    real(c_double), parameter :: ssnow_thickness =  0.5
+    real(c_double), parameter :: iice_thickness =  0.5
     real(c_double), parameter :: bbase_sal = 4.0
     real(c_double), parameter :: ssurf_sal = 1.0
 
@@ -217,9 +217,9 @@ program itinmcm1d_example
     print * 
 
     ! add snow precipitations
-    call AddPrecipitation(1, nlon, 1, nlat)
-    print *,  "Adding precipitations to snow thickness done!" 
-    print * 
+    ! call AddPrecipitation(1, nlon, 1, nlat)
+    ! print *,  "Adding precipitations to snow thickness done!" 
+    ! print * 
 
     ! assemble total atmosphere flux
     call AssembleTotalAtmFlux(1, nlon, 1, nlat)
@@ -275,7 +275,7 @@ program itinmcm1d_example
 
 
     ! single-step evaluation
-    !call Evaluate(1, nlon, 1, nlat)
+    call Evaluate(1, nlon, 1, nlat)
 
     print *,  "Single step evaluation done!" 
     print *
@@ -316,20 +316,20 @@ program itinmcm1d_example
     print *
 
     ! get is_ice array
-    !call GetIsIce(array = ice_presence, &
-    !              min_lon_ind = 1, &
-    !              max_lon_ind = nlon, &
-    !              min_lat_ind = 1, &                    
-    !              max_lat_ind = nlat)
-    !
-    !print *, "Output ice presence: "
-!
-    !do j = 5, 10
-    !    do i = 5, 10
-    !        write(*, fmt='(L, 1X)', advance="no") ice_presence(i, j)
-    !    end do
-    !    print *
-    !end do
+    call GetIsIce(array = ice_presence, &
+                  min_lon_ind = 1, &
+                  max_lon_ind = nlon, &
+                  min_lat_ind = 1, &                    
+                  max_lat_ind = nlat)
+    
+    print *, "Output ice presence: "
+
+    do j = 1, 1
+        do i = 1, 1
+            write(*, fmt='(L, 1X)', advance="no") ice_presence(i, j)
+        end do
+        print *
+    end do
 
     ! get is_snow array
     call GetIsSnow(array = snow_presence, &
@@ -339,8 +339,7 @@ program itinmcm1d_example
                    max_lat_ind = nlat)
     
 
-    !print *, "Output snow presence: "
-!
+    print *, "Output snow presence: "
     do j = 1, 1
         do i = 1, 1
             write(*, fmt='(L, 1X)', advance="no") snow_presence(i, j)

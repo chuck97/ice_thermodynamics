@@ -229,7 +229,7 @@ ThermoModelsSetIce1dSnow0d::ThermoModelsSetIce1dSnow0d(double time_step_,
                                                        bool is_verbose_
                                                        ):
         ThermoModelsSet::ThermoModelsSet(time_step_,  
-                                         1,         
+                                         num_ice_layers_,         
                                          min_ice_thick_,       
                                          min_lon_ind_,            
                                          max_lon_ind_,            

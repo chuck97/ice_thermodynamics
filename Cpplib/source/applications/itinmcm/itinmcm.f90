@@ -799,7 +799,7 @@ module itinmcm
 
         ! Body
         if (c_associated(obj)) then
-        call FinalizeThermodynamics1d_(obj)
+            call FinalizeThermodynamics1d_(obj)
         end if
 
         obj = InitThermodynamics1d_(time_step, &     
