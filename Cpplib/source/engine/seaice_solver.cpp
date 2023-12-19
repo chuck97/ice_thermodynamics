@@ -591,15 +591,15 @@ namespace icethermo
 
             current_err = L2_norm(new_temps - prev_temps)/(L2_norm(std::vector<NumType>{T_is, T_ss}) + (NumType)0.1);
 
-            FuncPtr<NumType> F_lws = this->F_lw;
-            FuncPtr<NumType> F_lwis = this->F_lwi;
-            FuncPtr<NumType> F_sws = this->F_sw;
-            FuncPtr<NumType> F_shs = this->F_sh;
-            FuncPtr<NumType> F_lhs = this->F_lh;
-            FuncPtr<NumType> F_Ps = this->F_P;
-            FuncPtr<NumType> F_total = this->F_up;
+            //FuncPtr<NumType> F_lws = this->F_lw;
+            //FuncPtr<NumType> F_lwis = this->F_lwi;
+            //FuncPtr<NumType> F_sws = this->F_sw;
+            //FuncPtr<NumType> F_shs = this->F_sh;
+            //FuncPtr<NumType> F_lhs = this->F_lh;
+            //FuncPtr<NumType> F_Ps = this->F_P;
+            //FuncPtr<NumType> F_total = this->F_up;
 
-            NumType T_ss_neww = -24.5;
+            //NumType T_ss_neww = -24.5;
 
             //std::cout << "snow temp:" << T_ss_neww << std::endl; 
             //std::cout << "T_ib:" << T_ib << std::endl;

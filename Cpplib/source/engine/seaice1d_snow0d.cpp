@@ -141,8 +141,6 @@ namespace icethermo
         {
             // computations with snow
 
-            std::cout << (*(this->Ti_cells)).size() << std::endl;
-
             // recalculate temperatures in ice freezing with snow mode
             auto freezing_values = this->seaice1d_snow0d_freezing(*(this->Ti_b),
                                                                   *(this->Ti_cells),
