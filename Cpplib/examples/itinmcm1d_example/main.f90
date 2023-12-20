@@ -24,15 +24,17 @@ program itinmcm1d_example
                         GetIsSnow, &
                         AddPrecipitation, &
                         Evaluate, &
-                        SetComputationMarker
+                        SetComputationMarker, &
+                        UpdateTemperatureProfile, &
+                        GetTemperatureProfile
 
     ! iso_c_binding module for types
     use, intrinsic :: iso_c_binding, only : c_int, c_double, c_bool
  
     ! variables that are passed to the library should be c_type!
     real(c_double), parameter :: time_step = 1800.0
-    integer(c_int), parameter :: nlon = 1
-    integer(c_int), parameter :: nlat = 1
+    integer(c_int), parameter :: nlon = 5
+    integer(c_int), parameter :: nlat = 5
     integer(c_int), parameter :: n_ice_layers = 5
     logical(c_bool), parameter :: is_verbose = .false.
     real(c_double), dimension(:,:), allocatable :: init_ice_surf_temp, init_ice_base_temp, init_snow_surf_temp
@@ -41,6 +43,7 @@ program itinmcm1d_example
     real(c_double), dimension(:,:), allocatable :: atm_temp, atm_press, prec_rate, atm_humid, wind_speed, &
                                                    sw_rad, lw_rad, sh_coeff, lh_coeff, ocean_flux, ocean_sal, &
                                                    snoww_thick, icee_thick, base_sal, surf_sal
+    real(c_double), dimension(:,:,:), allocatable :: test_temp_profile
 
     ! variables for output from library
     real(c_double), dimension(:,:), allocatable :: surf_temp
@@ -82,6 +85,7 @@ program itinmcm1d_example
     allocate(icee_thick(1:nlon, 1:nlat))
     allocate(base_sal(1:nlon, 1:nlat))
     allocate(surf_sal(1:nlon, 1:nlat))
+    allocate(test_temp_profile(1:nlon, 1:nlat, 1:(n_ice_layers+1)))
 
     ! initialization of arrays
     init_ice_surf_temp = -5.0
@@ -95,6 +99,15 @@ program itinmcm1d_example
     icee_thick = iice_thickness
     base_sal = bbase_sal
     surf_sal = ssurf_sal
+
+    do i = 1, nlon
+        do j = 1, nlat
+            do k = 1, (n_ice_layers + 1)
+                test_temp_profile(i, j, k) = i + j
+            end do
+        end do
+        print *
+    end do
 
 
     print *,  "Initialization of arrays done!" 
@@ -246,7 +259,7 @@ program itinmcm1d_example
                                max_lat_ind = nlat)
     
     print *, "SURFACE TEMP before EVALUATE: "
-    call print_slice(surf_temp, nlon, nlat, 1, 1, 1, 1)
+    call print_slice(surf_temp, nlon, nlat, 1, nlon, 1, nlat)
     print *
 
     ! ice thickness
@@ -258,7 +271,7 @@ program itinmcm1d_example
                          max_lat_ind = nlat)
     
     print *, "ICE THICK before EVALUATE: "
-    call print_slice(ice_thick, nlon, nlat, 1, 1, 1, 1)
+    call print_slice(ice_thick, nlon, nlat, 1, nlon, 1, nlat)
     print *
 
     ! ice thickness
@@ -270,7 +283,7 @@ program itinmcm1d_example
                           max_lat_ind = nlat)
     
     print *, "SNOW THICK before EVALUATE: "
-    call print_slice(snow_thick, nlon, nlat, 1, 1, 1, 1)
+    call print_slice(snow_thick, nlon, nlat, 1, nlon, 1, nlat)
     print *
 
 
@@ -290,7 +303,7 @@ program itinmcm1d_example
                                max_lat_ind = nlat)
     
     print *, "SURFACE TEMP after EVALUATE: "
-    call print_slice(surf_temp, nlon, nlat, 1, 1, 1, 1)
+    call print_slice(surf_temp, nlon, nlat, 1, nlon, 1, nlat)
     print *
 
     ! ice thickness
@@ -301,7 +314,7 @@ program itinmcm1d_example
                          max_lat_ind = nlat)
     
     print *, "ICE THICK after EVALUATE: "
-    call print_slice(ice_thick, nlon, nlat, 1, 1, 1, 1)
+    call print_slice(ice_thick, nlon, nlat, 1, nlon, 1, nlat)
     print *
 
     ! ice thickness
@@ -312,7 +325,7 @@ program itinmcm1d_example
                           max_lat_ind = nlat)
     
     print *, "SNOW THICK after EVALUATE: "
-    call print_slice(snow_thick, nlon, nlat, 1, 1, 1, 1)
+    call print_slice(snow_thick, nlon, nlat, 1, nlon, 1, nlat)
     print *
 
     ! get is_ice array
@@ -324,8 +337,8 @@ program itinmcm1d_example
     
     print *, "Output ice presence: "
 
-    do j = 1, 1
-        do i = 1, 1
+    do j = 1, nlat
+        do i = 1, nlon
             write(*, fmt='(L, 1X)', advance="no") ice_presence(i, j)
         end do
         print *
@@ -340,13 +353,38 @@ program itinmcm1d_example
     
 
     print *, "Output snow presence: "
-    do j = 1, 1
-        do i = 1, 1
+    do j = 1, nlat
+        do i = 1, nlon
             write(*, fmt='(L, 1X)', advance="no") snow_presence(i, j)
         end do
         print *
     end do
 
+    call UpdateTemperatureProfile(test_temp_profile, 1, nlon, 1, nlat)
+    call GetTemperatureProfile(test_temp_profile, 1, nlon, 1, nlat)
+
+    print *, "TEMP PROFILE after UPDATE PROFILE: "
+
+    do i = 1, nlon
+        do j = 1, nlat
+            print *, "lon = ", i, ", lat = ", j 
+            do k = 1, (n_ice_layers + 1)
+                write(*, fmt='((F15.8))', advance="no") test_temp_profile(i, j, k)
+            end do
+            print*
+        end do
+    end do
+
+
+    call GetSurfaceTemperature(array = surf_temp, &
+                               min_lon_ind = 1, &
+                               max_lon_ind = nlon, &
+                               min_lat_ind = 1, &                    
+                               max_lat_ind = nlat)
+    
+    print *, "SURFACE TEMP after UPDATE PROFILE: "
+    call print_slice(surf_temp, nlon, nlat, 1, nlon, 1, nlat)
+    print *
  
     ! finalization of thermodynamics solver at the end of the program (freeing the memory)
     call FinalizeThermodynamics1d()
