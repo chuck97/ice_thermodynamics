@@ -470,7 +470,7 @@ namespace icethermo
             FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return rho_cells.back()*L(T)*omega_value + this->F_up(T) - k(T)*grad(T);};
             
             // solve nonlinear 1D equation
-            auto secant_res = bisection_solver<NumType>(nonlin_func, T_cells.back() - (NumType)10.0, GenConsts<NumType>::TempFusion(salinity_cells.back() + (NumType)10.0));
+            auto secant_res = bisection_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0);
 
            return std::get<0>(secant_res);
         }
@@ -502,7 +502,7 @@ namespace icethermo
             FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return rho_cells[0]*L(T)*omega_value + this->F_down(T) - k(T)*grad(T);};
             
             // solve nonlinear 1D equation
-            auto secant_res = bisection_solver<NumType>(nonlin_func, T_cells[0] - (NumType)10.0, GenConsts<NumType>::TempFusion(salinity_cells[0]) + (NumType)10.0);
+            auto secant_res = bisection_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0);
             
             return std::get<0>(secant_res);
         }   
