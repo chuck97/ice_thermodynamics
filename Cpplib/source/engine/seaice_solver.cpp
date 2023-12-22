@@ -125,16 +125,16 @@ namespace icethermo
                                        true);
 
             // force the convergence of surface temperature
-            //surface_err = std::abs(T_is_new - T_is_prev)/(std::abs(T_is) + (NumType)0.1);
+            surface_err = std::abs(T_is_new - T_is_prev)/(std::abs(T_is) + (NumType)0.1);
             
-            //if (surface_err < prev_surface_err)
-            //{
-            //    T_is_history.push_back(T_is_new);
-            //}
-            //else
-            //{
-            //    T_is_new = sum_vec<NumType>(T_is_history)/T_is_history.size();
-            //}
+            if (surface_err < prev_surface_err)
+            {
+                T_is_history.push_back(T_is_new);
+            }
+            else
+            {
+                T_is_new = sum_vec<NumType>(T_is_history)/T_is_history.size();
+            }
 
             // recalculate ice thickness
             dz_cells_new = this->Update_dz(dz_cells,
@@ -183,8 +183,8 @@ namespace icethermo
 
             current_err = L2_norm(full_temp_vec - prev_temp_vec)/(L2_norm(old_temp_vec) + (NumType)0.1);
 
-            //if (current_err < tol)
-            //    break;
+            if (current_err < tol)
+                break;
         }
 
         if (this->is_verbose)
@@ -824,16 +824,16 @@ namespace icethermo
                                           true);
 
             // force the convergence of surface temperature
-            //surface_err = std::abs(T_ss_new - T_ss_prev)/std::abs(T_ss + (NumType)0.1);
+            surface_err = std::abs(T_ss_new - T_ss_prev)/std::abs(T_ss + (NumType)0.1);
             
-            //if (surface_err < prev_surface_err)
-            //{
-            //    T_ss_history.push_back(T_ss_new);
-            //}
-            //else
-            //{
-            //    T_ss_new = sum_vec<NumType>(T_ss_history)/T_ss_history.size();
-            //}
+            if (surface_err < prev_surface_err)
+            {
+                T_ss_history.push_back(T_ss_new);
+            }
+            else
+            {
+                T_ss_new = sum_vec<NumType>(T_ss_history)/T_ss_history.size();
+            }
 
             // compute ice-snow interface omega value
             if (this->si_transition_mode == SnowIceTransition::SnowAging)
@@ -912,8 +912,8 @@ namespace icethermo
 
             current_err = L2_norm(full_temp_vec - prev_temp_vec)/(L2_norm(old_temp_vec) + (NumType)0.1);
 
-            //if (current_err < tol)
-            //    break;
+            if (current_err < tol)
+                break;
         }
 
         if (this->is_verbose)

@@ -53,19 +53,19 @@ program itinmcm1d_example
     real(c_double), dimension(:,:), allocatable :: a
 
     ! parameters for experiment
-    real(c_double), parameter :: prec_rate_value = 7.609942598442472E-009
-    real(c_double), parameter :: ocean_sal_value = 33.5915298461914
-    real(c_double), parameter :: sw_value =  266.281200147678
-    real(c_double), parameter :: lw_value =  259.256152939006
-    real(c_double), parameter :: atm_temp_value =  -2.14904260635376
-    real(c_double), parameter :: spec_humid_value =  3.30236856825650     
-    real(c_double), parameter :: sh_coeff_value =  1.162560540251434E-003
-    real(c_double), parameter :: lh_coeff_value =  1.162560540251434E-003
-    real(c_double), parameter :: abs_wind_speed_value = 3.03282555476966     
-    real(c_double), parameter :: atm_pressure_value = 97984.3593750000          
+    real(c_double), parameter :: prec_rate_value = 5.429921990575380E-009
+    real(c_double), parameter :: ocean_sal_value = 9.994506835937500E-004
+    real(c_double), parameter :: sw_value =  34.3713805388029
+    real(c_double), parameter :: lw_value =  205.645509767637
+    real(c_double), parameter :: atm_temp_value =  -13.1182537078857
+    real(c_double), parameter :: spec_humid_value =  1.43520918209106     
+    real(c_double), parameter :: sh_coeff_value =  1.144087756983936E-003
+    real(c_double), parameter :: lh_coeff_value =  1.144087756983936E-003
+    real(c_double), parameter :: abs_wind_speed_value = 3.23311546728502     
+    real(c_double), parameter :: atm_pressure_value = 103296.921875000          
     real(c_double), parameter :: ocean_flux_value =  0.0
-    real(c_double), parameter :: ssnow_thickness =  0.5
-    real(c_double), parameter :: iice_thickness =  0.5
+    real(c_double), parameter :: ssnow_thickness =  6.393566942358753E-002
+    real(c_double), parameter :: iice_thickness =  0.913329218477102
     real(c_double), parameter :: bbase_sal = 4.0
     real(c_double), parameter :: ssurf_sal = 1.0
 
@@ -89,7 +89,7 @@ program itinmcm1d_example
 
     ! initialization of arrays
     init_ice_surf_temp = -5.0
-    init_ice_base_temp = 0.0
+    init_ice_base_temp = -1.0
     init_snow_surf_temp = -10.0
     init_ice_thick =  1.0
     init_snow_thick =  1.0
@@ -360,20 +360,20 @@ program itinmcm1d_example
         print *
     end do
 
-    call UpdateTemperatureProfile(test_temp_profile, 1, nlon, 1, nlat)
+    ! call UpdateTemperatureProfile(test_temp_profile, 1, nlon, 1, nlat)
     call GetTemperatureProfile(test_temp_profile, 1, nlon, 1, nlat)
 
     print *, "TEMP PROFILE after UPDATE PROFILE: "
 
-    do i = 1, nlon
-        do j = 1, nlat
-            print *, "lon = ", i, ", lat = ", j 
-            do k = 1, (n_ice_layers + 1)
-                write(*, fmt='((F15.8))', advance="no") test_temp_profile(i, j, k)
-            end do
-            print*
-        end do
-    end do
+    !do i = 1, nlon
+    !    do j = 1, nlat
+    !        print *, "lon = ", i, ", lat = ", j 
+    !        do k = 1, (n_ice_layers + 1)
+    !            write(*, fmt='((F15.8))', advance="no") test_temp_profile(i, j, k)
+    !        end do
+    !        print*
+    !    end do
+    !end do
 
 
     call GetSurfaceTemperature(array = surf_temp, &

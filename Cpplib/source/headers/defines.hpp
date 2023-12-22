@@ -11,7 +11,7 @@ namespace icethermo
     #define NAN_TEMP_VALUE -1000000.0
     #define NAN_THICK_VALUE -1000000.0
     #define MAX_1D_SOLVER_ITS 40
-    #define MAX_RELAXATION_ITS 10
+    #define MAX_RELAXATION_ITS 30
     #define NONLIN_SOLVER_ACCUR 1e-6
     #define RELAXATION_SOLVER_ACCUR 1e-4
 }
