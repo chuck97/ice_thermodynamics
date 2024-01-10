@@ -7,6 +7,8 @@ namespace icethermo
     SeaIce0D_Snow0D_Solver<NumType>::SeaIce0D_Snow0D_Solver(Mesh<NumType>* mesh_ice_,
                                                             Mesh<NumType>* mesh_snow_,
                                                             NumType time_step_,
+                                                            NumType min_ice_thick_,
+                                                            NumType min_snow_thick_,
                                                             bool is_sublimation_,
                                                             bool is_verbose_,
                                                             Kparam ice_k_param_,
@@ -19,6 +21,8 @@ namespace icethermo
         SeaIce_Solver<NumType>(mesh_ice_,
                                mesh_snow_,
                                time_step_,
+                               min_ice_thick_,
+                               min_snow_thick_,
                                ApproxOrder::first,
                                false,
                                is_sublimation_,
@@ -145,7 +149,7 @@ namespace icethermo
         *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
 
         // check if snow exists
-        if ((*(this->dzs_cells))[0] < (NumType)SNOW_THICKNESS_THRESHOLD)
+        if ((*(this->dzs_cells))[0] < this->min_snow_thick)
         {
             // computations without snow
 

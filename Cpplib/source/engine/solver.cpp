@@ -6,6 +6,8 @@ namespace icethermo
     ThermoSolver<NumType>::ThermoSolver(Mesh<NumType>* mesh_ice_,
                                         Mesh<NumType>* mesh_snow_,
                                         NumType time_step_,
+                                        NumType min_ice_thick_,
+                                        NumType min_snow_thick_,
                                         ApproxOrder grad_approx_order_,
                                         bool is_radiation_,
                                         bool is_sublimation_,
@@ -25,6 +27,8 @@ namespace icethermo
         this->mesh_ice = mesh_ice_;
         this->mesh_snow = mesh_snow_;
         this->time_step = time_step_;
+        this->min_ice_thick = min_ice_thick_;
+        this->min_snow_thick = min_snow_thick_;
         this->grad_approx_order = grad_approx_order_;
         this->ice_k_param = ice_k_param_;
         this->ice_c_eff_param = ice_c_eff_param_;
@@ -92,7 +96,7 @@ namespace icethermo
     void ThermoSolver<NumType>::UpdateUpperFlux()
     {
         if ((this->mesh_snow != NULL) and 
-            ((this->mesh_snow)->GetTotalThickness() > (NumType)SNOW_THICKNESS_THRESHOLD))
+            ((this->mesh_snow)->GetTotalThickness() > this->min_snow_thick))
         {
             // assign common parameterizations
             this->UpdateLatentHeatFlux();
@@ -400,8 +404,8 @@ namespace icethermo
 
                 
             // if snow appeared initialize snow temperatures
-            if ((sum_vec(*(this->dzs_cells)) > (NumType)SNOW_THICKNESS_THRESHOLD) and 
-                 (snow_thick_before < (NumType)SNOW_THICKNESS_THRESHOLD))
+            if ((sum_vec(*(this->dzs_cells)) > this->min_snow_thick) and 
+                 (snow_thick_before < this->min_snow_thick))
             {
                 *(this->Ts_s) = *(this->atm_temp);
                 *(this->Ts_b) = *(this->Ti_s);

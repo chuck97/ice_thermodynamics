@@ -6,6 +6,7 @@ namespace icethermo
     template <typename NumType>
     SeaIce1D_Solver<NumType>::SeaIce1D_Solver(Mesh<NumType>* mesh_ice_,
                                               NumType time_step_,
+                                              NumType min_ice_thick_,
                                               bool is_radiation_,
                                               bool is_sublimation_,
                                               bool is_verbose_,
@@ -18,6 +19,8 @@ namespace icethermo
         SeaIce_Solver<NumType>(mesh_ice_,
                                NULL,
                                time_step_,
+                               min_ice_thick_,
+                               0.0,
                                grad_approx_order_,
                                is_radiation_,
                                is_sublimation_,

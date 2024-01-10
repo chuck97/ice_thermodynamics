@@ -35,6 +35,8 @@ namespace icethermo
         ThermoSolver(Mesh<NumType>* mesh_ice_,
                      Mesh<NumType>* mesh_snow_,
                      NumType time_step_,
+                     NumType min_ice_thick_ = (NumType)0.0,
+                     NumType min_snow_thick_ = (NumType)0.0,
                      ApproxOrder grad_approx_order_ = ApproxOrder::first,
                      bool is_radiation = true,
                      bool is_sublimation_ = true,
@@ -61,9 +63,14 @@ namespace icethermo
         // time step
         NumType time_step;
 
+        // treshold values for thicknesses
+        NumType min_ice_thick;
+        NumType min_snow_thick;
+
         // ice and snow mesh
         Mesh<NumType>* mesh_ice = NULL;
         Mesh<NumType>* mesh_snow = NULL;
+
 
         // upwards, downwards, short-wave radiation, latent heat flux, precipitation rate, atmosphere temperature
         
@@ -342,6 +349,8 @@ namespace icethermo
         SeaIce_Solver(Mesh<NumType>* mesh_ice_,
                       Mesh<NumType>* mesh_snow_,
                       NumType time_step_,
+                      NumType min_ice_thick_,
+                      NumType min_snow_thick_,
                       ApproxOrder grad_approx_order_ = ApproxOrder::first,
                       bool is_radiation = true,
                       bool is_sublimation_ = true,
@@ -558,6 +567,7 @@ namespace icethermo
         // constructor
         SeaIce1D_Solver(Mesh<NumType>* mesh_ice_,
                         NumType time_step_,
+                        NumType min_ice_thick_,
                         bool is_radiation = true,
                         bool is_sublimation = false,
                         bool is_verbose_ = true,
@@ -592,7 +602,9 @@ namespace icethermo
     public:
         SeaIce1D_Snow0D_Solver(Mesh<NumType>* mesh_ice_,
                                Mesh<NumType>* mesh_snow_,
-                               NumType time_step,
+                               NumType time_step_,
+                               NumType min_ice_thick_,
+                               NumType min_snow_thick_,
                                bool is_radiation_ = true,
                                bool is_sublimation_ = false,
                                bool is_verbose_ = true,
@@ -629,7 +641,9 @@ namespace icethermo
     public:
         SeaIce0D_Snow0D_Solver(Mesh<NumType>* mesh_ice_,
                                Mesh<NumType>* mesh_snow_,
-                               NumType time_step,
+                               NumType time_step_,
+                               NumType min_ice_thick_,
+                               NumType min_snow_thick_,
                                bool is_sublimation_ = false,
                                bool is_verbose_ = true,
                                Kparam ice_k_param_ = Kparam::FreshIce,
@@ -665,6 +679,7 @@ namespace icethermo
 
         Glacier1D_Solver(Mesh<NumType>* mesh_ice_,
                          NumType time_step_,
+                         NumType min_ice_thick_,
                          bool is_radiation_ = true,
                          bool is_sublimation_ = false,
                          bool is_verbose_ = true,

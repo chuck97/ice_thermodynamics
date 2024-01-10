@@ -55,6 +55,7 @@ void run_model(NumType time_step,
     // create test 1d ice solver class
     Glacier1D_Solver<NumType> thermo_solver(ice_mesh,
                                             time_step,
+                                            0.01,
                                             true,
                                             true,
                                             true,

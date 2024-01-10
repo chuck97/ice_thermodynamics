@@ -115,7 +115,8 @@ program itinmcm1d_example
     ! initialization of thermodynamics solver
     call InitThermodynamics1d(time_step = time_step, &  
                               num_ice_layers = n_ice_layers, &   
-                              min_ice_thick = 1d-2, &               
+                              min_ice_thick = 1d-2, &        
+                              min_snow_thick = 1d-3, &       
                               min_lon_ind = 1, &                    
                               max_lon_ind = nlon, &                 
                               min_lat_ind = 1, &                    

@@ -65,6 +65,7 @@ void run_model(NumType time_step,
     // create 1dice solver class
     SeaIce1D_Solver<NumType> thermo_solver(ice_mesh,
                                            time_step, 
+                                           0.001,
                                            true,
                                            true,
                                            true,

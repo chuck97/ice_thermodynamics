@@ -16,7 +16,8 @@ public:
     // constructor
     ThermoModelsSet(double time_step_,    
                     int num_ice_layers,     
-                    double min_ice_thick_,       
+                    double min_ice_thick_,     
+                    double min_snow_thick_,  
                     int min_lon_ind_,            
                     int max_lon_ind_,            
                     int min_lat_ind_,            
@@ -210,6 +211,7 @@ protected:
     int num_ice_layers = 1;
 
     double min_ice_thick;
+    double min_snow_thick;
     bool is_verbose;
 
     std::vector<std::vector<icethermo::Mesh<double>*>> ice_meshes;
@@ -227,6 +229,7 @@ public:
     // constructor
     ThermoModelsSetIce0dSnow0d(double time_step_,           // time step in seconds
                                double min_ice_thick_,       // minimal ice thickness (meters) - if thickness is less than this value, model would not be evaluated
+                               double min_snow_thick_,      // minimal snow thickness (meters)
                                int min_lon_ind_,            // minimal longitude index
                                int max_lon_ind_,            // maximal longitude index (inclusive)
                                int min_lat_ind_,            // minimal latitude index 
@@ -257,6 +260,7 @@ public:
     ThermoModelsSetIce1dSnow0d(double time_step_,                 // time step in seconds
                                int num_ice_layers_,               // number of layers in 1d ice model
                                double min_ice_thick_,             // minimal ice thickness (meters) - if thickness is less than this value, model would not be evaluated
+                               double min_snow_thick_,            // minimal snow thickness (meters)
                                int min_lon_ind_,                  // minimal longitude index
                                int max_lon_ind_,                  // maximal longitude index (inclusive)
                                int min_lat_ind_,                  // minimal latitude index 
@@ -314,6 +318,7 @@ extern "C"
    // initialization of thermodynamics
    void* InitThermodynamics0d(double time_step,
                               double min_ice_thick,
+                              double min_snow_thick,
                               int min_lon_ind,
                               int max_lon_ind,
                               int min_lat_ind,
@@ -330,6 +335,7 @@ extern "C"
     void* InitThermodynamics1d(double time_step,
                                int num_ice_layers,
                                double min_ice_thick,
+                               double min_snow_thick,
                                int min_lon_ind,
                                int max_lon_ind,
                                int min_lat_ind,

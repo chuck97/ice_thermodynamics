@@ -10,6 +10,7 @@ module itinmcm
     interface
         function InitThermodynamics0d_(time_step,           &  ! time step (seconds)
                                        min_ice_thick,       &  ! minimal ice thickness (meters)
+                                       min_snow_thick,      &  ! minimal snow thickness (meters)
                                        min_lon_ind,         &  ! minimal longitude index
                                        max_lon_ind,         &  ! maximal longitude index
                                        min_lat_ind,         &  ! minimal latitude index
@@ -30,6 +31,7 @@ module itinmcm
             ! Argument list
             real(c_double), intent(in), value :: time_step
             real(c_double), intent(in), value :: min_ice_thick
+            real(c_double), intent(in), value :: min_snow_thick
             integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
             integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
             real(c_double), intent(in), dimension(*) :: init_ice_base_temp
@@ -49,6 +51,7 @@ module itinmcm
         function InitThermodynamics1d_(time_step,            &  ! time step (seconds)
                                        num_ice_layers,       &  ! number of unit ice layers
                                        min_ice_thick,        &  ! minimal ice thickness (meters)
+                                       min_snow_thick,       &  ! minimal snow thickness (meters)
                                        min_lon_ind,          &  ! minimal longitude index
                                        max_lon_ind,          &  ! maximal longitude index
                                        min_lat_ind,          &  ! minimal latitude index
@@ -72,6 +75,7 @@ module itinmcm
             real(c_double), intent(in), value :: time_step
             integer(c_int), intent(in), value :: num_ice_layers
             real(c_double), intent(in), value :: min_ice_thick
+            real(c_double), intent(in), value :: min_snow_thick
             integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
             integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
             real(c_double), intent(in), dimension(*) :: init_ice_base_temp
@@ -714,6 +718,7 @@ module itinmcm
     ! initialization of thermodynamics solver 
     subroutine InitThermodynamics0d(time_step,           &  ! time step (seconds)
                                     min_ice_thick,       &  ! minimal ice thickness (meters)
+                                    min_snow_thick,      &  ! minimal snow thickness (meters)
                                     min_lon_ind,         &  ! minimal longitude index (inclusively)
                                     max_lon_ind,         &  ! maximal longitude index (inclusively)
                                     min_lat_ind,         &  ! minimal latitude index (inclusively)
@@ -731,6 +736,7 @@ module itinmcm
         ! Argument list
         real(c_double), intent(in), value :: time_step
         real(c_double), intent(in), value :: min_ice_thick
+        real(c_double), intent(in), value :: min_snow_thick
         integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
         integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
         real(c_double), intent(in), dimension(*) :: init_ice_base_temp
@@ -747,7 +753,8 @@ module itinmcm
         end if
    
         obj = InitThermodynamics0d_(time_step, &                    
-                                    min_ice_thick, &         
+                                    min_ice_thick, &
+                                    min_snow_thick, &         
                                     min_lon_ind, &           
                                     max_lon_ind, &           
                                     min_lat_ind, &           
@@ -765,6 +772,7 @@ module itinmcm
     subroutine InitThermodynamics1d(time_step,            &  ! time step (seconds)
                                     num_ice_layers,       &  ! number of ice layers (should be greater than 2)
                                     min_ice_thick,        &  ! minimal ice thickness (meters)
+                                    min_snow_thick,       &  ! minimal snow thickness (meters)
                                     min_lon_ind,          &  ! minimal longitude index (inclusively)
                                     max_lon_ind,          &  ! maximal longitude index (inclusively)
                                     min_lat_ind,          &  ! minimal latitude index (inclusively)
@@ -785,6 +793,7 @@ module itinmcm
         real(c_double), intent(in), value :: time_step
         integer(c_int), intent(in), value :: num_ice_layers
         real(c_double), intent(in), value :: min_ice_thick
+        real(c_double), intent(in), value :: min_snow_thick
         integer(c_int), intent(in), value :: min_lon_ind, max_lon_ind
         integer(c_int), intent(in), value :: min_lat_ind, max_lat_ind
         real(c_double), intent(in), dimension(*) :: init_ice_base_temp
@@ -804,7 +813,8 @@ module itinmcm
 
         obj = InitThermodynamics1d_(time_step, &     
                                     num_ice_layers, &             
-                                    min_ice_thick, &         
+                                    min_ice_thick, & 
+                                    min_snow_thick, &        
                                     min_lon_ind, &           
                                     max_lon_ind, &           
                                     min_lat_ind, &           
