@@ -60,7 +60,7 @@ namespace icethermo
     void SeaIce1D_Snow0D_Solver<NumType>::Evaluate()
     {
         // force base temperature to freezing point
-        *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
+        *(this->Ti_b) = Params<NumType>::TempFusion(*(this->So));
 
         // check if snow exists
         if (sum_vec(*(this->dzs_cells)) < this->min_snow_thick)
@@ -81,7 +81,7 @@ namespace icethermo
                                                            *(this->rhoi_cells));
             
             // compute melting temperature for top layer
-            NumType surface_fusion_temp = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+            NumType surface_fusion_temp = Params<NumType>::TempFusion((*(this->Si_cells)).back());
 
             // check if ice surface temperature exeeds melting point and recalculate in melting mode
             if ((std::get<1>(freezing_values))[0] >= surface_fusion_temp)
@@ -277,7 +277,7 @@ namespace icethermo
             if (!this->mesh_ice->CheckSingleDataExistency("down_temperature"))
             {
                 this->Ti_b = this->mesh_ice->CreateSingleData("down_temperature");
-                *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
+                *(this->Ti_b) = Params<NumType>::TempFusion(*(this->So));
             }
             else
             {

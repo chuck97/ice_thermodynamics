@@ -7,8 +7,10 @@
 #include "defines.hpp"
 #include "mesh.hpp"
 #include "constants.hpp"
+#include "params.hpp"
 #include "matvec.hpp"
 #include "tools.hpp"
+#include "config.hpp"
 
 namespace icethermo
 {
@@ -38,9 +40,9 @@ namespace icethermo
                      NumType min_ice_thick_ = (NumType)0.0,
                      NumType min_snow_thick_ = (NumType)0.0,
                      ApproxOrder grad_approx_order_ = ApproxOrder::first,
-                     bool is_radiation = true,
-                     bool is_sublimation_ = true,
-                     bool is_verbose_ = true,
+                     bool is_radiation = false,
+                     bool is_sublimation_ = false,
+                     bool is_verbose_ = false,
                      Kparam ice_k_param_ = Kparam::FreshIce,
                      Cparam ice_c_eff_param_ = Cparam::FreshIce,
                      Eparam ice_E_param_ = Eparam::FreshIce,
@@ -568,9 +570,9 @@ namespace icethermo
         SeaIce1D_Solver(Mesh<NumType>* mesh_ice_,
                         NumType time_step_,
                         NumType min_ice_thick_,
-                        bool is_radiation = true,
+                        bool is_radiation = false,
                         bool is_sublimation = false,
-                        bool is_verbose_ = true,
+                        bool is_verbose_ = false,
                         ApproxOrder grad_approx_order_ = ApproxOrder::first,
                         Kparam ice_k_param_ = Kparam::FreshIce,
                         Cparam ice_c_eff_param_ = Cparam::FreshIce,
@@ -605,9 +607,9 @@ namespace icethermo
                                NumType time_step_,
                                NumType min_ice_thick_,
                                NumType min_snow_thick_,
-                               bool is_radiation_ = true,
+                               bool is_radiation_ = false,
                                bool is_sublimation_ = false,
-                               bool is_verbose_ = true,
+                               bool is_verbose_ = false,
                                Kparam ice_k_param_ = Kparam::FreshIce,
                                Cparam ice_c_eff_param_ = Cparam::FreshIce,
                                Eparam ice_E_param_ = Eparam::FreshIce,
@@ -645,7 +647,7 @@ namespace icethermo
                                NumType min_ice_thick_,
                                NumType min_snow_thick_,
                                bool is_sublimation_ = false,
-                               bool is_verbose_ = true,
+                               bool is_verbose_ = false,
                                Kparam ice_k_param_ = Kparam::FreshIce,
                                Lparam ice_L_param_ = Lparam::FreshIce,
                                Aparam ice_albedo_param_ = Aparam::ConstantIce,
@@ -680,9 +682,9 @@ namespace icethermo
         Glacier1D_Solver(Mesh<NumType>* mesh_ice_,
                          NumType time_step_,
                          NumType min_ice_thick_,
-                         bool is_radiation_ = true,
+                         bool is_radiation_ = false,
                          bool is_sublimation_ = false,
-                         bool is_verbose_ = true,
+                         bool is_verbose_ = false,
                          ApproxOrder grad_approx_order_ = ApproxOrder::first,
                          Kparam ice_k_param_ = Kparam::FreshIce,
                          Cparam ice_c_eff_param_ = Cparam::FreshIce,

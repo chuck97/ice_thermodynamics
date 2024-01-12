@@ -1,7 +1,7 @@
 {
     "General constants":
     {
-        "Fusion temperature salinity constant (deg C psu-1)" : 0.0575,
+        "Fusion temperature-salinity constant (deg C psu-1)" : 0.0575,
         "Stephan-Boltzman constant (W m-2 K-4)" : 5.67e-8,
         "Zero Celsium (K)" : 273.15,
         "Emissivity of ice and snow (-)" : 0.99,

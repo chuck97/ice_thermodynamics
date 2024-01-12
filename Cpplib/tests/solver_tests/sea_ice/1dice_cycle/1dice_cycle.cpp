@@ -76,6 +76,9 @@ void run_model(NumType time_step,
                Eparam enthalpy_parameterization,
                Lparam fusion_heat_parameterization)
 {
+
+    std::cout << (Configured()) : GetConfigConsts<NumType>()->GenConsts().mu << std::endl;
+
     // create uniform sigma-mesh
     Mesh<NumType>* ice_mesh = new(Mesh<NumType>)(num_cells, initial_thickness);
 
@@ -87,7 +90,7 @@ void run_model(NumType time_step,
     int n_cells = ice_mesh->GetCellsNum();
 
     // salty water with 30 psu freezing temperature
-    NumType fusion_temp = GenConsts<NumType>::TempFusion(30.0);
+    NumType fusion_temp = Params<NumType>::TempFusion(30.0);
 
     // initialize mandatory values
     for (int i = 0; i < n_cells; ++i)

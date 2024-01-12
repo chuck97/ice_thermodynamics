@@ -63,7 +63,7 @@ namespace icethermo
                                                         *(this->rhoi_cells));
         
         // compute melting temperature for top layer
-        NumType surface_fusion_temp = GenConsts<NumType>::TempFusion((NumType)0.0);
+        NumType surface_fusion_temp = Params<NumType>::TempFusion((NumType)0.0);
         
         // check if surface temperature exeeds melting point and recalculate in melting mode
         if ((std::get<2>(freezing_values))[0] >= surface_fusion_temp)

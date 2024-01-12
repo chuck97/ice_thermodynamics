@@ -42,6 +42,9 @@ void run_model(NumType time_step,
                Kparam conductivity_snow_parameterization,
                Lparam fusion_heat_snow_parameterization)
 {
+    // configure constants from .json file
+
+
     // create uniform sigma-mesh for 1d ice
     Mesh<NumType>* ice_mesh = new(Mesh<NumType>)(num_cells, initial_ice_thickness);
 
@@ -61,7 +64,7 @@ void run_model(NumType time_step,
     auto initial_snow_surf_temp = snow_mesh->CreateSingleData("up_temperature");
 
     // freezing point of salty water with 30 psu
-    NumType fusion_temp = GenConsts<NumType>::TempFusion(30.0);
+    NumType fusion_temp = Params<NumType>::TempFusion(30.0);
 
     // initialize mandatory values for ice
     for (int i = 0; i < n_ice_cells; ++i)

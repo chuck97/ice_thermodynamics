@@ -149,7 +149,7 @@ namespace icethermo
             if (this->is_radiation)
             {
                 NumType h_i = sum_vec<NumType>(dz_cells_new);
-                NumType Tfi = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+                NumType Tfi = Params<NumType>::TempFusion((*(this->Si_cells)).back());
                 auto albedo_param = this->ice_albedo_param;
                 FuncPtr<NumType> alb_i = [albedo_param, h_i, Tfi] (NumType T)
                 {
@@ -360,7 +360,7 @@ namespace icethermo
             if (this->is_radiation)
             {
                 NumType h_i = sum_vec<NumType>(dz_cells_new);
-                NumType Tfi = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+                NumType Tfi = Params<NumType>::TempFusion((*(this->Si_cells)).back());
                 auto albedo_param = this->ice_albedo_param;
                 FuncPtr<NumType> alb_i = [albedo_param, h_i, Tfi] (NumType T)
                 {
@@ -860,7 +860,7 @@ namespace icethermo
             {
 
                 NumType h_i = sum_vec<NumType>(dz_i_cells_new);
-                NumType Tfi = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+                NumType Tfi = Params<NumType>::TempFusion((*(this->Si_cells)).back());
                 auto ice_albedo_param = this->ice_albedo_param;
                 FuncPtr<NumType> alb_i = [ice_albedo_param, h_i, Tfi] (NumType T)
                 {
@@ -1028,7 +1028,7 @@ namespace icethermo
             if (this->is_radiation)
             {
                 NumType h_i = sum_vec<NumType>(dz_i_cells_new);
-                NumType Tfi = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+                NumType Tfi = Params<NumType>::TempFusion((*(this->Si_cells)).back());
                 auto ice_albedo_param = this->ice_albedo_param;
                 FuncPtr<NumType> alb_i = [ice_albedo_param, h_i, Tfi] (NumType T)
                 {

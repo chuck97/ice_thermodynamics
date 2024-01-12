@@ -46,10 +46,10 @@ namespace icethermo
         this->atm_humid = std::make_shared<NumType>(0.0); // g/kg
         this->abs_wind_speed = std::make_shared<NumType>(5.0);
 
-        NumType C_sh = GenConsts<NumType>::C_sh;
+        NumType C_sh = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.C_sh : GenConsts<NumType>::C_sh;
         this->sh_trans_coeff = std::make_shared<NumType>(C_sh);
 
-        NumType C_lh = GenConsts<NumType>::C_lh;
+        NumType C_lh = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.C_lh : GenConsts<NumType>::C_lh;
         this->lh_trans_coeff = std::make_shared<NumType>(C_lh);
 
         NumType atm_dens = AirConsts<NumType>::rho_a;
@@ -104,7 +104,7 @@ namespace icethermo
             this->UpdatePrecipitationHeatFlux();
             this->UpdateEmittingHeatFlux();
 
-            NumType em_s = GenConsts<NumType>::emissivity;
+            NumType em_s = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.emissivity : GenConsts<NumType>::emissivity;
             NumType i0_s = SnowConsts<NumType>::i0_s;
             auto al_param = this->snow_albedo_param;
             NumType hs = sum_vec<NumType>(*(this->dzs_cells));
@@ -158,7 +158,7 @@ namespace icethermo
             this->UpdatePrecipitationHeatFlux();
             this->UpdateEmittingHeatFlux();
 
-            NumType em_i = GenConsts<NumType>::emissivity;
+            NumType em_i = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.emissivity : GenConsts<NumType>::emissivity;
             
             IceConsts<NumType>::albedo_i;
             NumType i0_i = IceConsts<NumType>::i0_i;
@@ -172,7 +172,7 @@ namespace icethermo
 
             auto al_param = this->ice_albedo_param;
             NumType hi = sum_vec<NumType>(*(this->dzi_cells));
-            NumType Tfi = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+            NumType Tfi = Params<NumType>::TempFusion((*(this->Si_cells)).back());
 
             FuncPtr<NumType> alb_i = [al_param, hi, Tfi] (NumType T)
             {
@@ -248,7 +248,7 @@ namespace icethermo
 
         NumType c1 = IceConsts<NumType>::c1_i;
         NumType c2 = IceConsts<NumType>::c2_i;
-        NumType T_0 = GenConsts<NumType>::T0;
+        NumType T_0 = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.T0 : GenConsts<NumType>::T0;
         NumType Ls = GenConsts<NumType>::L_s;
 
         this->F_lh = [c1, c2, T_0, Ls, press, ws, ah, Clh, ra](NumType T)
@@ -257,7 +257,7 @@ namespace icethermo
             //NumType q_surf = 0.622*es/((*press)*1e-2 - 0.378*es);
 
 
-            NumType pb = 21.85/(T + GenConsts<NumType>::T0 - 7.65);
+            NumType pb = 21.85/(T + T_0 - 7.65);
             NumType qmax_dup = 3.80042e-3*exp(pb*T)/((*press)*1e-5);
             NumType q_surf = qmax_dup*0.98;
              
@@ -318,8 +318,8 @@ namespace icethermo
     template<typename NumType>
     void ThermoSolver<NumType>::UpdateEmittingHeatFlux()
     {
-        NumType sig = GenConsts<NumType>::sigma;
-        NumType T_0 = GenConsts<NumType>::T0;
+        NumType sig = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.sigma : GenConsts<NumType>::sigma;
+        NumType T_0 = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.T0 : GenConsts<NumType>::T0;
 
         this->F_lwi = [sig, T_0](NumType T)
         {

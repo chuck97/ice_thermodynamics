@@ -1,6 +1,8 @@
 set(HEADER
     ${HEADER}
     ${CMAKE_CURRENT_SOURCE_DIR}/constants.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/params.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/config.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/defines.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tools.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/matvec.hpp

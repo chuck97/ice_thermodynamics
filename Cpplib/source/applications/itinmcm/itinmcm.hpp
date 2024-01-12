@@ -198,6 +198,7 @@ public:
                   );
 
 protected:
+
     double time_step;
 
     int lon_dim;

@@ -4,5 +4,6 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/bisection_solver.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/thomas_solver.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/matvec.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/config.cpp
     PARENT_SCOPE
 )

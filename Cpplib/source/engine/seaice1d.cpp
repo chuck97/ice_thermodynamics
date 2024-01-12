@@ -46,7 +46,7 @@ namespace icethermo
     void SeaIce1D_Solver<NumType>::Evaluate()
     {
         // force base temperature to freezing point
-        *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
+        *(this->Ti_b) = Params<NumType>::TempFusion(*(this->So));
 
         // recalculate temperatures in freezing mode
         auto freezing_values = this->seaice1d_freezing(*(this->Ti_b),
@@ -57,7 +57,7 @@ namespace icethermo
                                                        *(this->rhoi_cells));
         
         // compute melting temperature for top layer
-        NumType surface_fusion_temp = GenConsts<NumType>::TempFusion((*(this->Si_cells)).back());
+        NumType surface_fusion_temp = Params<NumType>::TempFusion((*(this->Si_cells)).back());
         
         // check if surface temperature exeeds melting point and recalculate in melting mode
         if ((std::get<1>(freezing_values))[0] >= surface_fusion_temp)
@@ -149,7 +149,7 @@ namespace icethermo
             if (!this->mesh_ice->CheckSingleDataExistency("down_temperature"))
             {
                 this->Ti_b = this->mesh_ice->CreateSingleData("down_temperature");
-                *(this->Ti_b) = GenConsts<NumType>::TempFusion(*(this->So));
+                *(this->Ti_b) = Params<NumType>::TempFusion(*(this->So));
             }
 
         }

@@ -40,7 +40,7 @@ void run_model(NumType time_step,
     int n_cells = ice_mesh->GetCellsNum();
 
     // freezing point of salty water with 30 psu
-    NumType fusion_temp = GenConsts<NumType>::TempFusion(30.0);
+    NumType fusion_temp = Params<NumType>::TempFusion(30.0);
 
     // initialize mandatory values
     for (int i = 0; i < n_cells; ++i)

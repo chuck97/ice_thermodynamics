@@ -3,5 +3,6 @@ build_intel/
 build_gnu/
 json/
 .vscode/
+.VSCodeCounter/
 CMakeLists.txt.user
 *.mp4

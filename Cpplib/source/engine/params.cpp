@@ -1,7 +1,14 @@
-#include "constants.hpp"
+#include "params.hpp"
 
 namespace icethermo
 {
+    template<typename NumType>
+    NumType Params<NumType>::TempFusion(double S)
+    {
+        NumType mu = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.mu : GenConsts<NumType>::mu;
+        return -mu*S;
+    }
+
     template<typename NumType>
     NumType Params<NumType>::Density(Dparam param, NumType T, NumType S)
     {
@@ -28,7 +35,7 @@ namespace icethermo
     {
         if (param == Cparam::SeaIce)
         {
-            NumType Tf_i = GenConsts<NumType>::TempFusion(S);
+            NumType Tf_i = Params<NumType>::TempFusion(S);
             if ((std::abs(T) < REAL_MIN_VAL(NumType)) or (std::abs(T_old) < REAL_MIN_VAL(NumType)))
             {
                 return IceConsts<NumType>::c0_i;
@@ -57,7 +64,7 @@ namespace icethermo
     {
         if (param == Eparam::SeaIce)
         {
-            NumType Tf_i = GenConsts<NumType>::TempFusion(S);
+            NumType Tf_i = Params<NumType>::TempFusion(S);
             NumType c_w = WaterConsts<NumType>::c_w;
             if (std::abs(T) < REAL_MIN_VAL(NumType))
             {
@@ -87,7 +94,7 @@ namespace icethermo
     {
         if (param == Lparam::SeaIce)
         {
-            NumType Tf_i = GenConsts<NumType>::TempFusion(S);
+            NumType Tf_i = Params<NumType>::TempFusion(S);
             NumType c_w = WaterConsts<NumType>::c_w;
             if (std::abs(T) < REAL_MIN_VAL(NumType))
             {
