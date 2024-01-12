@@ -150,8 +150,10 @@ template struct Config<double>;
 template void Configure<float>(const char* filepath);
 template void Configure<double>(const char* filepath);
 
+#ifdef USE_JSON_OUTPUT
 template void ParseJson(const char* filepath, Config<float>* config_ptr);
 template void ParseJson(const char* filepath, Config<double>* config_ptr);
+#endif
 
 template Config<float>* GetConfigConsts();
 template Config<double>* GetConfigConsts();
