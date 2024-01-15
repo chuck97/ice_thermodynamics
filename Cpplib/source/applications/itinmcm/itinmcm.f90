@@ -1,10 +1,23 @@
 module itinmcm
 
-    use, intrinsic :: iso_c_binding, only : c_int, c_double, c_bool, c_ptr, c_null_ptr, c_associated
+    use, intrinsic :: iso_c_binding, only : c_int, c_double, c_bool, c_ptr, c_null_ptr, c_associated, c_char
  
     implicit none
  
     private
+
+    ! configuration with json file
+    interface
+        subroutine ConfigureThermodynamics_(filepath) & ! path to the configuration .json file
+                                            bind(C, name="Configure")
+            import :: c_char
+            implicit none 
+            
+            ! Argument list
+            character(c_char), intent(in), dimension(*) :: filepath
+
+        end subroutine
+    end interface
  
     ! initialization of 0d thermodynamics solver 
     interface
@@ -681,6 +694,7 @@ module itinmcm
     !!!!!!!  INTERFACE FUNCTIONS  !!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+    public :: ConfigureThermodynamics
     public :: InitThermodynamics0d
     public :: InitThermodynamics1d
     public :: FinalizeThermodynamics0d
@@ -714,6 +728,19 @@ module itinmcm
 
  
  contains
+
+    ! configuration of constants through .json file
+    subroutine ConfigureThermodynamics(filepath) ! path to configuration file
+        
+        implicit none
+
+        ! Argument list
+        character(c_char), intent(in), dimension(*) :: filepath
+
+        ! Body
+        call ConfigureThermodynamics_(filepath)
+
+    end subroutine
  
     ! initialization of thermodynamics solver 
     subroutine InitThermodynamics0d(time_step,           &  ! time step (seconds)

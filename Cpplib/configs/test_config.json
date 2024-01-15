@@ -16,8 +16,8 @@
     },
     "Water constants":
     {
-        "Air density (kg m-3)": 1026.0,
-        "Heat capacity of water (J kg-1 K-1)": 4.17e3
+        "Water density (kg m-3)": 1026.0,
+        "Heat capacity of fresh water (J kg-1 K-1)": 4.17e3
     },
     "Ice constants":
     {

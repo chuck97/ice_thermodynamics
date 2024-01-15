@@ -17,7 +17,7 @@ void Configure(const char* filepath)
 
     Config<NumType>* config_ptr = new Config<NumType>;
     #ifdef USE_JSON_OUTPUT
-        // TODO: read configuration file and fill out Config object
+        // ? read configuration file and fill out Config object
         ParseJson<NumType>(filepath, config_ptr);
     #else
         THERMO_ERR("Can't configure constants without nlohmann::json library!");
@@ -49,7 +49,7 @@ void ParseJson(const char* filepath, Config<NumType>* config_ptr)
     }
     else
     {
-        std::cout << "Warning! \'" << GenConstNames.at("mu") << "\' not found, used default value instead!" << std::endl;
+        std::cout << "IceThermo Warning! \'" << GenConstNames.at("mu") << "\' not found, used default value instead!" << std::endl;
         config_ptr->GenConsts.mu = GenConsts<NumType>::sigma;
     }
 
@@ -59,7 +59,7 @@ void ParseJson(const char* filepath, Config<NumType>* config_ptr)
     }
     else
     {
-        std::cout << "Warning! \'" << GenConstNames.at("sigma") << "\' not found, used default value instead!" << std::endl;
+        std::cout << "IceThermo Warning! \'" << GenConstNames.at("sigma") << "\' not found, used default value instead!" << std::endl;
         config_ptr->GenConsts.sigma = GenConsts<NumType>::sigma;
     }
 
@@ -69,7 +69,7 @@ void ParseJson(const char* filepath, Config<NumType>* config_ptr)
     }
     else
     {
-        std::cout << "Warning! \'" << GenConstNames.at("T0") << "\' not found, used default value instead!" << std::endl;
+        std::cout << "IceThermo Warning! \'" << GenConstNames.at("T0") << "\' not found, used default value instead!" << std::endl;
         config_ptr->GenConsts.T0 = GenConsts<NumType>::T0;
     }
 
@@ -79,7 +79,7 @@ void ParseJson(const char* filepath, Config<NumType>* config_ptr)
     }
     else
     {
-        std::cout << "Warning! \'" << GenConstNames.at("emissivity") << "\' not found, used default value instead!" << std::endl;
+        std::cout << "IceThermo Warning! \'" << GenConstNames.at("emissivity") << "\' not found, used default value instead!" << std::endl;
         config_ptr->GenConsts.emissivity = GenConsts<NumType>::emissivity;
     }
 
@@ -89,7 +89,7 @@ void ParseJson(const char* filepath, Config<NumType>* config_ptr)
     }
     else
     {
-        std::cout << "Warning! \'" << GenConstNames.at("C_sh") << "\' not found, used default value instead!" << std::endl;
+        std::cout << "IceThermo Warning! \'" << GenConstNames.at("C_sh") << "\' not found, used default value instead!" << std::endl;
         config_ptr->GenConsts.C_sh = GenConsts<NumType>::C_sh;
     }
 
@@ -99,17 +99,242 @@ void ParseJson(const char* filepath, Config<NumType>* config_ptr)
     }
     else
     {
-        std::cout << "Warning! \'" << GenConstNames.at("C_lh") << "\' not found, used default value instead!" << std::endl;
+        std::cout << "IceThermo Warning! \'" << GenConstNames.at("C_lh") << "\' not found, used default value instead!" << std::endl;
         config_ptr->GenConsts.C_lh = GenConsts<NumType>::C_lh;
     }
     
-    // TODO: parse Air constants
+    // ? parse Air constants
+    nlohmann::json j_air = j_file["Air constants"];
 
-    // TODO: parse Water constants 
+    if (!j_air[AirConstNames.at("rho_a")].empty())
+    {
+        config_ptr->AirConsts.rho_a = (NumType)j_air[AirConstNames.at("rho_a")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << AirConstNames.at("rho_a") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->AirConsts.rho_a = AirConsts<NumType>::rho_a;
+    }
 
-    // TODO: parse Ice constants 
+    if (!j_air[AirConstNames.at("cp_a")].empty())
+    {
+        config_ptr->AirConsts.cp_a = (NumType)j_air[AirConstNames.at("cp_a")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << AirConstNames.at("cp_a") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->AirConsts.cp_a = AirConsts<NumType>::cp_a;
+    }
 
-    // TODO: parse Snow constants 
+    // ? parse Water constants 
+    nlohmann::json j_water = j_file["Water constants"];
+
+    if (!j_water[WaterConstNames.at("rho_w")].empty())
+    {
+        config_ptr->WaterConsts.rho_w = (NumType)j_water[WaterConstNames.at("rho_w")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << WaterConstNames.at("rho_w") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->WaterConsts.rho_w = WaterConsts<NumType>::rho_w;
+    }
+
+    if (!j_water[WaterConstNames.at("cp_w")].empty())
+    {
+        config_ptr->WaterConsts.cp_w = (NumType)j_water[WaterConstNames.at("cp_w")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << WaterConstNames.at("cp_w") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->WaterConsts.cp_w = WaterConsts<NumType>::c_pw;
+    }
+
+
+    // ? parse Ice constants 
+    nlohmann::json j_ice = j_file["Ice constants"];
+
+    if (!j_ice[IceConstNames.at("c0_i")].empty())
+    {
+        config_ptr->IceConsts.c0_i = (NumType)j_ice[IceConstNames.at("c0_i")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << IceConstNames.at("c0_i") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->IceConsts.c0_i = IceConsts<NumType>::c0_i;
+    }
+
+    if (!j_ice[IceConstNames.at("rho_i")].empty())
+    {
+        config_ptr->IceConsts.rho_i = (NumType)j_ice[IceConstNames.at("rho_i")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << IceConstNames.at("rho_i") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->IceConsts.rho_i = IceConsts<NumType>::rho_i;
+    }
+
+    if (!j_ice[IceConstNames.at("L0_i")].empty())
+    {
+        config_ptr->IceConsts.L0_i = (NumType)j_ice[IceConstNames.at("L0_i")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << IceConstNames.at("L0_i") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->IceConsts.L0_i = IceConsts<NumType>::L0_i;
+    }
+
+    if (!j_ice[IceConstNames.at("kappa_i")].empty())
+    {
+        config_ptr->IceConsts.kappa_i = (NumType)j_ice[IceConstNames.at("kappa_i")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << IceConstNames.at("kappa_i") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->IceConsts.kappa_i = IceConsts<NumType>::kappa_i;
+    }
+
+    if (!j_ice[IceConstNames.at("albedo_i")].empty())
+    {
+        config_ptr->IceConsts.albedo_i = (NumType)j_ice[IceConstNames.at("albedo_i")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << IceConstNames.at("albedo_i") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->IceConsts.albedo_i = IceConsts<NumType>::albedo_i;
+    }
+
+    if (!j_ice[IceConstNames.at("i0_i")].empty())
+    {
+        config_ptr->IceConsts.i0_i = (NumType)j_ice[IceConstNames.at("i0_i")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << IceConstNames.at("i0_i") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->IceConsts.i0_i = IceConsts<NumType>::i0_i;
+    }
+
+    if (!j_ice[IceConstNames.at("k0_i")].empty())
+    {
+        config_ptr->IceConsts.k0_i = (NumType)j_ice[IceConstNames.at("k0_i")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << IceConstNames.at("k0_i") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->IceConsts.k0_i = IceConsts<NumType>::k0_i;
+    }
+
+    if (!j_ice[IceConstNames.at("albedo_dry_i")].empty())
+    {
+        config_ptr->IceConsts.albedo_dry_i = (NumType)j_ice[IceConstNames.at("albedo_dry_i")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << IceConstNames.at("albedo_dry_i") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->IceConsts.albedo_dry_i = IceConsts<NumType>::albedo_dry_i;
+    }
+
+    if (!j_ice[IceConstNames.at("albedo_wet_i")].empty())
+    {
+        config_ptr->IceConsts.albedo_wet_i = (NumType)j_ice[IceConstNames.at("albedo_wet_i")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << IceConstNames.at("albedo_wet_i") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->IceConsts.albedo_wet_i = IceConsts<NumType>::albedo_wet_i;
+    }
+
+    // ? parse Snow constants 
+    nlohmann::json j_snow = j_file["Snow constants"];
+
+    if (!j_snow[SnowConstNames.at("c0_s")].empty())
+    {
+        config_ptr->SnowConsts.c0_s = (NumType)j_snow[SnowConstNames.at("c0_s")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << SnowConstNames.at("c0_s") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->SnowConsts.c0_s = SnowConsts<NumType>::c0_s;
+    }
+
+    if (!j_snow[SnowConstNames.at("rho_s")].empty())
+    {
+        config_ptr->SnowConsts.rho_s = (NumType)j_snow[SnowConstNames.at("rho_s")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << SnowConstNames.at("rho_s") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->SnowConsts.rho_s = SnowConsts<NumType>::rho_s;
+    }
+
+    if (!j_snow[SnowConstNames.at("L_f0")].empty())
+    {
+        config_ptr->SnowConsts.L_f0 = (NumType)j_snow[SnowConstNames.at("L_f0")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << SnowConstNames.at("L_f0") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->SnowConsts.L_f0 = SnowConsts<NumType>::L_f0;
+    }
+
+    if (!j_snow[SnowConstNames.at("kappa_s")].empty())
+    {
+        config_ptr->SnowConsts.kappa_s = (NumType)j_snow[SnowConstNames.at("kappa_s")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << SnowConstNames.at("kappa_s") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->SnowConsts.kappa_s = SnowConsts<NumType>::kappa_s;
+    }
+
+    if (!j_snow[SnowConstNames.at("albedo_s")].empty())
+    {
+        config_ptr->SnowConsts.albedo_s = (NumType)j_snow[SnowConstNames.at("albedo_s")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << SnowConstNames.at("albedo_s") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->SnowConsts.albedo_s = SnowConsts<NumType>::albedo_s;
+    }
+
+    if (!j_snow[SnowConstNames.at("i0_s")].empty())
+    {
+        config_ptr->SnowConsts.i0_s = (NumType)j_snow[SnowConstNames.at("i0_s")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << SnowConstNames.at("i0_s") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->SnowConsts.i0_s = SnowConsts<NumType>::i0_s;
+    }
+
+    if (!j_snow[SnowConstNames.at("k0_s")].empty())
+    {
+        config_ptr->SnowConsts.k0_s = (NumType)j_snow[SnowConstNames.at("k0_s")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << SnowConstNames.at("k0_s") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->SnowConsts.k0_s = SnowConsts<NumType>::k0_s;
+    }
+
+    if (!j_snow[SnowConstNames.at("albedo_dry_s")].empty())
+    {
+        config_ptr->SnowConsts.albedo_dry_s = (NumType)j_snow[SnowConstNames.at("albedo_dry_s")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << SnowConstNames.at("albedo_dry_s") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->SnowConsts.albedo_dry_s = SnowConsts<NumType>::albedo_dry_s;
+    }
+
+    if (!j_snow[SnowConstNames.at("albedo_wet_s")].empty())
+    {
+        config_ptr->SnowConsts.albedo_wet_s = (NumType)j_snow[SnowConstNames.at("albedo_wet_s")];
+    }
+    else
+    {
+        std::cout << "IceThermo Warning! \'" << SnowConstNames.at("albedo_wet_s") << "\' not found, used default value instead!" << std::endl;
+        config_ptr->SnowConsts.albedo_wet_s = SnowConsts<NumType>::albedo_wet_s;
+    }
 
     // TODO: parse Ice parameterizations
 

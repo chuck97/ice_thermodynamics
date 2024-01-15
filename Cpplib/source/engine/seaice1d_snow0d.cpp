@@ -125,12 +125,13 @@ namespace icethermo
             // if there are precipitations with less than zero atm temp add snow
             if (*(this->atm_temp) < (NumType)0.0)
             {
+                NumType r_w = (Configured()) ? GetConfigConsts<NumType>()->WaterConsts.rho_w : WaterConsts<NumType>::rho_w;
+                NumType r_s = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.rho_s : SnowConsts<NumType>::rho_s;
+
                 // update snow thickness according to precipitation rate
                 (*(this->dzs_cells))[0] = this->Update_dz_0D((*(this->dzs_cells))[0],
                                                               (NumType)0.0, 
-                                                              -(*(this->prec_rate))*
-                                                              WaterConsts<NumType>::rho_w/
-                                                              SnowConsts<NumType>::rho_s);
+                                                              -(*(this->prec_rate))*r_w/r_s);
                 
                 // if snow appeared initialize snow temperatures
                 if (sum_vec(*(this->dzs_cells)) > this->min_snow_thick)

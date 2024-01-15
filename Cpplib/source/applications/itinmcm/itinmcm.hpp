@@ -578,4 +578,6 @@ extern "C"
                                int min_lat_ind_,        
                                int max_lat_ind_
                                );
+    
+    void Configure(const char * filepath);
 }

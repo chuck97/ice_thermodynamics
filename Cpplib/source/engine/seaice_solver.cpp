@@ -96,6 +96,9 @@ namespace icethermo
 
         NumType omega_is = (NumType)0.0; 
 
+        NumType kappa_i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.kappa_i : IceConsts<NumType>::kappa_i;
+        NumType i0_i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.i0_i : IceConsts<NumType>::i0_i;
+
         int npseudo = 0;
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
@@ -115,8 +118,9 @@ namespace icethermo
                                        false);
 
             // add sublimation
+            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_s : GenConsts<NumType>::L_s;
             omega_is = (this->is_sublimation) ?
-                -this->F_lh(T_is_new)/(rho_cells.back()*GenConsts<NumType>::L_s) :
+                -this->F_lh(T_is_new)/(rho_cells.back()*Ls) :
                 (NumType)0.0;
             
             // compute new value of ice surface temperature
@@ -158,8 +162,8 @@ namespace icethermo
 
                 radiation_nodes = this->Compute_radiation_nodes(this->F_sw(T_is_new),
                                                                 alb_i(T_is_new),
-                                                                IceConsts<NumType>::i0_i,
-                                                                IceConsts<NumType>::kappa_i,
+                                                                i0_i,
+                                                                kappa_i,
                                                                 dz_cells_new).first;
             }
 
@@ -320,6 +324,9 @@ namespace icethermo
 
         NumType omega_is_sublim;
 
+        NumType kappa_i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.kappa_i : IceConsts<NumType>::kappa_i;
+        NumType i0_i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.i0_i : IceConsts<NumType>::i0_i;
+
         int npseudo = 0;
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
@@ -347,8 +354,9 @@ namespace icethermo
                                        true);
             
             // add sublimation
+            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_s : GenConsts<NumType>::L_s;
             omega_is_sublim = (this->is_sublimation) ?
-                -this->F_lh(T_is)/(rho_cells.back()*GenConsts<NumType>::L_s) :
+                -this->F_lh(T_is)/(rho_cells.back()*Ls) :
                 (NumType)0.0;
 
             // recalculate ice thickness
@@ -369,8 +377,8 @@ namespace icethermo
 
                 radiation_nodes = this->Compute_radiation_nodes(this->F_sw(T_is),
                                                                 alb_i(T_is),
-                                                                IceConsts<NumType>::i0_i,
-                                                                IceConsts<NumType>::kappa_i,
+                                                                i0_i,
+                                                                kappa_i,
                                                                 dz_cells_new).first;
             }
 
@@ -528,7 +536,7 @@ namespace icethermo
 
             // recalculate conductivity of ice and snow
             NumType k_i = Params<NumType>::Conductivity(this->ice_k_param, salinity_i, 0.5*(T_ib + T_is_prev), rho_i);
-            NumType k_s = SnowConsts<NumType>::k0_s;
+            NumType k_s = Params<NumType>::Conductivity(this->snow_k_param, 0.0, 0.5*(T_is_prev + T_ss_prev), rho_s);
 
             // recalculate interface temperature as function of surface temperature
             FuncPtr<NumType> int_temp = [thickness_s_prev, thickness_i_prev, T_ib, k_i, k_s](NumType T)
@@ -671,7 +679,7 @@ namespace icethermo
             thickness_i_prev = thickness_i_new;
             
             // recalculate conductivity of snow
-            NumType k_s = SnowConsts<NumType>::k0_s;
+            NumType k_s = Params<NumType>::Conductivity(this->snow_k_param, 0.0, 0.5*(T_is_prev + T_ss), rho_s);
 
             // recalculate conductivity of ice
             NumType k_i = Params<NumType>::Conductivity(this->ice_k_param, salinity_i, 0.5*(T_ib + T_is_prev), rho_i);
@@ -772,12 +780,20 @@ namespace icethermo
         std::vector<NumType> prev_temp_vec(T_i_cells.size() + 2);
         std::vector<NumType> old_temp_vec = concatenate<NumType>({T_i_cells, std::vector<NumType>{T_is}, std::vector<NumType>{T_ss}});
 
-        NumType omega_ss =  (atm_temperature < (NumType)0.0) ? -precipitation_rate*WaterConsts<NumType>::rho_w/SnowConsts<NumType>::rho_s : (NumType)0.0;
+        NumType r_w = (Configured()) ? GetConfigConsts<NumType>()->WaterConsts.rho_w : WaterConsts<NumType>::rho_w;
+        NumType r_s = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.rho_s :SnowConsts<NumType>::rho_s;
+        NumType omega_ss =  (atm_temperature < (NumType)0.0) ? -precipitation_rate*r_w/r_s : (NumType)0.0;
 
         std::vector<NumType> radiation_nodes_ice(T_i_cells.size() + 1);
 
         NumType omega_ss_sublim;
         NumType omega_interface = (NumType)0.0;
+
+        NumType kappa_i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.kappa_i : IceConsts<NumType>::kappa_i;
+        NumType kappa_s = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.kappa_s :SnowConsts<NumType>::kappa_s;
+        NumType i0_i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.i0_i : IceConsts<NumType>::i0_i;
+        NumType i0_s = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.i0_s : SnowConsts<NumType>::i0_s;
+        
 
         int npseudo = 0;
 
@@ -800,11 +816,12 @@ namespace icethermo
                                        false);
             
             // recalculate conductivity of snow
-            NumType k_s = Params<NumType>::Conductivity(this->snow_k_param, T_ss_prev, (NumType)0.0, rho_s);
+            NumType k_s = Params<NumType>::Conductivity(this->snow_k_param, (NumType)0.5*(T_ss_prev + T_is_prev), (NumType)0.0, rho_s);
 
             // add sublimation 
+            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_s : GenConsts<NumType>::L_s;
             omega_ss_sublim = (this->is_sublimation) ?
-                -this->F_lh(T_ss_new)/(rho_s*GenConsts<NumType>::L_s) :
+                -this->F_lh(T_ss_new)/(rho_s*Ls) :
                 (NumType)0.0;
 
             NumType k_i = Params<NumType>::Conductivity(this->ice_k_param, salinity_i_cells.back(), T_is_new, rho_i_cells.back());
@@ -876,12 +893,12 @@ namespace icethermo
 
                 radiation_nodes_ice = this->Compute_radiation_nodes(this->F_sw(T_ss_new),
                                                                     alb_i(T_is_new),
-                                                                    IceConsts<NumType>::i0_i,
-                                                                    IceConsts<NumType>::kappa_i,
+                                                                    i0_i,
+                                                                    kappa_i,
                                                                     dz_i_cells_new,
                                                                     alb_s(T_ss_new),
-                                                                    SnowConsts<NumType>::i0_s,
-                                                                    SnowConsts<NumType>::kappa_s,
+                                                                    i0_s,
+                                                                    kappa_s,
                                                                     std::vector<NumType>{h_s_new}).first;
             }
             
@@ -970,6 +987,11 @@ namespace icethermo
         NumType omega_ss_sublim;
         NumType omega_interface = (NumType)0.0;
 
+        NumType kappa_i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.kappa_i : IceConsts<NumType>::kappa_i;
+        NumType kappa_s = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.kappa_s :SnowConsts<NumType>::kappa_s;
+        NumType i0_i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.i0_i : IceConsts<NumType>::i0_i;
+        NumType i0_s = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.i0_s : SnowConsts<NumType>::i0_s;
+
         int npseudo = 0;
 
         for (int pseudoit = 0; pseudoit < max_n_its; ++pseudoit)
@@ -1000,13 +1022,18 @@ namespace icethermo
                                           false,
                                           true);
             
+
             // add sublimation 
+            NumType r_s = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.rho_s : SnowConsts<NumType>::rho_s;
+            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_s : GenConsts<NumType>::L_s;
             omega_ss_sublim = (this->is_sublimation) ?
-                -this->F_lh((NumType)0.0)/(rho_s*GenConsts<NumType>::L_s) :
+                -this->F_lh((NumType)0.0)/(r_s*Ls) :
                 (NumType)0.0;
             
+            NumType r_w = (Configured()) ? GetConfigConsts<NumType>()->WaterConsts.rho_w : WaterConsts<NumType>::rho_w;
+
             if (atm_temperature < (NumType)0.0)
-                omega_ss -= precipitation_rate*WaterConsts<NumType>::rho_w/SnowConsts<NumType>::rho_s;
+                omega_ss -= precipitation_rate*r_w/r_s;
 
             // compute ice-snow interface omega value
             if (this->si_transition_mode == SnowIceTransition::SnowAging)
@@ -1044,12 +1071,12 @@ namespace icethermo
 
                 radiation_nodes_ice = this->Compute_radiation_nodes(this->F_sw((NumType)0.0),
                                                                     alb_i(T_is_new),
-                                                                    IceConsts<NumType>::i0_i,
-                                                                    IceConsts<NumType>::kappa_i,
+                                                                    i0_i,
+                                                                    kappa_i,
                                                                     dz_i_cells_new,
                                                                     alb_s(0.0),
-                                                                    SnowConsts<NumType>::i0_s,
-                                                                    SnowConsts<NumType>::kappa_s,
+                                                                    i0_s,
+                                                                    kappa_s,
                                                                     std::vector<NumType>{h_s_new}).first;
             }
             

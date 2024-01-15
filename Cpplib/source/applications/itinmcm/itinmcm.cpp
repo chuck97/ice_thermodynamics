@@ -28,7 +28,6 @@ ThermoModelsSet::ThermoModelsSet(double time_step_,
         max_lat_ind(max_lat_ind_),
         is_verbose(is_verbose_)
 {
-
     if (min_lon_ind_ > max_lon_ind_)
     {
         THERMO_ERR((std::string)"Thermodynamics constructor error: minimal longitude index is greater than maximal longitude index!");
@@ -161,12 +160,12 @@ ThermoModelsSetIce0dSnow0d::ThermoModelsSetIce0dSnow0d(double time_step_,
             // initialize mandatory values
             (*initial_ice_base_temp) = current_ice_base_temp;
             (*initial_ice_temp_cells)[0] = 0.5*(current_ice_base_temp + current_ice_surf_temp);
-            (*initial_ice_dens_cells)[0] = IceConsts<double>::rho_i;
+            (*initial_ice_dens_cells)[0] = (Configured()) ? GetConfigConsts<double>()->IceConsts.rho_i : IceConsts<double>::rho_i;
             (*initial_ice_sal_cells)[0] = 0.0;
             (*initial_ice_surf_temp) = current_ice_surf_temp;
 
             (*initial_snow_temp_cells)[0] = 0.5*(current_ice_surf_temp + current_snow_surf_temp);
-            (*initial_snow_dens_cells)[0] = SnowConsts<double>::rho_s;
+            (*initial_snow_dens_cells)[0] = (Configured()) ? GetConfigConsts<double>()->SnowConsts.rho_s : SnowConsts<double>::rho_s;
             (*initial_snow_surf_temp) = current_snow_surf_temp;
             (*initial_snow_base_temp) = current_ice_surf_temp;
         }
@@ -328,13 +327,13 @@ ThermoModelsSetIce1dSnow0d::ThermoModelsSetIce1dSnow0d(double time_step_,
             {
                 (*initial_ice_temp_cells)[i] = current_ice_base_temp + 1.0*(i + 0.5)/(n_ice_cells)*(current_ice_surf_temp - current_ice_base_temp);
                 (*initial_ice_sal_cells)[i] = current_ice_base_salinity + 1.0*(i + 0.5)/(n_ice_cells)*(current_ice_surface_salinity - current_ice_base_salinity);
-                (*initial_ice_dens_cells)[i] = IceConsts<double>::rho_i;
+                (*initial_ice_dens_cells)[i] = (Configured()) ? GetConfigConsts<double>()->IceConsts.rho_i : IceConsts<double>::rho_i;
             }
 
             (*initial_ice_surf_temp) = current_ice_surf_temp;
 
             (*initial_snow_temp_cells)[0] = 0.5*(current_ice_surf_temp + current_snow_surf_temp);
-            (*initial_snow_dens_cells)[0] = SnowConsts<double>::rho_s;
+            (*initial_snow_dens_cells)[0] = (Configured()) ? GetConfigConsts<double>()->SnowConsts.rho_s : SnowConsts<double>::rho_s;
             (*initial_snow_surf_temp) = current_snow_surf_temp;
             (*initial_snow_base_temp) = current_ice_surf_temp;
         }
@@ -2352,4 +2351,9 @@ void GetTemperatureProfile(void* obj,
                                max_lon_ind_,
                                min_lat_ind_,
                                max_lat_ind_);
+}
+
+void Configure(const char* filepath)
+{
+    icethermo::Configure<double>(filepath);
 }

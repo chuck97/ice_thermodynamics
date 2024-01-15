@@ -1,7 +1,8 @@
 program itinmcm1d_example
  
     ! itslav module
-    use itinmcm, only : InitThermodynamics1d, &
+    use itinmcm, only : ConfigureThermodynamics, &
+                        InitThermodynamics1d, &
                         FinalizeThermodynamics1d, &
                         UpdateAirTemperature, &
                         UpdateAirPressure, &
@@ -29,7 +30,7 @@ program itinmcm1d_example
                         GetTemperatureProfile
 
     ! iso_c_binding module for types
-    use, intrinsic :: iso_c_binding, only : c_int, c_double, c_bool
+    use, intrinsic :: iso_c_binding, only : c_int, c_double, c_bool, c_char
  
     ! variables that are passed to the library should be c_type!
     real(c_double), parameter :: time_step = 1800.0
@@ -111,6 +112,9 @@ program itinmcm1d_example
 
 
     print *,  "Initialization of arrays done!" 
+
+    ! Configure thermodynamics through .json file
+    call ConfigureThermodynamics("/home/chuck/Desktop/ice_thermodynamics/Cpplib/configs/test_config.json")
 
     ! initialization of thermodynamics solver
     call InitThermodynamics1d(time_step = time_step, &  
