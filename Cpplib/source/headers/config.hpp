@@ -64,7 +64,6 @@ namespace icethermo
     };
 
     // ! types of root-finding solvers
-    // order of approximation enum
     enum class Solver1dType
     {
         bisection,
