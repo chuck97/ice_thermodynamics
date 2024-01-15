@@ -73,7 +73,7 @@ namespace icethermo
     };
 
     // ! namelist for 1d root-finding solvers
-    static const std::map<std::string, Solver1dType> Solver1dNames = 
+    static const std::map<std::string, Solver1dType> Solver1dNameToType = 
     {
         {"Bisection", Solver1dType::bisection},
         {"Secant", Solver1dType::secant},
@@ -137,16 +137,19 @@ namespace icethermo
             NumType albedo_wet_s = icethermo::SnowConsts<NumType>::albedo_wet_s;
         };
 
-        //struct solver_1d
-       // {
-
-        //}
+        struct solver_1d
+        {
+            Solver1dType type = Solver1dType::bisection;
+            int max_nits = MAX_1D_SOLVER_ITS;
+            NumType residual = NONLIN_SOLVER_ACCUR;
+        };
 
         gen_consts GenConsts;
         air_consts AirConsts;
         water_consts WaterConsts;
         ice_consts IceConsts;
         snow_consts SnowConsts;
+        solver_1d Solver1d;
     };
 
     // ! configure constants using .json file

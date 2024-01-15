@@ -323,10 +323,47 @@ void ParseJson(const char* filepath, Config<NumType>* config_ptr)
     }
 
     // ? parse 1D root solver parameters
+    if (!j_file["1D root solver"].empty())
+    {
+        nlohmann::json j_solver1d = j_file["1D root solver"];
+
+        if (!j_solver1d["Type"].empty())
+        {
+            for (auto key : j_solver1d["Type"])
+            {
+                if (j_solver1d["Type"][key])
+                {
+                    config_ptr->Solver1d.type = Solver1dNameToType.at(key);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            std::cout << "IceThermo Warning! 1D root solver::\"Type\" not found, used default value instead!" << std::endl;
+        }
+
+        if (!j_solver1d["Maximum number of iterations"].empty())
+        {
+            config_ptr->Solver1d.max_nits = j_solver1d["Maximum number of iterations"];
+        }
+        else
+        {
+            std::cout << "IceThermo Warning! 1D root solver::\"Maximum number of iterations\" not found, used default value instead!" << std::endl;
+        }
+
+        if (!j_solver1d["Residual accuracy"].empty())
+        {
+            config_ptr->Solver1d.residual = (NumType)j_solver1d["Residual accuracy"];
+        }
+        else
+        {
+            std::cout << "IceThermo Warning! 1D root solver::\"Residual accuracy\" not found, used default value instead!" << std::endl;
+        }
+    }
 
     
     // TODO: parse Relaxation solver parameters
-    nlohmann::json j_root = j_file["1D root solver"];
 
     // TODO: parse NaN values
 

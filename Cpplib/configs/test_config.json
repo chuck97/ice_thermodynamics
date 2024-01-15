@@ -143,15 +143,13 @@
             "Option 4": false
         },
         "Maximum number of iterations": 40,
-        "Residual accuracy": 1e-6,
-        "Verbose output": false
+        "Residual accuracy": 1e-6
     },
     "Relaxation solver":
     {
         "Force surface convergence": true,
         "Maximum number of iterations": 30,
-        "Increment error": 1e-4,
-        "Verbose output": false
+        "Increment error": 1e-4
     },
     "NaN values":
     {

@@ -471,9 +471,32 @@ namespace icethermo
             FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return rho_cells.back()*L(T)*omega_value + this->F_up(T) - k(T)*grad(T);};
             
             // solve nonlinear 1D equation
-            auto secant_res = bisection_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0);
+            NumType solver_1d_res;
+            if (!Configured())
+            {
+                solver_1d_res = std::get<0>(bisection_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0));
+            }
+            else
+            {
+                Solver1dType type = GetConfigConsts<NumType>()->Solver1d.type;
+                int its = GetConfigConsts<NumType>()->Solver1d.max_nits;
+                NumType resid = GetConfigConsts<NumType>()->Solver1d.residual;
+                
+                if (type == Solver1dType::bisection)
+                {
+                    solver_1d_res = std::get<0>(bisection_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0, resid, its));
+                }
+                else if (type == Solver1dType::secant)
+                {
+                    solver_1d_res = std::get<0>(secant_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0, resid, its));
+                }
+                else
+                {
+                    THERMO_ERR("Currentlyavailable 1d root-finding solvers: bisection, secant!");
+                }
+            }
 
-           return std::get<0>(secant_res);
+           return solver_1d_res;
         }
         else
         {
@@ -503,9 +526,32 @@ namespace icethermo
             FuncPtr<NumType> nonlin_func = [&rho_cells, omega_value, this, &k, &grad, &L](NumType T){return rho_cells[0]*L(T)*omega_value + this->F_down(T) - k(T)*grad(T);};
             
             // solve nonlinear 1D equation
-            auto secant_res = bisection_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0);
-            
-            return std::get<0>(secant_res);
+            NumType solver_1d_res;
+            if (!Configured())
+            {
+                solver_1d_res = std::get<0>(bisection_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0));
+            }
+            else
+            {
+                Solver1dType type = GetConfigConsts<NumType>()->Solver1d.type;
+                int its = GetConfigConsts<NumType>()->Solver1d.max_nits;
+                NumType resid = GetConfigConsts<NumType>()->Solver1d.residual;
+                
+                if (type == Solver1dType::bisection)
+                {
+                    solver_1d_res = std::get<0>(bisection_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0, resid, its));
+                }
+                else if (type == Solver1dType::secant)
+                {
+                    solver_1d_res = std::get<0>(secant_solver<NumType>(nonlin_func, (NumType)-50.0, (NumType)1.0, resid, its));
+                }
+                else
+                {
+                    THERMO_ERR("Currentlyavailable 1d root-finding solvers: bisection, secant!");
+                }
+            }
+
+           return solver_1d_res;
         }   
     }
 
