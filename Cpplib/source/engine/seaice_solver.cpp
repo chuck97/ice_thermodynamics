@@ -118,7 +118,7 @@ namespace icethermo
                                        false);
 
             // add sublimation
-            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_s : GenConsts<NumType>::L_s;
+            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_sublim : GenConsts<NumType>::L_sublim;
             omega_is = (this->is_sublimation) ?
                 -this->F_lh(T_is_new)/(rho_cells.back()*Ls) :
                 (NumType)0.0;
@@ -354,7 +354,7 @@ namespace icethermo
                                        true);
             
             // add sublimation
-            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_s : GenConsts<NumType>::L_s;
+            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_sublim : GenConsts<NumType>::L_sublim;
             omega_is_sublim = (this->is_sublimation) ?
                 -this->F_lh(T_is)/(rho_cells.back()*Ls) :
                 (NumType)0.0;
@@ -819,7 +819,7 @@ namespace icethermo
             NumType k_s = Params<NumType>::Conductivity(this->snow_k_param, (NumType)0.5*(T_ss_prev + T_is_prev), (NumType)0.0, rho_s);
 
             // add sublimation 
-            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_s : GenConsts<NumType>::L_s;
+            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_sublim : GenConsts<NumType>::L_sublim;
             omega_ss_sublim = (this->is_sublimation) ?
                 -this->F_lh(T_ss_new)/(rho_s*Ls) :
                 (NumType)0.0;
@@ -1025,7 +1025,7 @@ namespace icethermo
 
             // add sublimation 
             NumType r_s = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.rho_s : SnowConsts<NumType>::rho_s;
-            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_s : GenConsts<NumType>::L_s;
+            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_sublim : GenConsts<NumType>::L_sublim;
             omega_ss_sublim = (this->is_sublimation) ?
                 -this->F_lh((NumType)0.0)/(r_s*Ls) :
                 (NumType)0.0;

@@ -72,7 +72,7 @@ namespace icethermo
         NumType c0i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.c0_i : IceConsts<NumType>::c0_i;
         NumType c0s = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.c0_s : SnowConsts<NumType>::c0_s;
         NumType L0i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.L0_i : IceConsts<NumType>::L0_i;
-        NumType Lf0 = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.L_f0 :SnowConsts<NumType>::L_f0;
+        NumType Lf0 = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.L0_s :SnowConsts<NumType>::L0_s;
 
         if (param == Eparam::SeaIce)
         {
@@ -107,7 +107,7 @@ namespace icethermo
         NumType c0i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.c0_i : IceConsts<NumType>::c0_i;
         NumType c0s = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.c0_s : SnowConsts<NumType>::c0_s;
         NumType L0i = (Configured()) ? GetConfigConsts<NumType>()->IceConsts.L0_i : IceConsts<NumType>::L0_i;
-        NumType Lf0 = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.L_f0 :SnowConsts<NumType>::L_f0;
+        NumType Lf0 = (Configured()) ? GetConfigConsts<NumType>()->SnowConsts.L0_s :SnowConsts<NumType>::L0_s;
 
         if (param == Lparam::SeaIce)
         {

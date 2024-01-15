@@ -11,7 +11,7 @@ namespace icethermo
         static constexpr NumType emissivity = 0.99;
         static constexpr NumType C_sh = 1e-3;
         static constexpr NumType C_lh = 1e-3;
-        static constexpr NumType L_s = 2.834e6;
+        static constexpr NumType L_sublim = 2.834e6;
         static constexpr NumType si_trans_time_scale = 1e7;
     };
 
@@ -27,7 +27,7 @@ namespace icethermo
     struct WaterConsts
     {
         static constexpr NumType c_w =  3.99e3;
-        static constexpr NumType c_pw =  4.17e3;
+        static constexpr NumType cp_w =  4.17e3;
         static constexpr NumType rho_w =  1026.0;
         static constexpr NumType c1_w =  21.87;
         static constexpr NumType c2_w =  7.66;
@@ -55,7 +55,7 @@ namespace icethermo
         static constexpr NumType c0_s = 2.06e3;
         static constexpr NumType rho_s = 320.0;
         static constexpr NumType k0_s = 0.31;
-        static constexpr NumType L_f0 = 3.33e5;
+        static constexpr NumType L0_s = 3.33e5;
         static constexpr NumType kappa_s = 10;
         static constexpr NumType albedo_s = 0.8;
         static constexpr NumType i0_s = 0.0;

@@ -248,7 +248,7 @@ namespace icethermo
         NumType c1 = IceConsts<NumType>::c1_i;
         NumType c2 = IceConsts<NumType>::c2_i;
         NumType T_0 = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.T0 : GenConsts<NumType>::T0;
-        NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_s : GenConsts<NumType>::L_s;
+        NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_sublim : GenConsts<NumType>::L_sublim;
 
         this->F_lh = [c1, c2, T_0, Ls, press, ws, ah, Clh, ra](NumType T)
         {   
@@ -296,7 +296,7 @@ namespace icethermo
     void ThermoSolver<NumType>::UpdatePrecipitationHeatFlux()
     {
         NumType rw = (Configured()) ? GetConfigConsts<NumType>()->WaterConsts.rho_w : WaterConsts<NumType>::rho_w;
-        NumType cpw = (Configured()) ? GetConfigConsts<NumType>()->WaterConsts.cp_w : WaterConsts<NumType>::c_pw;
+        NumType cpw = (Configured()) ? GetConfigConsts<NumType>()->WaterConsts.cp_w : WaterConsts<NumType>::cp_w;
 
         auto pr = this->prec_rate;
         auto at = this->atm_temp;
@@ -968,7 +968,7 @@ namespace icethermo
                                        false);
             
             // add sublimation
-            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_s : GenConsts<NumType>::L_s;
+            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_sublim : GenConsts<NumType>::L_sublim;
             omega_ss = (this->is_sublimation) ? 
                 -this->F_lh(T_is_new)/(rho_cells.back()*Ls) :
                 (NumType)0.0;
@@ -1138,7 +1138,7 @@ namespace icethermo
                                        true);
 
             // add sublimation
-            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_s : GenConsts<NumType>::L_s;
+            NumType Ls = (Configured()) ? GetConfigConsts<NumType>()->GenConsts.L_sublim : GenConsts<NumType>::L_sublim;
             omega_is_sublim = (this->is_sublimation) ? 
                 -this->F_lh(T_is)/(rho_cells.back()*Ls) :
                 (NumType)0.0;
