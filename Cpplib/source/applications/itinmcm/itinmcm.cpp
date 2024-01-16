@@ -1347,7 +1347,7 @@ void ThermoModelsSet::GetSurfaceTemperature(double* array,
                 (ice_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > min_ice_thick)
                )
             {
-                if (snow_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > SNOW_THICKNESS_THRESHOLD)
+                if (snow_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > min_snow_thick)
                 {
                     temp_value = *(snow_meshes[global_lat_ind][global_lon_ind]->GetSingleData("up_temperature"));
                 }
@@ -1470,7 +1470,7 @@ void ThermoModelsSet::GetSnowThickness(double* array,
             double thick_value;
 
             if (is_water[global_lat_ind][global_lon_ind] and 
-                (snow_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > SNOW_THICKNESS_THRESHOLD))
+                (snow_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > min_snow_thick))
             {
                 thick_value = snow_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness();
             }
@@ -1588,7 +1588,7 @@ void ThermoModelsSet::GetIsSnow(bool* array,
             bool is_snow_value;
 
             if (is_water[global_lat_ind][global_lon_ind] and 
-                (snow_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > SNOW_THICKNESS_THRESHOLD))
+                (snow_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > min_snow_thick))
             {
                 is_snow_value = true;
             }
@@ -1700,7 +1700,7 @@ void ThermoModelsSetIce1dSnow0d::UpdateTemperatureProfile(double* temp_values,
 
             if (is_water[global_lat_ind][global_lon_ind])
             {
-                if (snow_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > SNOW_THICKNESS_THRESHOLD)
+                if (snow_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > min_snow_thick)
                 {
                     // snow is available
 
@@ -1820,34 +1820,41 @@ void ThermoModelsSetIce1dSnow0d::GetTemperatureProfile(double* temp_values,
 
             if (is_water[global_lat_ind][global_lon_ind])
             {
-                for (int i = 0; i < num_ice_layers; ++i)
+                if (ice_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > min_ice_thick)
                 {
-                    if (ice_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > min_ice_thick)
+                    for (int i = 0; i < num_ice_layers; ++i)
                     {
                         temp_values[i*(max_lon_ind_ - min_lon_ind_ + 1)*(max_lat_ind_ - min_lat_ind_ + 1) 
                                     + local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) 
                                     + local_lon_ind] = 
                         (*ice_meshes[global_lat_ind][global_lon_ind]->GetCellsData("cells_temperature_array"))[i];
                     }
+
+                    if (snow_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > min_snow_thick)
+                    {
+                        // snow is available
+                        temp_values[num_ice_layers*(max_lon_ind_ - min_lon_ind_ + 1)*(max_lat_ind_ - min_lat_ind_ + 1) 
+                                    + local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) 
+                                    + local_lon_ind] = 
+                        *snow_meshes[global_lat_ind][global_lon_ind]->GetSingleData("up_temperature");
+                    }
                     else
+                    {
+                        temp_values[num_ice_layers*(max_lon_ind_ - min_lon_ind_ + 1)*(max_lat_ind_ - min_lat_ind_ + 1) 
+                                    + local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) 
+                                    + local_lon_ind] = 
+                        *ice_meshes[global_lat_ind][global_lon_ind]->GetSingleData("up_temperature");
+                    }
+                }
+                else 
+                {
+                    for (int i = 0; i < num_ice_layers; ++i)
                     {
                         temp_values[i*(max_lon_ind_ - min_lon_ind_ + 1)*(max_lat_ind_ - min_lat_ind_ + 1) 
                                     + local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) 
                                     + local_lon_ind] = 
                         NAN_TEMP_VALUE;
-                    }
-                }
-
-                if (snow_meshes[global_lat_ind][global_lon_ind]->GetTotalThickness() > SNOW_THICKNESS_THRESHOLD)
-                {
-                    // snow is available
-                    temp_values[num_ice_layers*(max_lon_ind_ - min_lon_ind_ + 1)*(max_lat_ind_ - min_lat_ind_ + 1) 
-                                + local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) 
-                                + local_lon_ind] = 
-                    *snow_meshes[global_lat_ind][global_lon_ind]->GetSingleData("up_temperature");
-                }
-                else
-                {
+                    } 
                     temp_values[num_ice_layers*(max_lon_ind_ - min_lon_ind_ + 1)*(max_lat_ind_ - min_lat_ind_ + 1) 
                                 + local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) 
                                 + local_lon_ind] = 
