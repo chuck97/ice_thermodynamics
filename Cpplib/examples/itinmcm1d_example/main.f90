@@ -15,6 +15,7 @@ program itinmcm1d_example
                         UpdateLhCoeff, &
                         UpdateSnowThickness, &
                         UpdateIceThickness, &
+                        UpdateOceanIceMassFlux, &
                         AssembleTotalAtmFlux, &
                         UpdateOceanSalinity, &
                         UpdateOceanFlux, &
@@ -43,7 +44,7 @@ program itinmcm1d_example
     logical(c_bool), dimension(:,:), allocatable :: water_marker, do_compute
     real(c_double), dimension(:,:), allocatable :: atm_temp, atm_press, prec_rate, atm_humid, wind_speed, &
                                                    sw_rad, lw_rad, sh_coeff, lh_coeff, ocean_flux, ocean_sal, &
-                                                   snoww_thick, icee_thick, base_sal, surf_sal
+                                                   snoww_thick, icee_thick, base_sal, surf_sal, ocean_ice_mass_flux
     real(c_double), dimension(:,:,:), allocatable :: test_temp_profile
 
     ! variables for output from library
@@ -54,21 +55,22 @@ program itinmcm1d_example
     real(c_double), dimension(:,:), allocatable :: a
 
     ! parameters for experiment
-    real(c_double), parameter :: prec_rate_value = 5.429921990575380E-009
-    real(c_double), parameter :: ocean_sal_value = 9.994506835937500E-004
-    real(c_double), parameter :: sw_value =  34.3713805388029
-    real(c_double), parameter :: lw_value =  205.645509767637
-    real(c_double), parameter :: atm_temp_value =  -13.1182537078857
-    real(c_double), parameter :: spec_humid_value =  1.43520918209106     
-    real(c_double), parameter :: sh_coeff_value =  1.144087756983936E-003
-    real(c_double), parameter :: lh_coeff_value =  1.144087756983936E-003
-    real(c_double), parameter :: abs_wind_speed_value = 3.23311546728502     
-    real(c_double), parameter :: atm_pressure_value = 103296.921875000          
+    real(c_double), parameter :: prec_rate_value = -1.288671425504300E-009
+    real(c_double), parameter :: ocean_sal_value = 34.1253322362900
+    real(c_double), parameter :: sw_value =  264.339856305469
+    real(c_double), parameter :: lw_value =  278.395450723074
+    real(c_double), parameter :: atm_temp_value =  -0.562261462211609
+    real(c_double), parameter :: spec_humid_value =  3.54840001091361     
+    real(c_double), parameter :: sh_coeff_value =  6.090078968554735E-004
+    real(c_double), parameter :: lh_coeff_value =  6.090078968554735E-004
+    real(c_double), parameter :: abs_wind_speed_value = 9.34151834588829     
+    real(c_double), parameter :: atm_pressure_value = 98357.9921875000          
     real(c_double), parameter :: ocean_flux_value =  0.0
-    real(c_double), parameter :: ssnow_thickness =  6.393566942358753E-002
-    real(c_double), parameter :: iice_thickness =  0.913329218477102
+    real(c_double), parameter :: ssnow_thickness =  1.671041510901417E-004
+    real(c_double), parameter :: iice_thickness =  0.826040554656672
     real(c_double), parameter :: bbase_sal = 4.0
     real(c_double), parameter :: ssurf_sal = 1.0
+    real(c_double), parameter :: ocean_ice_mass_flux_val = 0.0
 
 
     
@@ -224,6 +226,14 @@ program itinmcm1d_example
     print *,  "Update of latent heat coefficient done!" 
     print * 
 
+    ! update ocean-ice mass flux
+    allocate(ocean_ice_mass_flux(1:nlon, 1:nlat))
+    ocean_ice_mass_flux = ocean_ice_mass_flux_val
+    call UpdateOceanIceMassFlux(ocean_ice_mass_flux, 1, nlon, 1, nlat)
+
+    print *, "Update of ocean-ice mass flux done!"
+    print *
+
     ! update snow thickness
     call UpdateSnowThickness(snoww_thick, 1, nlon, 1, nlat)
     print *,  "Update of snow thickness done!" 
@@ -252,6 +262,7 @@ program itinmcm1d_example
 
     print *,  "Update of total ocean flux done!" 
     print *
+    
 
     ! print prognostic values before EVALUATE
     
@@ -372,11 +383,13 @@ program itinmcm1d_example
 
     !do i = 1, nlon
     !    do j = 1, nlat
-    !        print *, "lon = ", i, ", lat = ", j 
-    !        do k = 1, (n_ice_layers + 1)
-    !            write(*, fmt='((F15.8))', advance="no") test_temp_profile(i, j, k)
-    !        end do
-    !        print*
+            i = 3
+            j = 3
+            print *, "lon = ", 3, ", lat = ", 3 
+            do k = 1, (n_ice_layers + 1)
+                write(*, fmt='((F15.8))', advance="no") test_temp_profile(i, j, k)
+            end do
+            print*
     !    end do
     !end do
 
