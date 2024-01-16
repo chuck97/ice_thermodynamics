@@ -363,8 +363,38 @@ void ParseJson(const char* filepath, Config<NumType>* config_ptr)
         }
     }
 
-    
-    // TODO: parse Relaxation solver parameters
+    // ? parse Relaxation solver parameters
+    if (!j_file["Relaxation solver"].empty())
+    {
+        nlohmann::json j_relax = j_file["Relaxation solver"];
+
+        if (!j_relax["Force surface convergence"].empty())
+        {
+            config_ptr->SolverRelaxation.force_surf_conv = j_relax["Force surface convergence"];
+        }
+        else
+        {
+            std::cout << "IceThermo Warning! Relaxation solver::\"Force surface convergence\" not found, used default value instead!" << std::endl;
+        }
+
+        if (!j_relax["Maximum number of iterations"].empty())
+        {
+            config_ptr->SolverRelaxation.max_nits = j_relax["Maximum number of iterations"];
+        }
+        else
+        {
+            std::cout << "IceThermo Warning! Relaxation solver::\"Maximum number of iterations\" not found, used default value instead!" << std::endl;
+        }
+
+        if (!j_relax["Residual accuracy"].empty())
+        {
+            config_ptr->SolverRelaxation.inc_error = j_relax["Residual accuracy"];
+        }
+        else
+        {
+            std::cout << "IceThermo Warning! Relaxation solver::\"Residual accuracy\" not found, used default value instead!" << std::endl;
+        }
+    }
 
     // TODO: parse NaN values
 

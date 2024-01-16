@@ -78,7 +78,10 @@ namespace icethermo
                                                            *(this->Ti_s),
                                                            *(this->dzi_cells),
                                                            *(this->Si_cells),
-                                                           *(this->rhoi_cells));
+                                                           *(this->rhoi_cells),
+                                                           (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.max_nits : MAX_RELAXATION_ITS,
+                                                           (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.inc_error : RELAXATION_SOLVER_ACCUR
+                                                           );
             
             // compute melting temperature for top layer
             NumType surface_fusion_temp = Params<NumType>::TempFusion((*(this->Si_cells)).back());
@@ -102,7 +105,10 @@ namespace icethermo
                                                              *(this->Ti_s),
                                                              *(this->dzi_cells),
                                                              *(this->Si_cells),
-                                                             *(this->rhoi_cells));
+                                                             *(this->rhoi_cells),
+                                                             (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.max_nits : MAX_RELAXATION_ITS,
+                                                             (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.inc_error : RELAXATION_SOLVER_ACCUR
+                                                            );
 
                 // update mesh values
                 *(this->Ti_cells) = std::get<0>(melting_values);
@@ -157,7 +163,10 @@ namespace icethermo
                                                                   (*(this->dzs_cells))[0],
                                                                   (*(this->rhos_cells))[0],
                                                                   *(this->prec_rate),
-                                                                  *(this->atm_temp));
+                                                                  *(this->atm_temp),
+                                                                  (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.max_nits : MAX_RELAXATION_ITS,
+                                                                  (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.inc_error : RELAXATION_SOLVER_ACCUR
+                                                                  );
 
             auto freezing_ice = freezing_values.first;
             auto freezing_snow = freezing_values.second;
@@ -184,7 +193,10 @@ namespace icethermo
                                                                     (*(this->dzs_cells))[0],
                                                                     (*(this->rhos_cells))[0],
                                                                     *(this->prec_rate),
-                                                                    *(this->atm_temp));
+                                                                    *(this->atm_temp),
+                                                                    (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.max_nits : MAX_RELAXATION_ITS,
+                                                                    (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.inc_error : RELAXATION_SOLVER_ACCUR
+                                                                    );
                 auto melting_ice = melting_values.first;
                 auto melting_snow = melting_values.second;
 

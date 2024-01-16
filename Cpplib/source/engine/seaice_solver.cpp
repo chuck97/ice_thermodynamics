@@ -133,15 +133,18 @@ namespace icethermo
                                        true);
 
             // force the convergence of surface temperature
-            surface_err = std::abs(T_is_new - T_is_prev)/(std::abs(T_is) + (NumType)0.1);
-            
-            if (surface_err < prev_surface_err)
+            if ((Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.force_surf_conv : true)
             {
-                T_is_history.push_back(T_is_new);
-            }
-            else
-            {
-                T_is_new = sum_vec<NumType>(T_is_history)/T_is_history.size();
+                surface_err = std::abs(T_is_new - T_is_prev)/(std::abs(T_is) + (NumType)0.1);
+
+                if (surface_err < prev_surface_err)
+                {
+                    T_is_history.push_back(T_is_new);
+                }
+                else
+                {
+                    T_is_new = sum_vec<NumType>(T_is_history)/T_is_history.size();
+                }
             }
 
             // recalculate ice thickness
@@ -845,15 +848,18 @@ namespace icethermo
                                           true);
 
             // force the convergence of surface temperature
-            surface_err = std::abs(T_ss_new - T_ss_prev)/std::abs(T_ss + (NumType)0.1);
-            
-            if (surface_err < prev_surface_err)
+            if ((Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.force_surf_conv : true)
             {
-                T_ss_history.push_back(T_ss_new);
-            }
-            else
-            {
-                T_ss_new = sum_vec<NumType>(T_ss_history)/T_ss_history.size();
+                surface_err = std::abs(T_ss_new - T_ss_prev)/std::abs(T_ss + (NumType)0.1);
+
+                if (surface_err < prev_surface_err)
+                {
+                    T_ss_history.push_back(T_ss_new);
+                }
+                else
+                {
+                    T_ss_new = sum_vec<NumType>(T_ss_history)/T_ss_history.size();
+                }
             }
 
             // compute ice-snow interface omega value

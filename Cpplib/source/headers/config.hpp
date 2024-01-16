@@ -143,12 +143,20 @@ namespace icethermo
             NumType residual = NONLIN_SOLVER_ACCUR;
         };
 
+        struct solver_relaxation
+        {
+            bool force_surf_conv = true;
+            int max_nits = MAX_RELAXATION_ITS;
+            NumType inc_error = RELAXATION_SOLVER_ACCUR;
+        };
+
         gen_consts GenConsts;
         air_consts AirConsts;
         water_consts WaterConsts;
         ice_consts IceConsts;
         snow_consts SnowConsts;
         solver_1d Solver1d;
+        solver_relaxation SolverRelaxation;
     };
 
     // ! configure constants using .json file

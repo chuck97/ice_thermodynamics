@@ -54,7 +54,10 @@ namespace icethermo
                                                        *(this->Ti_s),
                                                        *(this->dzi_cells),
                                                        *(this->Si_cells),
-                                                       *(this->rhoi_cells));
+                                                       *(this->rhoi_cells),
+                                                       (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.max_nits : MAX_RELAXATION_ITS,
+                                                       (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.inc_error : RELAXATION_SOLVER_ACCUR
+                                                       );
         
         // compute melting temperature for top layer
         NumType surface_fusion_temp = Params<NumType>::TempFusion((*(this->Si_cells)).back());
@@ -78,7 +81,10 @@ namespace icethermo
                                                          *(this->Ti_s),
                                                          *(this->dzi_cells),
                                                          *(this->Si_cells),
-                                                         *(this->rhoi_cells));
+                                                         *(this->rhoi_cells),
+                                                         (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.max_nits : MAX_RELAXATION_ITS,
+                                                         (Configured()) ? GetConfigConsts<NumType>()->SolverRelaxation.inc_error : RELAXATION_SOLVER_ACCUR
+                                                        );
             
             // update mesh values
             *(this->Ti_cells) = std::get<0>(melting_values);

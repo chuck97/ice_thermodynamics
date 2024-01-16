@@ -336,7 +336,7 @@ namespace icethermo
                                              const std::vector<NumType>& salinity_cells,
                                              const std::vector<NumType>& rho_cells,
                                              int max_n_its = MAX_RELAXATION_ITS,
-                                             NumType tol = 1e-6);
+                                             NumType tol = RELAXATION_SOLVER_ACCUR);
 
     };
 
