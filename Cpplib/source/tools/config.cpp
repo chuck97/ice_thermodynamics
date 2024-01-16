@@ -386,17 +386,39 @@ void ParseJson(const char* filepath, Config<NumType>* config_ptr)
             std::cout << "IceThermo Warning! Relaxation solver::\"Maximum number of iterations\" not found, used default value instead!" << std::endl;
         }
 
-        if (!j_relax["Residual accuracy"].empty())
+        if (!j_relax["Increment error"].empty())
         {
-            config_ptr->SolverRelaxation.inc_error = j_relax["Residual accuracy"];
+            config_ptr->SolverRelaxation.inc_error = j_relax["Increment error"];
         }
         else
         {
-            std::cout << "IceThermo Warning! Relaxation solver::\"Residual accuracy\" not found, used default value instead!" << std::endl;
+            std::cout << "IceThermo Warning! Relaxation solver::\"Increment error\" not found, used default value instead!" << std::endl;
         }
     }
 
     // TODO: parse NaN values
+    if (!j_file["NaN values"].empty())
+    {
+        nlohmann::json j_nan = j_file["NaN values"];
+
+        if (!j_nan["Temperature (deg C)"].empty())
+        {
+            config_ptr->NaNs.temp_nan = j_nan["Temperature (deg C)"];
+        }
+        else
+        {
+            std::cout << "IceThermo Warning! NaN values::\"Temperature (deg C)\" not found, used default value instead!" << std::endl;
+        }
+
+        if (!j_nan["Temperature (deg C)"].empty())
+        {
+            config_ptr->NaNs.thick_nan = j_nan["Thickness (m)"];
+        }
+        else
+        {
+            std::cout << "IceThermo Warning! NaN values::\"Thickness (m)\" not found, used default value instead!" << std::endl;
+        }
+    }
 
     // TODO: parse Ice parameterizations
 

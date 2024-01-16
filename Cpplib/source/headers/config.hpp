@@ -150,6 +150,12 @@ namespace icethermo
             NumType inc_error = RELAXATION_SOLVER_ACCUR;
         };
 
+        struct nans
+        {
+            NumType temp_nan = NAN_TEMP_VALUE;
+            NumType thick_nan = NAN_THICK_VALUE;
+        };
+
         gen_consts GenConsts;
         air_consts AirConsts;
         water_consts WaterConsts;
@@ -157,6 +163,7 @@ namespace icethermo
         snow_consts SnowConsts;
         solver_1d Solver1d;
         solver_relaxation SolverRelaxation;
+        nans NaNs;
     };
 
     // ! configure constants using .json file

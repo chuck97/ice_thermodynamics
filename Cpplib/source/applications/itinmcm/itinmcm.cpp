@@ -1358,7 +1358,7 @@ void ThermoModelsSet::GetSurfaceTemperature(double* array,
             }
             else
             {
-                temp_value = NAN_TEMP_VALUE;
+                temp_value = (Configured()) ? GetConfigConsts<double>()->NaNs.temp_nan : NAN_TEMP_VALUE;
             }
 
             array[local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) + local_lon_ind] = temp_value;
@@ -1417,7 +1417,7 @@ void ThermoModelsSet::GetIceThickness(double* array,
             }
             else
             {
-                thick_value = NAN_THICK_VALUE;
+                thick_value = (Configured()) ? GetConfigConsts<double>()->NaNs.thick_nan : NAN_THICK_VALUE;
             }
 
             array[local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) + local_lon_ind] = thick_value;
@@ -1476,7 +1476,7 @@ void ThermoModelsSet::GetSnowThickness(double* array,
             }
             else
             {
-                thick_value = NAN_THICK_VALUE;
+                thick_value = (Configured()) ? GetConfigConsts<double>()->NaNs.thick_nan : NAN_THICK_VALUE;
             }
 
             array[local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) + local_lon_ind] = thick_value;
@@ -1853,12 +1853,12 @@ void ThermoModelsSetIce1dSnow0d::GetTemperatureProfile(double* temp_values,
                         temp_values[i*(max_lon_ind_ - min_lon_ind_ + 1)*(max_lat_ind_ - min_lat_ind_ + 1) 
                                     + local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) 
                                     + local_lon_ind] = 
-                        NAN_TEMP_VALUE;
+                        (Configured()) ? GetConfigConsts<double>()->NaNs.temp_nan : NAN_TEMP_VALUE;;
                     } 
                     temp_values[num_ice_layers*(max_lon_ind_ - min_lon_ind_ + 1)*(max_lat_ind_ - min_lat_ind_ + 1) 
                                 + local_lat_ind*(max_lon_ind_ - min_lon_ind_ + 1) 
                                 + local_lon_ind] = 
-                    NAN_TEMP_VALUE;
+                    (Configured()) ? GetConfigConsts<double>()->NaNs.temp_nan : NAN_TEMP_VALUE;;
                 }
             }
         }
