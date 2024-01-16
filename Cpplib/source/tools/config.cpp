@@ -329,11 +329,11 @@ void ParseJson(const char* filepath, Config<NumType>* config_ptr)
 
         if (!j_solver1d["Type"].empty())
         {
-            for (auto key : j_solver1d["Type"])
+            for (auto it = j_solver1d["Type"].begin(); it != j_solver1d["Type"].end(); ++it)
             {
-                if (j_solver1d["Type"][key])
+                if (it.value())
                 {
-                    config_ptr->Solver1d.type = Solver1dNameToType.at(key);
+                    config_ptr->Solver1d.type = Solver1dNameToType.at(it.key());
                     break;
                 }
             }
@@ -342,6 +342,7 @@ void ParseJson(const char* filepath, Config<NumType>* config_ptr)
         {
             std::cout << "IceThermo Warning! 1D root solver::\"Type\" not found, used default value instead!" << std::endl;
         }
+
 
         if (!j_solver1d["Maximum number of iterations"].empty())
         {

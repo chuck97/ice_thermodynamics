@@ -29,7 +29,7 @@
         "Surface radiation transmission coefficient of ice (-)": 0.17,
         "Thermal conductivity of freshwater ice (W m-1 K-1)": 2.04,
         "Albedo of dry ice (-)": 0.8,
-        "Albedo of wet snow (-)": 0.65 
+        "Albedo of wet ice (-)": 0.65 
     },
     "Snow constants":
     {
