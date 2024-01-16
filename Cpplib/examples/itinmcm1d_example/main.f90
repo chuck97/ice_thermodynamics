@@ -116,7 +116,7 @@ program itinmcm1d_example
     print *,  "Initialization of arrays done!" 
 
     ! Configure thermodynamics through .json file
-    call ConfigureThermodynamics("/home/chuck/Desktop/ice_thermodynamics/Cpplib/configs/test_config.json")
+    ! call ConfigureThermodynamics("/home/chuck/Desktop/ice_thermodynamics/Cpplib/configs/test_config.json")
 
     ! initialization of thermodynamics solver
     call InitThermodynamics1d(time_step = time_step, &  
